@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+:root {
+  --background: #050b1f;
+  --foreground: #f4efe1;
+
+  --color-navy-deep: #030817;
+  --color-navy: #0a1330;
+  --color-navy-light: #131f45;
+  --color-navy-lighter: #1c2c5c;
+
+  --color-gold: #e8c468;
+  --color-gold-bright: #f4d888;
+  --color-gold-deep: #ab8636;
+
+  --color-gray-team: #a7adba;
+  --color-gray-team-light: #d3d7de;
+  --color-gray-team-deep: #565c6b;
+  --color-gray-team-bg: #3a3f4c;
+
+  --color-aqua-team: #2fb7e6;
+  --color-aqua-team-light: #7fd6f5;
+  --color-aqua-team-deep: #0d5a82;
+  --color-aqua-team-bg: #0c3a56;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --color-navy-deep: var(--color-navy-deep);
+  --color-navy: var(--color-navy);
+  --color-navy-light: var(--color-navy-light);
+  --color-navy-lighter: var(--color-navy-lighter);
+
+  --color-gold: var(--color-gold);
+  --color-gold-bright: var(--color-gold-bright);
+  --color-gold-deep: var(--color-gold-deep);
+
+  --color-gray-team: var(--color-gray-team);
+  --color-gray-team-light: var(--color-gray-team-light);
+  --color-gray-team-deep: var(--color-gray-team-deep);
+  --color-gray-team-bg: var(--color-gray-team-bg);
+
+  --color-aqua-team: var(--color-aqua-team);
+  --color-aqua-team-light: var(--color-aqua-team-light);
+  --color-aqua-team-deep: var(--color-aqua-team-deep);
+  --color-aqua-team-bg: var(--color-aqua-team-bg);
+}
+
+body {
+  background: radial-gradient(ellipse at top, var(--color-navy-light) 0%, var(--color-navy-deep) 65%);
+  background-attachment: fixed;
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-navy-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-navy-lighter);
+  border-radius: 999px;
+}

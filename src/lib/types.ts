@@ -1,0 +1,64 @@
+export type TeamId = "gray" | "aqua";
+
+export interface Team {
+  id: TeamId;
+  name: string;
+  color: string;
+}
+
+export interface Player {
+  id: string;
+  name: string;
+  team_id: TeamId;
+}
+
+export interface Day {
+  id: string;
+  label: string;
+  date: string;
+  course: string | null;
+  sort_order: number;
+}
+
+export type SessionFormat = "fourball" | "greensome" | "singles" | "scramble";
+
+export interface Session {
+  id: string;
+  day_id: string;
+  name: string;
+  format: SessionFormat;
+  points_per_match: number;
+  sort_order: number;
+}
+
+export type MatchResult = "not_played" | "gray_won" | "aqua_won" | "halved";
+
+export interface Match {
+  id: string;
+  session_id: string;
+  start_time: string | null;
+  points: number;
+  gray_player1: string | null;
+  gray_player2: string | null;
+  aqua_player1: string | null;
+  aqua_player2: string | null;
+  result: MatchResult;
+  points_gray: number;
+  points_aqua: number;
+  note: string | null;
+  sort_order: number;
+}
+
+export const FORMAT_LABELS: Record<SessionFormat, string> = {
+  fourball: "Fourball",
+  greensome: "Greensome",
+  singles: "Singles",
+  scramble: "Scramble",
+};
+
+export const RESULT_LABELS: Record<MatchResult, string> = {
+  not_played: "Ikke spilt",
+  gray_won: "Gray vant",
+  aqua_won: "Aqua vant",
+  halved: "Delt",
+};

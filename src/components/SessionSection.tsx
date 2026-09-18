@@ -1,0 +1,60 @@
+"use client";
+
+import { useState } from "react";
+import { Match, Player, Session, FORMAT_LABELS } from "@/lib/types";
+import { MatchRow } from "./MatchRow";
+
+function fmt(n: number) {
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
+export function SessionSection({
+  session,
+  matches,
+  players,
+  defaultOpen = false,
+}: {
+  session: Session;
+  matches: Match[];
+  players: Player[];
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  const gray = matches.reduce((sum, m) => sum + m.points_gray, 0);
+  const aqua = matches.reduce((sum, m) => sum + m.points_aqua, 0);
+  const played = matches.filter((m) => m.result !== "not_played").length;
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-navy-lighter/50 bg-navy/60">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+      >
+        <div className="flex items-center gap-3">
+          <span className={`text-foreground/40 transition-transform ${open ? "rotate-90" : ""}`}>▶</span>
+          <div>
+            <div className="font-semibold text-foreground/90">{session.name}</div>
+            <div className="text-[11px] uppercase tracking-wide text-foreground/40">
+              {FORMAT_LABELS[session.format]} &middot; {fmt(session.points_per_match)}p/kamp &middot;{" "}
+              {played}/{matches.length} spilt
+            </div>
+          </div>
+        </div>
+        <div className="shrink-0 text-sm font-bold">
+          <span className="text-gray-team-light">{fmt(gray)}</span>
+          <span className="text-foreground/30"> – </span>
+          <span className="text-aqua-team-light">{fmt(aqua)}</span>
+        </div>
+      </button>
+
+      {open && (
+        <div className="space-y-2 border-t border-navy-lighter/50 px-3 pb-3 pt-3">
+          {matches.map((m) => (
+            <MatchRow key={m.id} match={m} session={session} players={players} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -29,6 +29,36 @@ export function totalPoints(matches: Match[]) {
   );
 }
 
+/**
+ * Same as totalPoints, but a match still in progress (not yet finalized)
+ * counts toward whichever team currently leads it live — so the standing
+ * updates hole by hole instead of waiting for the match to be locked in.
+ * A match that's all square live contributes nothing yet, same as one that
+ * hasn't started.
+ */
+export function projectedPoints(matches: Match[]) {
+  return matches.reduce(
+    (acc, m) => {
+      if (m.result !== "not_played") {
+        acc.gray += m.points_gray;
+        acc.aqua += m.points_aqua;
+      } else {
+        const leader = liveLeader(m.live_up);
+        if (leader === "gray") acc.gray += m.points;
+        if (leader === "aqua") acc.aqua += m.points;
+      }
+      acc.possible += m.points;
+      return acc;
+    },
+    { gray: 0, aqua: 0, possible: 0 }
+  );
+}
+
+/** True if any not-yet-finalized match currently has a live score entered. */
+export function hasLiveMatches(matches: Match[]) {
+  return matches.some((m) => m.result === "not_played" && (m.live_up !== 0 || m.live_thru !== null));
+}
+
 /** Standard match-play label for the live in-progress score, e.g. "2 UP" or "A/S". */
 export function liveUpLabel(liveUp: number): string {
   return liveUp === 0 ? "A/S" : `${Math.abs(liveUp)} UP`;

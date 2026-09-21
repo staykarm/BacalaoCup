@@ -11,7 +11,20 @@ import {
 } from "react";
 import { supabase } from "@/lib/supabase";
 import { pointsForResult } from "@/lib/scoring";
-import { Day, InfoPage, InfoPageId, Match, MatchResult, Message, Player, Session, Team } from "@/lib/types";
+import {
+  Day,
+  InfoPage,
+  InfoPageId,
+  LocationType,
+  MapLocation,
+  Match,
+  MatchResult,
+  Message,
+  Player,
+  PlayerYearStat,
+  Session,
+  Team,
+} from "@/lib/types";
 
 interface TournamentContextValue {
   teams: Team[];
@@ -21,6 +34,8 @@ interface TournamentContextValue {
   matches: Match[];
   messages: Message[];
   infoPages: InfoPage[];
+  locations: MapLocation[];
+  playerYearStats: PlayerYearStat[];
   loading: boolean;
   error: string | null;
   /** A background save (not the initial load) failed, e.g. a dropped connection while live-scoring. */
@@ -30,6 +45,10 @@ interface TournamentContextValue {
   setMatchResult: (id: string, result: MatchResult) => Promise<void>;
   postMessage: (author: string, body: string) => Promise<void>;
   updateInfoPage: (id: InfoPageId, content: string) => Promise<void>;
+  addLocation: (type: LocationType, name: string, address: string | null, notes: string | null) => Promise<void>;
+  deleteLocation: (id: string) => Promise<void>;
+  /** Admin: resets every match back to not-played with no live score or result. */
+  resetAllMatches: () => Promise<void>;
 }
 
 const TournamentContext = createContext<TournamentContextValue | null>(null);
@@ -42,6 +61,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const [matches, setMatches] = useState<Match[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [infoPages, setInfoPages] = useState<InfoPage[]>([]);
+  const [locations, setLocations] = useState<MapLocation[]>([]);
+  const [playerYearStats, setPlayerYearStats] = useState<PlayerYearStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -53,16 +74,27 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     async function load() {
       setLoading(true);
       try {
-        const [teamsRes, playersRes, daysRes, sessionsRes, matchesRes, messagesRes, infoPagesRes] =
-          await Promise.all([
-            supabase.from("teams").select("*"),
-            supabase.from("players").select("*"),
-            supabase.from("days").select("*").order("sort_order"),
-            supabase.from("sessions").select("*").order("sort_order"),
-            supabase.from("matches").select("*").order("sort_order"),
-            supabase.from("messages").select("*").order("created_at"),
-            supabase.from("info_pages").select("*"),
-          ]);
+        const [
+          teamsRes,
+          playersRes,
+          daysRes,
+          sessionsRes,
+          matchesRes,
+          messagesRes,
+          infoPagesRes,
+          locationsRes,
+          playerYearStatsRes,
+        ] = await Promise.all([
+          supabase.from("teams").select("*"),
+          supabase.from("players").select("*"),
+          supabase.from("days").select("*").order("sort_order"),
+          supabase.from("sessions").select("*").order("sort_order"),
+          supabase.from("matches").select("*").order("sort_order"),
+          supabase.from("messages").select("*").order("created_at"),
+          supabase.from("info_pages").select("*"),
+          supabase.from("locations").select("*").order("sort_order"),
+          supabase.from("player_year_stats").select("*").order("year", { ascending: false }),
+        ]);
 
         if (cancelled) return;
 
@@ -73,7 +105,9 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           sessionsRes.error ||
           matchesRes.error ||
           messagesRes.error ||
-          infoPagesRes.error;
+          infoPagesRes.error ||
+          locationsRes.error ||
+          playerYearStatsRes.error;
 
         if (firstError) {
           setError(firstError.message);
@@ -88,6 +122,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         setMatches(matchesRes.data ?? []);
         setMessages(messagesRes.data ?? []);
         setInfoPages(infoPagesRes.data ?? []);
+        setLocations(locationsRes.data ?? []);
+        setPlayerYearStats(playerYearStatsRes.data ?? []);
         setLoading(false);
       } catch (err) {
         if (cancelled) return;
@@ -165,6 +201,24 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           setInfoPages((current) => current.map((p) => (p.id === next.id ? next : p)));
         }
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "locations" },
+        (payload) => {
+          setLocations((current) => {
+            if (payload.eventType === "INSERT") {
+              const next = payload.new as MapLocation;
+              if (current.some((l) => l.id === next.id)) return current;
+              return [...current, next].sort((a, b) => a.sort_order - b.sort_order);
+            }
+            if (payload.eventType === "DELETE") {
+              const old = payload.old as MapLocation;
+              return current.filter((l) => l.id !== old.id);
+            }
+            return current;
+          });
+        }
+      )
       .subscribe();
 
     return () => {
@@ -218,6 +272,49 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const addLocation = useCallback(
+    async (type: LocationType, name: string, address: string | null, notes: string | null) => {
+      const sort_order = locations.filter((l) => l.type === type).length;
+      const { data, error: insertError } = await supabase
+        .from("locations")
+        .insert({ type, name, address, notes, sort_order })
+        .select()
+        .single();
+      if (insertError) {
+        setSyncError(insertError.message);
+        return;
+      }
+      if (data) {
+        setLocations((current) => (current.some((l) => l.id === data.id) ? current : [...current, data]));
+      }
+    },
+    [locations]
+  );
+
+  const deleteLocation = useCallback(async (id: string) => {
+    setLocations((current) => current.filter((l) => l.id !== id));
+    const { error: deleteError } = await supabase.from("locations").delete().eq("id", id);
+    if (deleteError) {
+      setSyncError(deleteError.message);
+    }
+  }, []);
+
+  const resetAllMatches = useCallback(async () => {
+    const reset = {
+      result: "not_played" as MatchResult,
+      points_gray: 0,
+      points_aqua: 0,
+      live_up: 0,
+      live_thru: null,
+    };
+    setMatches((current) => current.map((m) => ({ ...m, ...reset })));
+
+    const { error: updateError } = await supabase.from("matches").update(reset).neq("id", "");
+    if (updateError) {
+      setSyncError(updateError.message);
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       teams,
@@ -227,6 +324,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       matches,
       messages,
       infoPages,
+      locations,
+      playerYearStats,
       loading,
       error,
       syncError,
@@ -235,6 +334,9 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       setMatchResult,
       postMessage,
       updateInfoPage,
+      addLocation,
+      deleteLocation,
+      resetAllMatches,
     }),
     [
       teams,
@@ -244,6 +346,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       matches,
       messages,
       infoPages,
+      locations,
+      playerYearStats,
       loading,
       error,
       syncError,
@@ -252,6 +356,9 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       setMatchResult,
       postMessage,
       updateInfoPage,
+      addLocation,
+      deleteLocation,
+      resetAllMatches,
     ]
   );
 

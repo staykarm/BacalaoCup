@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { TournamentProvider, useTournament } from "@/context/TournamentContext";
 import { ScoreHeader } from "./ScoreHeader";
-import { StandingsModal } from "./StandingsModal";
+import { MvpModal } from "./MvpModal";
 import { MeldingerModal } from "./MeldingerModal";
 import { AgendaModal } from "./AgendaModal";
 import { BaneinfoModal } from "./BaneinfoModal";
 import { InfoPageModal } from "./InfoPageModal";
+import { KartModal } from "./KartModal";
+import { AdminModal } from "./AdminModal";
 
 function SyncErrorToast() {
   const { syncError, clearSyncError } = useTournament();
@@ -31,13 +33,23 @@ function SyncErrorToast() {
   );
 }
 
-type ModalKey = "stilling" | "meldinger" | "agenda" | "baneinfo" | "praktisk" | "restaurant" | null;
+type ModalKey =
+  | "mvp"
+  | "meldinger"
+  | "agenda"
+  | "baneinfo"
+  | "kart"
+  | "praktisk"
+  | "restaurant"
+  | "admin"
+  | null;
 
-const NAV_ITEMS: { key: Exclude<ModalKey, null>; label: string; icon: string }[] = [
-  { key: "stilling", label: "Stilling", icon: "🏆" },
+const NAV_ITEMS: { key: Exclude<ModalKey, null | "admin">; label: string; icon: string }[] = [
+  { key: "mvp", label: "MVP", icon: "🏆" },
   { key: "meldinger", label: "Meldinger", icon: "💬" },
   { key: "agenda", label: "Agenda", icon: "📅" },
   { key: "baneinfo", label: "Baneinfo", icon: "⛳" },
+  { key: "kart", label: "Kart", icon: "🗺️" },
   { key: "praktisk", label: "Praktisk", icon: "ℹ️" },
   { key: "restaurant", label: "Restaurant", icon: "🍽️" },
 ];
@@ -47,7 +59,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <TournamentProvider>
-      <ScoreHeader />
+      <ScoreHeader onOpenAdmin={() => setOpenModal("admin")} />
 
       <main className="mx-auto max-w-5xl px-4 pb-28 pt-4 sm:px-6">{children}</main>
 
@@ -68,16 +80,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
 
-      {openModal === "stilling" && <StandingsModal onClose={() => setOpenModal(null)} />}
+      {openModal === "mvp" && <MvpModal onClose={() => setOpenModal(null)} />}
       {openModal === "meldinger" && <MeldingerModal onClose={() => setOpenModal(null)} />}
       {openModal === "agenda" && <AgendaModal onClose={() => setOpenModal(null)} />}
       {openModal === "baneinfo" && <BaneinfoModal onClose={() => setOpenModal(null)} />}
+      {openModal === "kart" && <KartModal onClose={() => setOpenModal(null)} />}
       {openModal === "praktisk" && (
         <InfoPageModal pageId="praktisk" title="Praktisk info" onClose={() => setOpenModal(null)} />
       )}
       {openModal === "restaurant" && (
         <InfoPageModal pageId="restaurant" title="Restaurantinfo" onClose={() => setOpenModal(null)} />
       )}
+      {openModal === "admin" && <AdminModal onClose={() => setOpenModal(null)} />}
 
       <SyncErrorToast />
     </TournamentProvider>

@@ -44,4 +44,14 @@ export const COURSE_INFO: Record<string, CourseInfo> = {
     description:
       "Ligger i fjellene i Benahavís, ca. 20 minutter fra Marbella Club Hotel. Designeren Dave Thomas var selv Ryder Cup-spiller og nådde playoff i to British Open. Banen er kjent som en eksklusiv, velholdt layout med signaturpreg fra en av golfens mest erfarne banearkitekter.",
   },
+  "Mijas Los Lagos": {
+    name: "Mijas Golf – Los Lagos",
+    location: "Mijas, Costa del Sol",
+    designer: "Robert Trent Jones Sr.",
+    year: "1976 (renovert 2012)",
+    par: 71,
+    length: "6 367 m",
+    description:
+      "Brede fairways med noen skogholt som hindre, men det er banens ni innsjøer som gir den navnet og definerer spillet — sammen med mange bunkere. Myke høydeforskjeller og store greener. Totalrenovert i 2012 med større greener bygget til USGA-standard og utvidede teesteder, uten å røre Trent Jones' opprinnelige design.",
+  },
 };

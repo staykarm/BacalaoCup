@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
 import { Match, MatchResult, Player, RESULT_LABELS, Session, TeamId } from "@/lib/types";
 import { liveLeader, liveUpLabel } from "@/lib/scoring";
@@ -87,14 +88,14 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
 
   const isLiveInProgress = match.result === "not_played" && (match.live_up !== 0 || match.live_thru !== null);
 
-  // Standard match-play margin, e.g. "3&2" (won with holes to spare) or "1 UP" (won on the last hole).
+  // Standard match-play margin, e.g. "3/2" (won with holes to spare) or "1 UP" (won on the last hole).
   const finalMarginLabel = (() => {
     if (match.result !== "gray_won" && match.result !== "aqua_won") return null;
     if (match.live_thru === null) return null;
     const upBy = Math.abs(match.live_up);
     if (upBy === 0) return null;
     const remaining = 18 - match.live_thru;
-    return remaining > 0 && upBy > remaining ? `${upBy}&${remaining}` : `${upBy} UP`;
+    return remaining > 0 && upBy > remaining ? `${upBy}/${remaining}` : `${upBy} UP`;
   })();
 
   const leadingSide: TeamId | null =
@@ -140,6 +141,13 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
               {marginBadgeText}
             </span>
           )}
+          <Image
+            src="/logos/gray.png"
+            alt=""
+            width={24}
+            height={24}
+            className="hidden h-5 w-5 shrink-0 rounded-full object-cover opacity-80 sm:block sm:h-6 sm:w-6"
+          />
           <div className="flex min-w-0 flex-col gap-0.5">
             {(grayNames.length > 0 ? grayNames : ["Gray (Joys)"]).map((name) => (
               <span
@@ -154,7 +162,12 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
 
         <div className="flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 bg-navy-deep px-1 py-3 text-center sm:w-24 sm:py-4">
           {match.result !== "not_played" ? (
-            <span className="text-sm font-extrabold text-foreground/70 sm:text-base">F</span>
+            <>
+              <span className="text-sm font-extrabold text-foreground/70 sm:text-base">F</span>
+              {match.result === "halved" && (
+                <span className="text-[10px] font-bold text-gold sm:text-xs">HALF</span>
+              )}
+            </>
           ) : isLiveInProgress ? (
             <>
               <span className={`text-xs font-extrabold sm:text-sm ${liveColor}`}>
@@ -186,6 +199,13 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
               </span>
             ))}
           </div>
+          <Image
+            src="/logos/aquarellos.png"
+            alt=""
+            width={24}
+            height={24}
+            className="hidden h-5 w-5 shrink-0 rounded-full object-cover opacity-80 sm:block sm:h-6 sm:w-6"
+          />
           {leadingSide === "aqua" && marginBadgeText && (
             <span className="shrink-0 text-sm font-extrabold text-aqua-team-light sm:text-base">
               {marginBadgeText}
@@ -220,7 +240,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
         </div>
 
         {match.result === "not_played" && (
-          <div className="mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-navy-lighter/50 bg-navy-deep/40 px-3 py-2">
+          <div className="mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-navy-lighter/50 bg-navy-light/50 px-3 py-2">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => bumpLiveUp(1)}
@@ -256,7 +276,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
               <select
                 value={match.live_thru ?? ""}
                 onChange={(e) => setLiveThru(e.target.value ? Number(e.target.value) : null)}
-                className="rounded-lg border border-navy-lighter/60 bg-navy-deep px-2 py-1 text-sm text-foreground focus:border-gold/60 focus:outline-none"
+                className="rounded-lg border border-navy-lighter/60 bg-navy px-2 py-1 text-sm text-foreground focus:border-gold/60 focus:outline-none"
               >
                 <option value="">–</option>
                 {Array.from({ length: 18 }, (_, i) => i + 1).map((hole) => (
@@ -279,7 +299,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
         {match.note && <p className="mt-2 text-[11px] italic text-foreground/40">⚠ {match.note}</p>}
 
         {editing && (
-          <div className="mt-3 space-y-3 rounded-lg border border-navy-lighter/60 bg-navy-deep/60 p-3">
+          <div className="mt-3 space-y-3 rounded-lg border border-navy-lighter/60 bg-navy-light/60 p-3">
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex items-center gap-2 text-xs text-foreground/60">
                 Tid
@@ -288,7 +308,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
                   value={draft.start_time ?? ""}
                   onChange={(e) => setDraft({ ...draft, start_time: e.target.value })}
                   placeholder="14:20"
-                  className="w-20 rounded-lg border border-navy-lighter/60 bg-navy-deep px-2 py-1.5 text-sm focus:border-gold/60 focus:outline-none"
+                  className="w-20 rounded-lg border border-navy-lighter/60 bg-navy px-2 py-1.5 text-sm focus:border-gold/60 focus:outline-none"
                 />
               </label>
               <label className="flex items-center gap-2 text-xs text-foreground/60">
@@ -299,7 +319,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
                   min="0"
                   value={draft.points}
                   onChange={(e) => setDraft({ ...draft, points: Number(e.target.value) })}
-                  className="w-20 rounded-lg border border-navy-lighter/60 bg-navy-deep px-2 py-1.5 text-sm focus:border-gold/60 focus:outline-none"
+                  className="w-20 rounded-lg border border-navy-lighter/60 bg-navy px-2 py-1.5 text-sm focus:border-gold/60 focus:outline-none"
                 />
               </label>
             </div>
@@ -353,7 +373,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
                 value={draft.note ?? ""}
                 onChange={(e) => setDraft({ ...draft, note: e.target.value || null })}
                 rows={2}
-                className="mt-1 w-full rounded-lg border border-navy-lighter/60 bg-navy-deep px-2 py-1.5 text-sm focus:border-gold/60 focus:outline-none"
+                className="mt-1 w-full rounded-lg border border-navy-lighter/60 bg-navy px-2 py-1.5 text-sm focus:border-gold/60 focus:outline-none"
               />
             </label>
 

@@ -33,8 +33,9 @@ export function totalPoints(matches: Match[]) {
  * Same as totalPoints, but a match still in progress (not yet finalized)
  * counts toward whichever team currently leads it live — so the standing
  * updates hole by hole instead of waiting for the match to be locked in.
- * A match that's all square live contributes nothing yet, same as one that
- * hasn't started.
+ * Once at least one hole has been played, a match that's all square splits
+ * its points evenly between the teams, same as a halved final result. A
+ * match that hasn't started yet still contributes nothing.
  */
 export function projectedPoints(matches: Match[]) {
   return matches.reduce(
@@ -42,10 +43,14 @@ export function projectedPoints(matches: Match[]) {
       if (m.result !== "not_played") {
         acc.gray += m.points_gray;
         acc.aqua += m.points_aqua;
-      } else {
+      } else if (m.live_thru !== null || m.live_up !== 0) {
         const leader = liveLeader(m.live_up);
         if (leader === "gray") acc.gray += m.points;
-        if (leader === "aqua") acc.aqua += m.points;
+        else if (leader === "aqua") acc.aqua += m.points;
+        else {
+          acc.gray += m.points / 2;
+          acc.aqua += m.points / 2;
+        }
       }
       acc.possible += m.points;
       return acc;

@@ -4,13 +4,17 @@ import { useState } from "react";
 import { TournamentProvider, useTournament } from "@/context/TournamentContext";
 import { ScoreHeader } from "./ScoreHeader";
 import { StandingsModal } from "./StandingsModal";
+import { MeldingerModal } from "./MeldingerModal";
+import { AgendaModal } from "./AgendaModal";
+import { BaneinfoModal } from "./BaneinfoModal";
+import { InfoPageModal } from "./InfoPageModal";
 
 function SyncErrorToast() {
   const { syncError, clearSyncError } = useTournament();
   if (!syncError) return null;
 
   return (
-    <div className="fixed bottom-24 left-1/2 z-40 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-xl border border-red-500/40 bg-red-950/90 px-4 py-3 text-sm text-red-200 shadow-lg backdrop-blur sm:bottom-8">
+    <div className="fixed bottom-24 left-1/2 z-40 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-xl border border-red-500/40 bg-red-950/90 px-4 py-3 text-sm text-red-200 shadow-lg backdrop-blur sm:bottom-28">
       <div className="flex items-start gap-3">
         <p className="flex-1">
           <span className="font-semibold">Klarte ikke å lagre.</span> Sjekk nettforbindelsen og prøv igjen.
@@ -27,8 +31,19 @@ function SyncErrorToast() {
   );
 }
 
+type ModalKey = "stilling" | "meldinger" | "agenda" | "baneinfo" | "praktisk" | "restaurant" | null;
+
+const NAV_ITEMS: { key: Exclude<ModalKey, null>; label: string; icon: string }[] = [
+  { key: "stilling", label: "Stilling", icon: "🏆" },
+  { key: "meldinger", label: "Meldinger", icon: "💬" },
+  { key: "agenda", label: "Agenda", icon: "📅" },
+  { key: "baneinfo", label: "Baneinfo", icon: "⛳" },
+  { key: "praktisk", label: "Praktisk", icon: "ℹ️" },
+  { key: "restaurant", label: "Restaurant", icon: "🍽️" },
+];
+
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const [standingsOpen, setStandingsOpen] = useState(false);
+  const [openModal, setOpenModal] = useState<ModalKey>(null);
 
   return (
     <TournamentProvider>
@@ -36,15 +51,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <main className="mx-auto max-w-5xl px-4 pb-28 pt-4 sm:px-6">{children}</main>
 
-      <button
-        onClick={() => setStandingsOpen(true)}
-        className="fixed bottom-5 right-5 z-30 flex items-center gap-2 rounded-full border border-gold/60 bg-gradient-to-b from-gold-bright to-gold-deep px-5 py-3 font-semibold text-navy-deep shadow-lg shadow-black/40 transition hover:scale-105 active:scale-95 sm:bottom-8 sm:right-8"
-      >
-        <span aria-hidden>🏆</span>
-        Stilling
-      </button>
+      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-navy-lighter/60 bg-navy-deep/95 backdrop-blur supports-[backdrop-filter]:bg-navy-deep/85">
+        <div className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-2 py-2 sm:justify-center sm:gap-2 sm:px-6">
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.key}
+              onClick={() => setOpenModal(item.key)}
+              className="flex shrink-0 flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-foreground/60 transition hover:bg-navy-lighter/40 hover:text-gold"
+            >
+              <span className="text-lg leading-none" aria-hidden>
+                {item.icon}
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
 
-      {standingsOpen && <StandingsModal onClose={() => setStandingsOpen(false)} />}
+      {openModal === "stilling" && <StandingsModal onClose={() => setOpenModal(null)} />}
+      {openModal === "meldinger" && <MeldingerModal onClose={() => setOpenModal(null)} />}
+      {openModal === "agenda" && <AgendaModal onClose={() => setOpenModal(null)} />}
+      {openModal === "baneinfo" && <BaneinfoModal onClose={() => setOpenModal(null)} />}
+      {openModal === "praktisk" && (
+        <InfoPageModal pageId="praktisk" title="Praktisk info" onClose={() => setOpenModal(null)} />
+      )}
+      {openModal === "restaurant" && (
+        <InfoPageModal pageId="restaurant" title="Restaurantinfo" onClose={() => setOpenModal(null)} />
+      )}
 
       <SyncErrorToast />
     </TournamentProvider>

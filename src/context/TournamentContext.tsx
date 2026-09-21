@@ -21,6 +21,9 @@ interface TournamentContextValue {
   matches: Match[];
   loading: boolean;
   error: string | null;
+  /** A background save (not the initial load) failed, e.g. a dropped connection while live-scoring. */
+  syncError: string | null;
+  clearSyncError: () => void;
   updateMatch: (id: string, patch: Partial<Match>) => Promise<void>;
   setMatchResult: (id: string, result: MatchResult) => Promise<void>;
 }
@@ -35,6 +38,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const clearSyncError = useCallback(() => setSyncError(null), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -117,7 +122,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
 
     const { error: updateError } = await supabase.from("matches").update(patch).eq("id", id);
     if (updateError) {
-      setError(updateError.message);
+      setSyncError(updateError.message);
     }
   }, []);
 
@@ -132,8 +137,20 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ teams, players, days, sessions, matches, loading, error, updateMatch, setMatchResult }),
-    [teams, players, days, sessions, matches, loading, error, updateMatch, setMatchResult]
+    () => ({
+      teams,
+      players,
+      days,
+      sessions,
+      matches,
+      loading,
+      error,
+      syncError,
+      clearSyncError,
+      updateMatch,
+      setMatchResult,
+    }),
+    [teams, players, days, sessions, matches, loading, error, syncError, clearSyncError, updateMatch, setMatchResult]
   );
 
   return <TournamentContext.Provider value={value}>{children}</TournamentContext.Provider>;

@@ -1,4 +1,4 @@
-import { Match, MatchResult } from "./types";
+import { Match, MatchResult, TeamId } from "./types";
 
 export function pointsForResult(
   result: MatchResult,
@@ -27,6 +27,17 @@ export function totalPoints(matches: Match[]) {
     },
     { gray: 0, aqua: 0, possible: 0 }
   );
+}
+
+/** Standard match-play label for the live in-progress score, e.g. "2 UP" or "A/S". */
+export function liveUpLabel(liveUp: number): string {
+  return liveUp === 0 ? "A/S" : `${Math.abs(liveUp)} UP`;
+}
+
+export function liveLeader(liveUp: number): TeamId | null {
+  if (liveUp > 0) return "gray";
+  if (liveUp < 0) return "aqua";
+  return null;
 }
 
 /** Points a team still needs to mathematically clinch the cup outright. */

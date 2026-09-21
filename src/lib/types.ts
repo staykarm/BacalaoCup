@@ -47,6 +47,10 @@ export interface Match {
   points_aqua: number;
   note: string | null;
   sort_order: number;
+  /** Positive: Gray leads by this many holes. Negative: Aqua leads. 0: All square. */
+  live_up: number;
+  /** Which hole the match has reached, 1–18. Null if not started. */
+  live_thru: number | null;
 }
 
 export const FORMAT_LABELS: Record<SessionFormat, string> = {

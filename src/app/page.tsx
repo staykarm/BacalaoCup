@@ -12,9 +12,7 @@ export default function Home() {
   const currentDayId = activeDay ?? sortedDays[0]?.id ?? null;
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-20 text-foreground/50">Laster turneringsdata…</div>
-    );
+    return <div className="flex justify-center py-20 text-ink-light">Laster turneringsdata…</div>;
   }
 
   if (error) {
@@ -45,8 +43,8 @@ export default function Home() {
             onClick={() => setActiveDay(day.id)}
             className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${
               day.id === currentDayId
-                ? "border-gold bg-gold/15 text-gold"
-                : "border-navy-lighter/50 text-foreground/60 hover:border-navy-lighter hover:text-foreground/90"
+                ? "border-gold bg-gold/15 text-gold-deep"
+                : "border-navy-lighter/30 bg-white/40 text-ink-light hover:border-navy-lighter/50 hover:text-ink"
             }`}
           >
             {day.label}
@@ -55,7 +53,7 @@ export default function Home() {
       </div>
 
       {currentDay && (
-        <p className="mb-4 text-xs uppercase tracking-wide text-foreground/40">
+        <p className="mb-4 text-xs uppercase tracking-wide text-ink-light/80">
           {currentDay.course ? `Bane: ${currentDay.course}` : "Bane ikke oppgitt"}
         </p>
       )}

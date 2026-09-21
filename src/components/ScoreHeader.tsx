@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
 import { hasLiveMatches, projectedPoints } from "@/lib/scoring";
 import { ScoreBar } from "./ScoreBar";
@@ -19,30 +20,48 @@ export function ScoreHeader() {
         <div className="flex items-center justify-center gap-2 text-center">
           <span className={`h-1.5 w-1.5 rounded-full ${isLive ? "animate-pulse bg-red-500" : "bg-gold"}`} />
           <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gold sm:text-xs">
-            Bacalao Cup MMXXV &middot; Marbella
-            {isLive && <span className="ml-2 text-red-400">&middot; LIVE / PROJISERT</span>}
+            Bacalao Cup MMXXVI &middot; Marbella
+            {isLive && <span className="ml-2 text-red-400">&middot; LIVE / PROJECTED</span>}
           </p>
           <span className={`h-1.5 w-1.5 rounded-full ${isLive ? "animate-pulse bg-red-500" : "bg-gold"}`} />
         </div>
 
         <div className="mt-2 grid grid-cols-3 items-center gap-2">
-          <div className="text-right">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-team-light sm:text-sm">
-              Gray (Joys)
+          <div className="flex items-center justify-end gap-2 sm:gap-3">
+            <div className="text-right">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-team-light sm:text-sm">
+                Gray (Joys)
+              </div>
+              <div className="font-serif text-3xl font-bold text-gray-team-light drop-shadow sm:text-5xl">
+                {fmt(gray)}
+              </div>
             </div>
-            <div className="font-serif text-3xl font-bold text-gray-team-light drop-shadow sm:text-5xl">
-              {fmt(gray)}
-            </div>
+            <Image
+              src="/logos/gray.png"
+              alt="Gray (Joys)"
+              width={40}
+              height={40}
+              className="h-8 w-8 shrink-0 rounded-full object-cover sm:h-11 sm:w-11"
+            />
           </div>
 
           <div className="text-center text-lg font-bold text-foreground/40 sm:text-2xl">–</div>
 
-          <div className="text-left">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-aqua-team-light sm:text-sm">
-              Aquarellos
-            </div>
-            <div className="font-serif text-3xl font-bold text-aqua-team-light drop-shadow sm:text-5xl">
-              {fmt(aqua)}
+          <div className="flex items-center justify-start gap-2 sm:gap-3">
+            <Image
+              src="/logos/aquarellos.png"
+              alt="Aquarellos"
+              width={40}
+              height={40}
+              className="h-8 w-8 shrink-0 rounded-full object-cover sm:h-11 sm:w-11"
+            />
+            <div className="text-left">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-aqua-team-light sm:text-sm">
+                Aquarellos
+              </div>
+              <div className="font-serif text-3xl font-bold text-aqua-team-light drop-shadow sm:text-5xl">
+                {fmt(aqua)}
+              </div>
             </div>
           </div>
         </div>

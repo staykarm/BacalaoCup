@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
-import { pointsToClinch, totalPoints } from "@/lib/scoring";
+import { hasLiveMatches, pointsToClinch, projectedPoints } from "@/lib/scoring";
 import { computeDayBreakdown, computePairStats, computePlayerStats } from "@/lib/stats";
 import { FORMAT_LABELS } from "@/lib/types";
 import { ScoreBar } from "./ScoreBar";
@@ -24,8 +25,15 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
     };
   }, [onClose]);
 
-  const { gray, aqua, possible } = totalPoints(matches);
+  const { gray, aqua, possible } = projectedPoints(matches);
+  const isLive = hasLiveMatches(matches);
   const clinch = pointsToClinch(gray, aqua, possible);
+  // Projected points are provisionally split as soon as a match starts, so the
+  // pool of points still genuinely up for grabs can be smaller than `clinch`
+  // assumes. Cap against that so we never ask a team for more than remains.
+  const remaining = Math.max(0, possible - gray - aqua);
+  const grayEliminated = clinch.gray > 0 && clinch.gray > remaining;
+  const aquaEliminated = clinch.aqua > 0 && clinch.aqua > remaining;
   const dayBreakdown = computeDayBreakdown(days, sessions, matches);
   const playerStats = computePlayerStats(matches, players);
   const grayPlayerStats = playerStats.filter((s) => s.player.team_id === "gray");
@@ -39,7 +47,8 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
       <div className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border border-navy-lighter/60 bg-navy sm:rounded-3xl">
         <div className="flex items-center justify-between border-b border-navy-lighter/60 px-5 py-4">
           <h2 className="font-serif text-lg font-bold uppercase tracking-wide text-gold sm:text-xl">
-            Stilling &middot; Bacalao Cup MMXXV
+            Stilling &middot; Bacalao Cup MMXXVI
+            {isLive && <span className="ml-2 text-sm text-red-400">&middot; LIVE / PROJECTED</span>}
           </h2>
           <button
             onClick={onClose}
@@ -55,6 +64,13 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
           <section className="mb-8">
             <div className="grid grid-cols-3 items-end gap-2 text-center">
               <div>
+                <Image
+                  src="/logos/gray.png"
+                  alt="Gray (Joys)"
+                  width={48}
+                  height={48}
+                  className="mx-auto mb-1 h-10 w-10 rounded-full object-cover sm:h-14 sm:w-14"
+                />
                 <div className="text-xs font-semibold uppercase tracking-wider text-gray-team-light">
                   Gray (Joys)
                 </div>
@@ -64,6 +80,13 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
               </div>
               <div className="pb-2 text-sm text-foreground/40">av {fmt(possible)}</div>
               <div>
+                <Image
+                  src="/logos/aquarellos.png"
+                  alt="Aquarellos"
+                  width={48}
+                  height={48}
+                  className="mx-auto mb-1 h-10 w-10 rounded-full object-cover sm:h-14 sm:w-14"
+                />
                 <div className="text-xs font-semibold uppercase tracking-wider text-aqua-team-light">
                   Aquarellos
                 </div>
@@ -78,6 +101,8 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
               <div className="rounded-xl border border-gray-team-deep/50 bg-gray-team-bg/40 px-3 py-2">
                 {clinch.gray === 0 ? (
                   <span className="font-semibold text-gray-team-light">Gray har sikret cupen! 🏆</span>
+                ) : grayEliminated ? (
+                  <span className="text-foreground/50">Gray kan ikke lenger vinne cupen</span>
                 ) : (
                   <>
                     <span className="font-semibold text-gray-team-light">Gray</span> trenger{" "}
@@ -88,6 +113,8 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
               <div className="rounded-xl border border-aqua-team-deep/50 bg-aqua-team-bg/40 px-3 py-2">
                 {clinch.aqua === 0 ? (
                   <span className="font-semibold text-aqua-team-light">Aqua har sikret cupen! 🏆</span>
+                ) : aquaEliminated ? (
+                  <span className="text-foreground/50">Aqua kan ikke lenger vinne cupen</span>
                 ) : (
                   <>
                     <span className="font-semibold text-aqua-team-light">Aqua</span> trenger{" "}
@@ -188,10 +215,14 @@ function PlayerStatTable({
   rows: ReturnType<typeof computePlayerStats>;
 }) {
   const headerColor = accent === "gray" ? "text-gray-team-light" : "text-aqua-team-light";
+  const logoSrc = accent === "gray" ? "/logos/gray.png" : "/logos/aquarellos.png";
 
   return (
     <div className="overflow-hidden rounded-xl border border-navy-lighter/50">
-      <div className={`bg-navy-light/60 px-3 py-2 text-xs font-bold uppercase tracking-wider ${headerColor}`}>
+      <div
+        className={`flex items-center gap-2 bg-navy-light/60 px-3 py-2 text-xs font-bold uppercase tracking-wider ${headerColor}`}
+      >
+        <Image src={logoSrc} alt={title} width={20} height={20} className="h-5 w-5 rounded-full object-cover" />
         {title}
       </div>
       <table className="w-full text-xs">

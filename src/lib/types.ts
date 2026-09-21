@@ -53,6 +53,22 @@ export interface Match {
   live_thru: number | null;
 }
 
+export interface Message {
+  id: string;
+  author: string;
+  body: string;
+  created_at: string;
+}
+
+export type InfoPageId = "praktisk" | "restaurant";
+
+export interface InfoPage {
+  id: InfoPageId;
+  title: string;
+  content: string;
+  updated_at: string;
+}
+
 export const FORMAT_LABELS: Record<SessionFormat, string> = {
   fourball: "Fourball",
   greensome: "Greensome",

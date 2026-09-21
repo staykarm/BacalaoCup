@@ -10,6 +10,18 @@ export interface Player {
   id: string;
   name: string;
   team_id: TeamId;
+  hcp: number | null;
+}
+
+/** A past season's record for a player, e.g. from 2024 or 2023. */
+export interface PlayerYearStat {
+  id: string;
+  player_id: string;
+  year: number;
+  /** Free-form record string as kept on the source sheet, e.g. "6-2" or "2-1-3". */
+  record: string | null;
+  individual_points: number | null;
+  total_points: number | null;
 }
 
 export interface Day {
@@ -68,6 +80,23 @@ export interface InfoPage {
   content: string;
   updated_at: string;
 }
+
+export type LocationType = "course" | "house" | "restaurant";
+
+export interface MapLocation {
+  id: string;
+  type: LocationType;
+  name: string;
+  address: string | null;
+  notes: string | null;
+  sort_order: number;
+}
+
+export const LOCATION_TYPE_LABELS: Record<LocationType, string> = {
+  course: "Bane",
+  house: "Hus",
+  restaurant: "Restaurant",
+};
 
 export const FORMAT_LABELS: Record<SessionFormat, string> = {
   fourball: "Fourball",

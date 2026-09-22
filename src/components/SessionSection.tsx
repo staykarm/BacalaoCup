@@ -37,17 +37,14 @@ export function SessionSection({
         : "border-gold bg-gold/10 border-l-4"
     : "border-card-border bg-card";
 
-  // The active-aqua state keeps a dark navy fill (team-color exception), everything else is a light surface now.
-  const isDarkBg = isActive && leader === "aqua";
-  const textClass = isDarkBg ? "text-foreground/40" : "text-ink-light/60";
-  const titleClass = isDarkBg ? "text-foreground/90" : "text-ink";
-  const badgeClass = isDarkBg
-    ? "border-gold/50 bg-gold/10 text-gold"
-    : "border-gold-deep/50 bg-gold/10 text-gold-deep";
-  const grayScoreText = isDarkBg ? "text-gray-team-light" : "text-ink";
-  const aquaScoreText = isDarkBg ? "text-aqua-team-light" : "text-aqua-team-deep";
-  const dashText = isDarkBg ? "text-foreground/30" : "text-ink-light/40";
-  const borderTClass = isDarkBg ? "border-navy-lighter/50" : "border-card-border";
+  // Every leader tint (gray, aqua, gold) and the inactive state all sit on a light fill now, so text stays ink-based throughout.
+  const textClass = "text-ink-light/60";
+  const titleClass = "text-ink";
+  const badgeClass = "border-gold-deep/50 bg-gold/10 text-gold-deep";
+  const grayScoreText = "text-ink";
+  const aquaScoreText = "text-aqua-team-deep";
+  const dashText = "text-ink-light/40";
+  const borderTClass = "border-card-border";
 
   return (
     <div className={`overflow-hidden rounded-3xl border transition-colors ${cardClass}`}>

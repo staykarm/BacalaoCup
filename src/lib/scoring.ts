@@ -154,6 +154,38 @@ export function liveLeader(liveUp: number): TeamId | null {
   return null;
 }
 
+/** These are 9-hole matches, not the usual 18. */
+export const HOLES_PER_MATCH = 9;
+
+/**
+ * A match-play match is decided once a team is up by more holes than remain to play
+ * (e.g. 3 up with 2 to play), or once the last hole has been reached at all — a match
+ * still all square after the last hole is a halve, which is also "decided".
+ */
+export function isMatchDecided(liveUp: number, liveThru: number | null): boolean {
+  if (liveThru === null) return false;
+  if (liveThru >= HOLES_PER_MATCH) return true;
+  const remaining = HOLES_PER_MATCH - liveThru;
+  return Math.abs(liveUp) > remaining;
+}
+
+/** The result the app should record automatically, based only on the live hole-by-hole score. */
+export function autoResultFromLive(liveUp: number, liveThru: number | null): MatchResult {
+  if (!isMatchDecided(liveUp, liveThru)) return "not_played";
+  if (liveUp > 0) return "gray_won";
+  if (liveUp < 0) return "aqua_won";
+  return "halved";
+}
+
+/** Standard match-play margin label once decided, e.g. "3/2" (closed out early) or "1 UP" (won on the last hole). Null while undecided. */
+export function matchMarginLabel(liveUp: number, liveThru: number | null): string | null {
+  if (!isMatchDecided(liveUp, liveThru) || liveThru === null) return null;
+  const upBy = Math.abs(liveUp);
+  if (upBy === 0) return null;
+  const remaining = HOLES_PER_MATCH - liveThru;
+  return remaining > 0 ? `${upBy}/${remaining}` : `${upBy} UP`;
+}
+
 /** Points a team still needs to mathematically clinch the cup outright. */
 export function pointsToClinch(currentGray: number, currentAqua: number, totalPossible: number) {
   // Work in half-point units to avoid floating point edge cases (all points

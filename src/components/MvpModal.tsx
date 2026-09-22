@@ -23,7 +23,7 @@ function PlayerCard({
   onClick: () => void;
 }) {
   return (
-    <button onClick={onClick} className="w-full rounded-xl border border-navy-lighter/40 bg-black/10 p-3 text-left hover:border-navy-lighter">
+    <button onClick={onClick} className="w-full rounded-2xl border border-navy-lighter/40 bg-navy-lighter/20 p-3 text-left hover:border-navy-lighter">
       <div className="flex items-center justify-between gap-2">
         <span className="font-semibold text-foreground/90 hover:underline">{player.name}</span>
         {player.hcp !== null && (
@@ -88,7 +88,7 @@ function TeamGroup({
 
   return (
     <section>
-      <h3 className={`mb-3 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-widest ${headerClass}`}>
+      <h3 className={`mb-3 rounded-xl px-3 py-1.5 text-xs font-bold uppercase tracking-widest ${headerClass}`}>
         {title}
       </h3>
       <div className="space-y-2">

@@ -40,7 +40,7 @@ export function ScoreHeader({ onOpenAdmin }: { onOpenAdmin: () => void }) {
               <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-team-light sm:text-sm">
                 Gray (Joys)
               </div>
-              <div className="font-serif text-3xl font-bold text-gray-team-light drop-shadow sm:text-5xl">
+              <div className="font-display text-3xl font-bold text-gray-team-light drop-shadow sm:text-5xl">
                 {fmt(gray)}
               </div>
             </div>
@@ -67,7 +67,7 @@ export function ScoreHeader({ onOpenAdmin }: { onOpenAdmin: () => void }) {
               <div className="text-[11px] font-semibold uppercase tracking-wider text-aqua-team-light sm:text-sm">
                 Aquarellos
               </div>
-              <div className="font-serif text-3xl font-bold text-aqua-team-light drop-shadow sm:text-5xl">
+              <div className="font-display text-3xl font-bold text-aqua-team-light drop-shadow sm:text-5xl">
                 {fmt(aqua)}
               </div>
             </div>

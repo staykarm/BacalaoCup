@@ -35,10 +35,10 @@ export function SessionSection({
       : leader === "aqua"
         ? "border-aqua-team bg-aqua-team-bg/30 border-l-4"
         : "border-gold bg-gold/10 border-l-4"
-    : "border-navy-lighter/50 bg-navy/60";
+    : "border-navy-lighter/40 bg-navy-light/70";
 
   return (
-    <div className={`overflow-hidden rounded-2xl border transition-colors ${cardClass}`}>
+    <div className={`overflow-hidden rounded-3xl border transition-colors ${cardClass}`}>
       <button
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"

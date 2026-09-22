@@ -6,6 +6,10 @@
   --color-ink: #212a3d;
   --color-ink-light: #4b5468;
 
+  --color-card: #f9fafc;
+  --color-card-deep: #eef0f5;
+  --color-card-border: #dde1ea;
+
   --color-navy-deep: #030817;
   --color-navy: #0a1330;
   --color-navy-light: #131f45;
@@ -31,6 +35,9 @@
   --color-foreground: var(--foreground);
   --color-ink: var(--color-ink);
   --color-ink-light: var(--color-ink-light);
+  --color-card: var(--color-card);
+  --color-card-deep: var(--color-card-deep);
+  --color-card-border: var(--color-card-border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-outfit);

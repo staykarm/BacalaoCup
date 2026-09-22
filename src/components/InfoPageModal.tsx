@@ -38,18 +38,18 @@ export function InfoPageModal({
             onChange={(e) => setDraft(e.target.value)}
             rows={12}
             placeholder={`Skriv inn ${title.toLowerCase()}...`}
-            className="w-full rounded-xl border border-navy-lighter/60 bg-navy px-3 py-2 text-sm leading-relaxed focus:border-gold/60 focus:outline-none"
+            className="w-full rounded-xl border border-card-border bg-card-deep px-3 py-2 text-sm leading-relaxed text-ink focus:border-gold-deep/60 focus:outline-none"
           />
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setEditing(false)}
-              className="rounded-xl border border-navy-lighter/60 px-3 py-1.5 text-xs text-foreground/60 hover:bg-navy-lighter/30"
+              className="rounded-xl border border-card-border px-3 py-1.5 text-xs text-ink-light hover:bg-card-deep"
             >
               Avbryt
             </button>
             <button
               onClick={save}
-              className="rounded-xl border border-gold/60 bg-gold/20 px-3 py-1.5 text-xs font-semibold text-gold hover:bg-gold/30"
+              className="rounded-xl border border-gold-deep/60 bg-gold/20 px-3 py-1.5 text-xs font-semibold text-gold-deep hover:bg-gold/30"
             >
               Lagre
             </button>
@@ -58,13 +58,13 @@ export function InfoPageModal({
       ) : (
         <div>
           {page?.content ? (
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">{page.content}</p>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink">{page.content}</p>
           ) : (
-            <p className="text-sm italic text-foreground/40">Ingen info lagt inn ennå.</p>
+            <p className="text-sm italic text-ink-light/60">Ingen info lagt inn ennå.</p>
           )}
           <button
             onClick={startEdit}
-            className="mt-4 rounded-xl border border-gold/50 bg-gold/10 px-3 py-1.5 text-xs font-semibold text-gold hover:bg-gold/20"
+            className="mt-4 rounded-xl border border-gold-deep/50 bg-gold/10 px-3 py-1.5 text-xs font-semibold text-gold-deep hover:bg-gold/20"
           >
             ✎ Rediger
           </button>

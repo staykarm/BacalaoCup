@@ -1,22 +1,25 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
 import { hasLiveMatches, projectedPoints } from "@/lib/scoring";
 import { TeamId } from "@/lib/types";
 import { ScoreBar } from "./ScoreBar";
-import { TeamPointsModal } from "./TeamPointsModal";
 
 function fmt(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
 
-export function ScoreHeader({ onOpenAdmin }: { onOpenAdmin: () => void }) {
+export function ScoreHeader({
+  onOpenAdmin,
+  onOpenTeam,
+}: {
+  onOpenAdmin: () => void;
+  onOpenTeam: (team: TeamId) => void;
+}) {
   const { matches } = useTournament();
   const { gray, aqua, possible } = projectedPoints(matches);
   const isLive = hasLiveMatches(matches);
-  const [openTeam, setOpenTeam] = useState<TeamId | null>(null);
 
   return (
     <header className="sticky top-0 z-40 border-b border-navy-lighter/60 bg-navy-deep/90 backdrop-blur supports-[backdrop-filter]:bg-navy-deep/75">
@@ -40,7 +43,7 @@ export function ScoreHeader({ onOpenAdmin }: { onOpenAdmin: () => void }) {
 
         <div className="mt-2 grid grid-cols-3 items-center gap-2">
           <button
-            onClick={() => setOpenTeam("gray")}
+            onClick={() => onOpenTeam("gray")}
             className="flex items-center justify-end gap-2 rounded-2xl px-2 py-1 transition hover:bg-white/5 sm:gap-3"
           >
             <div className="text-right">
@@ -63,7 +66,7 @@ export function ScoreHeader({ onOpenAdmin }: { onOpenAdmin: () => void }) {
           <div className="text-center text-lg font-bold text-foreground/40 sm:text-2xl">–</div>
 
           <button
-            onClick={() => setOpenTeam("aqua")}
+            onClick={() => onOpenTeam("aqua")}
             className="flex items-center justify-start gap-2 rounded-2xl px-2 py-1 transition hover:bg-white/5 sm:gap-3"
           >
             <Image
@@ -86,8 +89,6 @@ export function ScoreHeader({ onOpenAdmin }: { onOpenAdmin: () => void }) {
 
         <ScoreBar gray={gray} aqua={aqua} possible={possible} className="mx-auto mt-2 max-w-md" />
       </div>
-
-      {openTeam && <TeamPointsModal team={openTeam} onClose={() => setOpenTeam(null)} />}
     </header>
   );
 }

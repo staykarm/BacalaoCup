@@ -27,28 +27,28 @@ export function MeldingerModal({ onClose }: { onClose: () => void }) {
     <ModalShell title="Meldinger" onClose={onClose}>
       <div className="flex flex-col gap-3">
         {messages.length === 0 && (
-          <p className="text-sm italic text-foreground/40">Ingen meldinger ennå — vær den første!</p>
+          <p className="text-sm italic text-ink-light/60">Ingen meldinger ennå — vær den første!</p>
         )}
 
         <div className="space-y-2">
           {messages.map((m) => (
-            <div key={m.id} className="rounded-2xl border border-navy-lighter/50 bg-navy-lighter/30 p-3">
+            <div key={m.id} className="rounded-2xl border border-card-border bg-white p-3">
               <div className="mb-1 flex items-baseline justify-between gap-2">
-                <span className="text-sm font-semibold text-gold">{m.author}</span>
-                <span className="text-[11px] text-foreground/40">{fmtTime(m.created_at)}</span>
+                <span className="text-sm font-semibold text-gold-deep">{m.author}</span>
+                <span className="text-[11px] text-ink-light/60">{fmtTime(m.created_at)}</span>
               </div>
-              <p className="text-sm text-foreground/80">{m.body}</p>
+              <p className="text-sm text-ink">{m.body}</p>
             </div>
           ))}
         </div>
 
-        <div className="mt-2 space-y-2 border-t border-navy-lighter/60 pt-3">
+        <div className="mt-2 space-y-2 border-t border-card-border pt-3">
           <input
             type="text"
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
             placeholder="Ditt navn"
-            className="w-full rounded-xl border border-navy-lighter/60 bg-navy px-3 py-2 text-sm focus:border-gold/60 focus:outline-none"
+            className="w-full rounded-xl border border-card-border bg-card-deep px-3 py-2 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
           />
           <div className="flex gap-2">
             <textarea
@@ -56,12 +56,12 @@ export function MeldingerModal({ onClose }: { onClose: () => void }) {
               onChange={(e) => setBody(e.target.value)}
               placeholder="Skriv en melding til alle..."
               rows={2}
-              className="flex-1 rounded-xl border border-navy-lighter/60 bg-navy px-3 py-2 text-sm focus:border-gold/60 focus:outline-none"
+              className="flex-1 rounded-xl border border-card-border bg-card-deep px-3 py-2 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
             />
             <button
               onClick={send}
               disabled={sending || !author.trim() || !body.trim()}
-              className="shrink-0 rounded-xl border border-gold/60 bg-gold/20 px-4 py-2 text-sm font-semibold text-gold hover:bg-gold/30 disabled:opacity-40"
+              className="shrink-0 rounded-xl border border-gold-deep/60 bg-gold/20 px-4 py-2 text-sm font-semibold text-gold-deep hover:bg-gold/30 disabled:opacity-40"
             >
               Send
             </button>

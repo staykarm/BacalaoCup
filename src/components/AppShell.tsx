@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { TournamentProvider, useTournament } from "@/context/TournamentContext";
+import { TeamId } from "@/lib/types";
 import { ScoreHeader } from "./ScoreHeader";
 import { MvpModal } from "./MvpModal";
 import { MeldingerModal } from "./MeldingerModal";
@@ -10,6 +11,7 @@ import { BaneinfoModal } from "./BaneinfoModal";
 import { InfoPageModal } from "./InfoPageModal";
 import { KartModal } from "./KartModal";
 import { AdminModal } from "./AdminModal";
+import { TeamPointsModal } from "./TeamPointsModal";
 
 function SyncErrorToast() {
   const { syncError, clearSyncError } = useTournament();
@@ -56,10 +58,11 @@ const NAV_ITEMS: { key: Exclude<ModalKey, null | "admin">; label: string; icon: 
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [openModal, setOpenModal] = useState<ModalKey>(null);
+  const [openTeam, setOpenTeam] = useState<TeamId | null>(null);
 
   return (
     <TournamentProvider>
-      <ScoreHeader onOpenAdmin={() => setOpenModal("admin")} />
+      <ScoreHeader onOpenAdmin={() => setOpenModal("admin")} onOpenTeam={setOpenTeam} />
 
       <main className="mx-auto max-w-5xl px-4 pb-28 pt-4 sm:px-6">{children}</main>
 
@@ -92,6 +95,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <InfoPageModal pageId="restaurant" title="Restaurantinfo" onClose={() => setOpenModal(null)} />
       )}
       {openModal === "admin" && <AdminModal onClose={() => setOpenModal(null)} />}
+      {openTeam && <TeamPointsModal team={openTeam} onClose={() => setOpenTeam(null)} />}
 
       <SyncErrorToast />
     </TournamentProvider>

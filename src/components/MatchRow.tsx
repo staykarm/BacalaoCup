@@ -104,6 +104,12 @@ export function MatchRow({ match, players }: { match: Match; players: Player[] }
 
   const marginBadgeText = match.result === "not_played" ? (isLiveInProgress ? liveUpLabel(match.live_up) : null) : finalMarginLabel;
 
+  // A halved match gets "A/S" beside both team names, same spot a win's margin goes beside the winner.
+  function sideBadgeText(team: TeamId) {
+    if (match.result === "halved") return "A/S";
+    return leadingSide === team ? marginBadgeText : null;
+  }
+
   function sideBg(team: TeamId) {
     const flat = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-bg";
     const bold =
@@ -137,9 +143,9 @@ export function MatchRow({ match, players }: { match: Match; players: Player[] }
 
       <div className="flex items-stretch overflow-hidden rounded-t-2xl">
         <div className={`flex min-w-0 flex-1 items-center gap-2 px-3 py-3 sm:px-4 sm:py-4 ${sideBg("gray")}`}>
-          {leadingSide === "gray" && marginBadgeText && (
+          {sideBadgeText("gray") && (
             <span className="shrink-0 rounded-full bg-navy-deep/60 px-2 py-1 text-sm font-extrabold text-white shadow-sm sm:text-base">
-              {marginBadgeText}
+              {sideBadgeText("gray")}
             </span>
           )}
           <Image
@@ -174,12 +180,7 @@ export function MatchRow({ match, players }: { match: Match; players: Player[] }
           className="flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 bg-navy-deep px-1 py-3 text-center transition hover:bg-navy-lighter sm:w-24 sm:py-4"
         >
           {match.result !== "not_played" ? (
-            <>
-              <span className="text-sm font-extrabold text-foreground/70 sm:text-base">F</span>
-              {match.result === "halved" && (
-                <span className="text-[10px] font-bold text-gold sm:text-xs">HALF</span>
-              )}
-            </>
+            <span className="text-sm font-extrabold text-foreground/70 sm:text-base">F</span>
           ) : isLiveInProgress ? (
             <>
               <span className={`text-xs font-extrabold sm:text-sm ${liveColor}`}>
@@ -225,9 +226,9 @@ export function MatchRow({ match, players }: { match: Match; players: Player[] }
             height={24}
             className="hidden h-5 w-5 shrink-0 rounded-full object-cover opacity-80 sm:block sm:h-6 sm:w-6"
           />
-          {leadingSide === "aqua" && marginBadgeText && (
+          {sideBadgeText("aqua") && (
             <span className="shrink-0 rounded-full bg-navy-deep/60 px-2 py-1 text-sm font-extrabold text-white shadow-sm sm:text-base">
-              {marginBadgeText}
+              {sideBadgeText("aqua")}
             </span>
           )}
         </div>

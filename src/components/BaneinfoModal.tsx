@@ -37,7 +37,17 @@ export function BaneinfoModal({ onClose }: { onClose: () => void }) {
                     </div>
                   </div>
                   <p className="text-sm leading-relaxed text-ink-light">{info.description}</p>
-                  <p className="mt-2 text-xs text-ink-light/60">Designer: {info.designer}</p>
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <p className="text-xs text-ink-light/60">Designer: {info.designer}</p>
+                    <a
+                      href={info.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 rounded-lg border border-gold-deep/50 bg-gold/10 px-2 py-1 text-[11px] font-semibold text-gold-deep hover:bg-gold/20"
+                    >
+                      Nettside ↗
+                    </a>
+                  </div>
                 </>
               ) : (
                 <p className="text-sm italic text-ink-light/60">

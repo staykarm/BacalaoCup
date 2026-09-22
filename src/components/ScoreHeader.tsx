@@ -110,7 +110,7 @@ export function ScoreHeader({
           possible={possible}
           clinchGray={winner ? null : clinch.gray}
           clinchAqua={winner ? null : clinch.aqua}
-          className="mx-auto mt-2 max-w-md"
+          className="mt-3 w-full"
         />
       </div>
     </header>

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
-import { HOLES_PER_MATCH, scrambleResult } from "@/lib/scoring";
+import { courseHoleNumber, HOLES_PER_MATCH, isFrontNine, scrambleResult } from "@/lib/scoring";
+import { getHoleInfo } from "@/lib/courseHoles";
 import { Match, Session, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
 
@@ -49,8 +50,12 @@ function FlightRow({ flight, onClick }: { flight: Match; onClick: () => void }) 
 }
 
 export function ScrambleFlights({ session, matches }: { session: Session; matches: Match[] }) {
-  const { updateMatch } = useTournament();
-  const [editingFlight, setEditingFlight] = useState<Match | null>(null);
+  const { matchHoles, sessions, days, setMatchHole } = useTournament();
+  const [editingFlightId, setEditingFlightId] = useState<string | null>(null);
+  const [editingHole, setEditingHole] = useState<number | null>(null);
+  // Re-derived from the live `matches` prop every render, not a captured snapshot, so the
+  // modal's totals stay in sync as holes are entered instead of freezing at open-time.
+  const editingFlight = matches.find((m) => m.id === editingFlightId) ?? null;
 
   const flights = [...matches].sort((a, b) => a.sort_order - b.sort_order);
   const grayFlights = matches.filter((m) => m.flight_team === "gray");
@@ -62,21 +67,19 @@ export function ScrambleFlights({ session, matches }: { session: Session; matche
   const grayRunningTotal = grayFlights.reduce((a, f) => a + (f.score_vs_par ?? 0), 0);
   const aquaRunningTotal = aquaFlights.reduce((a, f) => a + (f.score_vs_par ?? 0), 0);
 
-  function recordHole(value: number) {
-    if (!editingFlight) return;
-    const thru = Math.min((editingFlight.live_thru ?? 0) + 1, HOLES_PER_MATCH);
-    const score = (editingFlight.score_vs_par ?? 0) + value;
-    updateMatch(editingFlight.id, { live_thru: thru, score_vs_par: score });
-    setEditingFlight({ ...editingFlight, live_thru: thru, score_vs_par: score });
-  }
+  const frontNine = isFrontNine(session, sessions);
+  const course = days.find((d) => d.id === session.day_id)?.course ?? null;
+  const holesForFlight = editingFlight
+    ? new Map(
+        matchHoles.filter((h) => h.match_id === editingFlight.id).map((h) => [h.hole_number, h.score_vs_par])
+      )
+    : new Map<number, number | null>();
 
-  function clear() {
-    if (!editingFlight) return;
-    updateMatch(editingFlight.id, { score_vs_par: null, live_thru: null });
-    setEditingFlight({ ...editingFlight, score_vs_par: null, live_thru: null });
+  function setHoleScore(value: number | null) {
+    if (!editingFlight || editingHole === null) return;
+    setMatchHole(editingFlight, editingHole, { score_vs_par: value });
+    setEditingHole(null);
   }
-
-  const editingDone = editingFlight !== null && (editingFlight.live_thru ?? 0) >= HOLES_PER_MATCH;
 
   return (
     <div className="space-y-3">
@@ -105,7 +108,7 @@ export function ScrambleFlights({ session, matches }: { session: Session; matche
 
       <div className="space-y-2">
         {flights.map((f) => (
-          <FlightRow key={f.id} flight={f} onClick={() => setEditingFlight(f)} />
+          <FlightRow key={f.id} flight={f} onClick={() => setEditingFlightId(f.id)} />
         ))}
       </div>
 
@@ -128,33 +131,101 @@ export function ScrambleFlights({ session, matches }: { session: Session; matche
       </div>
 
       {editingFlight && (
-        <ModalShell title="Scramble-score" onClose={() => setEditingFlight(null)}>
-          <div className="space-y-5 text-center">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-light">
-              {editingFlight.flight_team === "gray" ? "Gray (Joys)" : "Aquarellos"} &middot;{" "}
-              {editingFlight.start_time ?? "--:--"}
-            </p>
-            <div>
-              <p className="font-display text-4xl font-bold text-ink">{fmtVsPar(editingFlight.score_vs_par)}</p>
-              <p className="mt-1 text-xs text-ink-light">
-                Hull {editingFlight.live_thru ?? 0} av {HOLES_PER_MATCH}
+        <ModalShell title="Scramble-score" onClose={() => setEditingFlightId(null)}>
+          <div className="space-y-4">
+            <div className="text-center">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-light">
+                {editingFlight.flight_team === "gray" ? "Gray (Joys)" : "Aquarellos"} &middot;{" "}
+                {editingFlight.start_time ?? "--:--"}
               </p>
+              <p className="font-display text-3xl font-bold text-ink">{fmtVsPar(editingFlight.score_vs_par)}</p>
             </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full border-separate border-spacing-x-0.5 border-spacing-y-1 text-center">
+                <tbody>
+                  <tr>
+                    <td className="w-9 pr-1 text-left text-[9px] font-semibold uppercase tracking-wide text-ink-light/70">
+                      Hull
+                    </td>
+                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => (
+                      <td key={relHole} className="text-[11px] font-bold text-ink">
+                        {courseHoleNumber(relHole, frontNine)}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="pr-1 text-left text-[9px] font-semibold uppercase tracking-wide text-ink-light/70">
+                      Par
+                    </td>
+                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => (
+                      <td key={relHole} className="text-[10px] text-ink-light">
+                        {getHoleInfo(course, courseHoleNumber(relHole, frontNine)).par ?? "–"}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td />
+                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => {
+                      const value = holesForFlight.get(relHole) ?? null;
+                      const label = value === null ? "–" : value > 0 ? `+${value}` : String(value);
+                      const colorClass =
+                        value === null
+                          ? "border-card-border bg-white text-ink-light/30"
+                          : value < 0
+                            ? "border-gold-deep bg-gold/15 text-gold-deep"
+                            : value === 0
+                              ? "border-card-border bg-card-deep text-ink"
+                              : "border-aqua-team-deep/40 bg-aqua-team-bg/40 text-aqua-team-deep";
+                      return (
+                        <td key={relHole}>
+                          <button
+                            onClick={() => setEditingHole(relHole)}
+                            aria-label={`Hull ${courseHoleNumber(relHole, frontNine)}`}
+                            className={`h-8 w-8 rounded-lg border text-xs font-bold transition ${colorClass}`}
+                          >
+                            {label}
+                          </button>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p className="text-center text-xs text-ink-light/60">Trykk et hull for å registrere slag mot par.</p>
+          </div>
+        </ModalShell>
+      )}
+
+      {editingFlight && editingHole !== null && (
+        <ModalShell title={`Hull ${courseHoleNumber(editingHole, frontNine)}`} onClose={() => setEditingHole(null)}>
+          <div className="space-y-5 text-center">
+            {(() => {
+              const info = getHoleInfo(course, courseHoleNumber(editingHole, frontNine));
+              return (
+                <p className="text-xs text-ink-light">
+                  {info.par !== null ? `Par ${info.par}` : "Par –"}
+                  {info.meters !== null && <> &middot; {info.meters} m</>}
+                  {info.index !== null && <> &middot; Idx {info.index}</>}
+                </p>
+              );
+            })()}
             <div className="grid grid-cols-1 gap-2">
               {HOLE_BUTTONS.map((b) => (
                 <button
                   key={b.label}
-                  disabled={editingDone}
-                  onClick={() => recordHole(b.value)}
-                  className="flex items-center justify-between rounded-xl border border-card-border px-4 py-3 text-sm font-semibold text-ink hover:border-gold-deep/40 hover:bg-card-deep disabled:opacity-40"
+                  onClick={() => setHoleScore(b.value)}
+                  className="flex items-center justify-between rounded-xl border border-card-border px-4 py-3 text-sm font-semibold text-ink hover:border-gold-deep/40 hover:bg-card-deep"
                 >
                   <span>{b.label}</span>
                   <span className="text-ink-light">{b.value > 0 ? `+${b.value}` : b.value}</span>
                 </button>
               ))}
             </div>
-            {(editingFlight.score_vs_par !== null || editingFlight.live_thru !== null) && (
-              <button onClick={clear} className="text-xs text-ink-light hover:text-ink">
+            {holesForFlight.get(editingHole) !== undefined && holesForFlight.get(editingHole) !== null && (
+              <button onClick={() => setHoleScore(null)} className="text-xs text-ink-light hover:text-ink">
                 Nullstill
               </button>
             )}

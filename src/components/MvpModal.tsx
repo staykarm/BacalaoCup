@@ -28,50 +28,37 @@ function PlayerRow({
   const team: TeamId = player.team_id;
   const borderClass = team === "gray" ? "border-l-gray-team" : "border-l-aqua-team";
 
+  const historyText = history
+    .map((h) => {
+      const bits = [h.record, h.total_points !== null ? `${fmt(h.total_points)}p` : null].filter(Boolean);
+      return `${h.year}${bits.length > 0 ? ` (${bits.join(" · ")})` : ""}`;
+    })
+    .join("  ·  ");
+
   return (
     <button
       onClick={onClick}
-      className={`w-full rounded-2xl border border-l-4 border-card-border bg-white p-3 text-left hover:border-gold-deep/40 ${borderClass}`}
+      className={`flex w-full items-center gap-1.5 border-b border-l-4 border-card-border bg-white px-2 py-1.5 text-left hover:bg-card-deep/50 ${borderClass}`}
     >
-      <div className="flex items-center gap-2">
-        <span className="w-5 shrink-0 text-xs font-bold text-ink-light/50">{rank}</span>
-        <Image
-          src={team === "gray" ? "/logos/gray.png" : "/logos/aquarellos.png"}
-          alt={team === "gray" ? "Gray (Joys)" : "Aquarellos"}
-          width={20}
-          height={20}
-          className="h-5 w-5 shrink-0 rounded-full object-cover"
-        />
-        <span className="flex-1 truncate font-semibold text-ink hover:underline">{player.name}</span>
-        {player.hcp !== null && (
-          <span className="shrink-0 rounded-full border border-card-border px-2 py-0.5 text-[11px] text-ink-light">
-            HCP {fmt(player.hcp)}
-          </span>
+      <span className="w-4 shrink-0 text-[10px] font-bold text-ink-light/50">{rank}</span>
+      <Image
+        src={team === "gray" ? "/logos/gray.png" : "/logos/aquarellos.png"}
+        alt=""
+        width={16}
+        height={16}
+        className="h-4 w-4 shrink-0 rounded-full object-cover"
+      />
+      <span className="min-w-0 flex-1 truncate">
+        <span className="font-semibold text-ink">{player.name}</span>
+        {player.hcp !== null && <span className="ml-1.5 text-[10px] text-ink-light/40">hcp {fmt(player.hcp)}</span>}
+        {historyText && (
+          <span className="ml-1.5 truncate text-[10px] text-ink-light/40">&middot; {historyText}</span>
         )}
-      </div>
-
-      <div className="mt-2 flex items-center gap-3 pl-7 text-xs text-ink-light">
-        <span>
-          {stat.wins}-{stat.halved}-{stat.losses}
-        </span>
-        <span className="font-bold text-ink">{fmt(stat.pointsContributed)} p</span>
-      </div>
-
-      {history.length > 0 && (
-        <div className="mt-2 space-y-1 border-t border-card-border pl-7 pt-2 text-[11px] text-ink-light/70">
-          {history.map((h) => (
-            <div key={h.year} className="flex items-center justify-between gap-2">
-              <span>{h.year}</span>
-              {h.record && <span>{h.record}</span>}
-              <span>
-                {h.individual_points !== null && `${fmt(h.individual_points)} ind.`}
-                {h.individual_points !== null && h.total_points !== null && " · "}
-                {h.total_points !== null && `${fmt(h.total_points)} p`}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+      </span>
+      <span className="shrink-0 text-[11px] text-ink-light">
+        {stat.wins}-{stat.halved}-{stat.losses}
+      </span>
+      <span className="w-9 shrink-0 text-right text-sm font-bold text-ink">{fmt(stat.pointsContributed)}p</span>
     </button>
   );
 }
@@ -87,7 +74,7 @@ export function MvpModal({ onClose }: { onClose: () => void }) {
 
   return (
     <ModalShell title="MVP" onClose={onClose}>
-      <div className="space-y-2">
+      <div className="overflow-hidden rounded-2xl border border-card-border">
         {rows.map(({ player, stat }, i) => (
           <PlayerRow
             key={player.id}

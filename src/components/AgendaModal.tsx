@@ -21,7 +21,7 @@ export function AgendaModal({ onClose }: { onClose: () => void }) {
           type AgendaItem =
             | { kind: "session"; time: string; session: (typeof daySessions)[number] }
             | { kind: "transport"; time: string; from: string; to: string }
-            | { kind: "event"; time: string; label: string; icon: string };
+            | { kind: "event"; time: string; label: string; icon: string; address?: string };
 
           const sessionItems: AgendaItem[] = daySessions.map((session) => {
             const sessionMatches = matches.filter((m) => m.session_id === session.id);
@@ -44,6 +44,7 @@ export function AgendaModal({ onClose }: { onClose: () => void }) {
             time: event.time,
             label: event.label,
             icon: event.icon,
+            address: event.address,
           }));
 
           const items = [...sessionItems, ...transportItems, ...eventItems].sort((a, b) =>
@@ -80,11 +81,14 @@ export function AgendaModal({ onClose }: { onClose: () => void }) {
                     return (
                       <li
                         key={`e-${i}`}
-                        className="flex items-center gap-3 rounded-xl bg-card-deep px-3 py-2 text-sm"
+                        className="flex items-start gap-3 rounded-xl bg-card-deep px-3 py-2 text-sm"
                       >
-                        <span className="w-14 shrink-0 font-semibold text-gold-deep">{item.time}</span>
-                        <span className="flex-1 font-medium text-ink">
-                          {item.icon} {item.label}
+                        <span className="w-14 shrink-0 pt-0.5 font-semibold text-gold-deep">{item.time}</span>
+                        <span className="flex-1">
+                          <span className="font-medium text-ink">
+                            {item.icon} {item.label}
+                          </span>
+                          {item.address && <span className="block text-xs text-ink-light/60">{item.address}</span>}
                         </span>
                       </li>
                     );

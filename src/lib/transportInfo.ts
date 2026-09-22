@@ -8,19 +8,19 @@ export interface TransportLeg {
 export const TRANSPORT_INFO: Record<string, TransportLeg[]> = {
   wed: [
     { time: "10:30", from: "Malaga lufthavn", to: "Santana Golf" },
-    { time: "19:00", from: "Santana Golf", to: "Puerto Banús-området" },
+    { time: "19:00", from: "Santana Golf", to: "Calle los Lirios" },
   ],
   thu: [
-    { time: "07:40", from: "Puerto Banús-området", to: "Los Naranjos Golf" },
-    { time: "15:30", from: "Los Naranjos Golf", to: "Puerto Banús-området" },
+    { time: "07:40", from: "Calle los Lirios", to: "Los Naranjos Golf" },
+    { time: "15:30", from: "Los Naranjos Golf", to: "Calle los Lirios" },
   ],
   fri: [
-    { time: "09:00", from: "Puerto Banús-området", to: "Marbella Club Resort" },
-    { time: "15:30", from: "Marbella Club Resort", to: "Puerto Banús-området" },
+    { time: "09:00", from: "Calle los Lirios", to: "Marbella Club Resort" },
+    { time: "15:30", from: "Marbella Club Resort", to: "Calle los Lirios" },
   ],
   sat: [
-    { time: "12:00", from: "Puerto Banús-området", to: "Mijas Golf (Los Lagos)" },
-    { time: "19:00", from: "Mijas Golf (Los Lagos)", to: "Puerto Banús-området" },
+    { time: "12:00", from: "Calle los Lirios", to: "Mijas Golf (Los Lagos)" },
+    { time: "19:00", from: "Mijas Golf (Los Lagos)", to: "Calle los Lirios" },
   ],
-  sun: [{ time: "08:30", from: "Puerto Banús-området", to: "Malaga lufthavn" }],
+  sun: [{ time: "08:30", from: "Calle los Lirios", to: "Malaga lufthavn" }],
 };

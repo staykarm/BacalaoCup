@@ -40,7 +40,6 @@ export function SessionSection({
   // Every leader tint (gray, aqua, gold) and the inactive state all sit on a light fill now, so text stays ink-based throughout.
   const textClass = "text-ink-light/60";
   const titleClass = "text-ink";
-  const badgeClass = "border-gold-deep/50 bg-gold/10 text-gold-deep";
   const grayScoreText = "text-ink";
   const aquaScoreText = "text-aqua-team-deep";
   const dashText = "text-ink-light/40";
@@ -55,13 +54,9 @@ export function SessionSection({
         <div className="flex items-center gap-3">
           <span className={`transition-transform ${textClass} ${open ? "rotate-90" : ""}`}>▶</span>
           <div>
-            <div className={`flex items-center gap-2 font-semibold ${titleClass}`}>
+            <div className={`font-semibold ${titleClass}`}>
               {session.name}
-              {isActive && (
-                <span className={`rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${badgeClass}`}>
-                  Aktiv runde
-                </span>
-              )}
+              {isActive && <span className="text-gold-deep"> - pågår</span>}
             </div>
             <div className={`text-[11px] uppercase tracking-wide ${textClass}`}>
               {FORMAT_LABELS[session.format]} &middot; {fmt(session.points_per_match)}p/kamp &middot;{" "}
@@ -79,7 +74,7 @@ export function SessionSection({
       {open && (
         <div className={`space-y-2 border-t px-3 pb-3 pt-3 ${borderTClass}`}>
           {matches.map((m) => (
-            <MatchRow key={m.id} match={m} session={session} players={players} />
+            <MatchRow key={m.id} match={m} players={players} />
           ))}
         </div>
       )}

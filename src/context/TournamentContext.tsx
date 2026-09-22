@@ -50,7 +50,7 @@ interface TournamentContextValue {
   updateLocationCoords: (id: string, lat: number, lng: number) => Promise<void>;
   /** Admin: resets every match back to not-played with no live score or result. */
   resetAllMatches: () => Promise<void>;
-  /** Admin: null means every round is open for editing. */
+  /** Admin: which round is marked "- pågår" in the UI. Purely informational — doesn't restrict editing. */
   activeSessionId: string | null;
   setActiveSession: (sessionId: string | null) => Promise<void>;
 }

@@ -30,14 +30,14 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
         <div className="rounded-2xl border border-card-border bg-white p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Aktiv runde</h3>
           <p className="mb-3 text-xs text-ink-light">
-            Kun den valgte runden kan redigeres — resten låses for alle andre spillere.
+            Den valgte runden merkes med «- pågår» i oversikten. Alle runder kan redigeres uansett.
           </p>
           <select
             value={activeSessionId ?? ""}
             onChange={(e) => setActiveSession(e.target.value || null)}
             className="w-full rounded-xl border border-card-border bg-card-deep px-3 py-2 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
           >
-            <option value="">Ingen — alle runder åpne</option>
+            <option value="">Ingen</option>
             {sortedDays.map((day) => (
               <optgroup key={day.id} label={day.label}>
                 {sessions

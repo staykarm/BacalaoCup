@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
-import { Match, MatchResult, Player, RESULT_LABELS, Session, TeamId } from "@/lib/types";
+import { Match, MatchResult, Player, RESULT_LABELS, TeamId } from "@/lib/types";
 import { liveLeader, liveUpLabel } from "@/lib/scoring";
 import { PlayerDetailModal } from "./PlayerDetailModal";
 import { ModalShell } from "./ModalShell";
@@ -23,12 +23,10 @@ function fmtPts(n: number) {
 
 const RESULT_OPTIONS: MatchResult[] = ["gray_won", "halved", "aqua_won", "not_played"];
 
-export function MatchRow({ match, session, players }: { match: Match; session: Session; players: Player[] }) {
-  const { updateMatch, setMatchResult, activeSessionId } = useTournament();
+export function MatchRow({ match, players }: { match: Match; players: Player[] }) {
+  const { updateMatch, setMatchResult } = useTournament();
   const [scoring, setScoring] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-
-  const locked = activeSessionId !== null && session.id !== activeSessionId;
 
   const grayPlayers = sidePlayers(match, "gray", players);
   const aquaPlayers = sidePlayers(match, "aqua", players);
@@ -133,15 +131,6 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
             : "border-card-border"
       }`}
     >
-      {locked && (
-        <span
-          title="Denne runden er låst av admin"
-          className="absolute right-1.5 top-1.5 z-10 rounded-full border border-navy-lighter/60 bg-navy-deep/70 px-1.5 py-1 text-[10px] text-foreground/40 backdrop-blur"
-        >
-          🔒
-        </span>
-      )}
-
       <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/50 bg-navy-deep px-2 py-0.5 text-[10px] font-bold text-gold shadow">
         {fmtPts(match.points)}p
       </div>
@@ -181,9 +170,8 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
 
         <button
           onClick={() => setScoring(true)}
-          disabled={locked}
           aria-label="Oppdater stilling"
-          className="flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 bg-navy-deep px-1 py-3 text-center transition enabled:hover:bg-navy-lighter disabled:cursor-default sm:w-24 sm:py-4"
+          className="flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 bg-navy-deep px-1 py-3 text-center transition hover:bg-navy-lighter sm:w-24 sm:py-4"
         >
           {match.result !== "not_played" ? (
             <>
@@ -252,7 +240,6 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
             {(match.result === "gray_won" || match.result === "aqua_won" || match.result === "halved") &&
               ` · Gray ${fmtPts(match.points_gray)} – ${fmtPts(match.points_aqua)} Aqua`}
           </span>
-          {locked && <span className="ml-auto text-[11px] italic text-ink-light/60">🔒 Runden er låst</span>}
         </div>
 
         {match.note && <p className="mt-2 text-[11px] italic text-ink-light/60">⚠ {match.note}</p>}

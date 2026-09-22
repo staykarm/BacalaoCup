@@ -24,20 +24,18 @@ export function pointsForResult(
  * "Decided" only once every flight on both sides has a score entered.
  */
 export function scrambleResult(flights: Match[], session: Session) {
-  const grayScores = flights.filter((f) => f.flight_team === "gray").map((f) => f.score_vs_par);
-  const aquaScores = flights.filter((f) => f.flight_team === "aqua").map((f) => f.score_vs_par);
-  const decided =
-    grayScores.length > 0 &&
-    aquaScores.length > 0 &&
-    grayScores.every((s): s is number => s !== null) &&
-    aquaScores.every((s): s is number => s !== null);
+  const grayFlights = flights.filter((f) => f.flight_team === "gray");
+  const aquaFlights = flights.filter((f) => f.flight_team === "aqua");
+  const allPlayedOut = (fs: Match[]) =>
+    fs.length > 0 && fs.every((f) => f.live_thru !== null && f.live_thru >= HOLES_PER_MATCH);
+  const decided = allPlayedOut(grayFlights) && allPlayedOut(aquaFlights);
 
   if (!decided) {
     return { decided: false, grayTotal: null, aquaTotal: null, winner: null } as const;
   }
 
-  const grayTotal = (grayScores as number[]).reduce((a, b) => a + b, 0);
-  const aquaTotal = (aquaScores as number[]).reduce((a, b) => a + b, 0);
+  const grayTotal = grayFlights.reduce((a, f) => a + (f.score_vs_par ?? 0), 0);
+  const aquaTotal = aquaFlights.reduce((a, f) => a + (f.score_vs_par ?? 0), 0);
   const grayNet = grayTotal - (session.handicap_team === "gray" ? (session.handicap_strokes ?? 0) : 0);
   const aquaNet = aquaTotal - (session.handicap_team === "aqua" ? (session.handicap_strokes ?? 0) : 0);
   const winner: TeamId | null = grayNet === aquaNet ? null : grayNet < aquaNet ? "gray" : "aqua";
@@ -152,6 +150,38 @@ export function liveLeader(liveUp: number): TeamId | null {
   if (liveUp > 0) return "gray";
   if (liveUp < 0) return "aqua";
   return null;
+}
+
+/** These are 9-hole matches, not the usual 18. */
+export const HOLES_PER_MATCH = 9;
+
+/**
+ * A match-play match is decided once a team is up by more holes than remain to play
+ * (e.g. 3 up with 2 to play), or once the last hole has been reached at all — a match
+ * still all square after the last hole is a halve, which is also "decided".
+ */
+export function isMatchDecided(liveUp: number, liveThru: number | null): boolean {
+  if (liveThru === null) return false;
+  if (liveThru >= HOLES_PER_MATCH) return true;
+  const remaining = HOLES_PER_MATCH - liveThru;
+  return Math.abs(liveUp) > remaining;
+}
+
+/** The result the app should record automatically, based only on the live hole-by-hole score. */
+export function autoResultFromLive(liveUp: number, liveThru: number | null): MatchResult {
+  if (!isMatchDecided(liveUp, liveThru)) return "not_played";
+  if (liveUp > 0) return "gray_won";
+  if (liveUp < 0) return "aqua_won";
+  return "halved";
+}
+
+/** Standard match-play margin label once decided, e.g. "3/2" (closed out early) or "1 UP" (won on the last hole). Null while undecided. */
+export function matchMarginLabel(liveUp: number, liveThru: number | null): string | null {
+  if (!isMatchDecided(liveUp, liveThru) || liveThru === null) return null;
+  const upBy = Math.abs(liveUp);
+  if (upBy === 0) return null;
+  const remaining = HOLES_PER_MATCH - liveThru;
+  return remaining > 0 ? `${upBy}/${remaining}` : `${upBy} UP`;
 }
 
 /** Points a team still needs to mathematically clinch the cup outright. */

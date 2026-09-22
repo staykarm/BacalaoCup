@@ -8,7 +8,14 @@ export default function Home() {
   const { days, sessions, matches, players, loading, error, activeSessionId } = useTournament();
   const [activeDay, setActiveDay] = useState<string | null>(null);
 
-  const sortedDays = useMemo(() => [...days].sort((a, b) => a.sort_order - b.sort_order), [days]);
+  // Only days with golf on them belong on the main page — a travel-only day (e.g. Sunday) has nothing to show here.
+  const sortedDays = useMemo(
+    () =>
+      [...days]
+        .filter((day) => sessions.some((s) => s.day_id === day.id))
+        .sort((a, b) => a.sort_order - b.sort_order),
+    [days, sessions]
+  );
   const activeRoundDayId = sessions.find((s) => s.id === activeSessionId)?.day_id ?? null;
   // Default to whichever day holds the active round, so opening the app lands on it directly.
   const currentDayId = activeDay ?? activeRoundDayId ?? sortedDays[0]?.id ?? null;

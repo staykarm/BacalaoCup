@@ -10,7 +10,6 @@ import {
   useState,
 } from "react";
 import { supabase } from "@/lib/supabase";
-import { pointsForResult } from "@/lib/scoring";
 import {
   Day,
   InfoPage,
@@ -43,7 +42,6 @@ interface TournamentContextValue {
   syncError: string | null;
   clearSyncError: () => void;
   updateMatch: (id: string, patch: Partial<Match>) => Promise<void>;
-  setMatchResult: (id: string, result: MatchResult) => Promise<void>;
   postMessage: (author: string, body: string) => Promise<void>;
   updateInfoPage: (id: InfoPageId, content: string) => Promise<void>;
   addLocation: (type: LocationType, name: string, address: string | null, notes: string | null) => Promise<void>;
@@ -259,16 +257,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const setMatchResult = useCallback(
-    async (id: string, result: MatchResult) => {
-      const match = matches.find((m) => m.id === id);
-      if (!match) return;
-      const { points_gray, points_aqua } = pointsForResult(result, match.points);
-      await updateMatch(id, { result, points_gray, points_aqua });
-    },
-    [matches, updateMatch]
-  );
-
   const postMessage = useCallback(async (author: string, body: string) => {
     const { data, error: insertError } = await supabase
       .from("messages")
@@ -391,7 +379,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       syncError,
       clearSyncError,
       updateMatch,
-      setMatchResult,
       postMessage,
       updateInfoPage,
       addLocation,
@@ -417,7 +404,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       syncError,
       clearSyncError,
       updateMatch,
-      setMatchResult,
       postMessage,
       updateInfoPage,
       addLocation,

@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
-import { Match, MatchResult, Player, RESULT_LABELS, TeamId } from "@/lib/types";
-import { liveLeader, liveUpLabel } from "@/lib/scoring";
+import { Match, Player, RESULT_LABELS, TeamId } from "@/lib/types";
+import { autoResultFromLive, HOLES_PER_MATCH, liveLeader, liveUpLabel, matchMarginLabel, pointsForResult } from "@/lib/scoring";
 import { PlayerDetailModal } from "./PlayerDetailModal";
 import { ModalShell } from "./ModalShell";
 
@@ -21,38 +21,34 @@ function fmtPts(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
 
-const RESULT_OPTIONS: MatchResult[] = ["gray_won", "halved", "aqua_won", "not_played"];
-
 export function MatchRow({ match, players }: { match: Match; players: Player[] }) {
-  const { updateMatch, setMatchResult } = useTournament();
+  const { updateMatch } = useTournament();
   const [scoring, setScoring] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   const grayPlayers = sidePlayers(match, "gray", players);
   const aquaPlayers = sidePlayers(match, "aqua", players);
 
+  // The result and its points are always derived from the live hole-by-hole score —
+  // there's no manual "set result" step, so every live update recomputes both together.
+  function applyLive(patch: { live_up?: number; live_thru?: number | null }) {
+    const live_up = patch.live_up ?? match.live_up;
+    const live_thru = patch.live_thru !== undefined ? patch.live_thru : match.live_thru;
+    const result = autoResultFromLive(live_up, live_thru);
+    const { points_gray, points_aqua } = pointsForResult(result, match.points);
+    updateMatch(match.id, { live_up, live_thru, result, points_gray, points_aqua });
+  }
+
   function bumpLiveUp(delta: number) {
-    updateMatch(match.id, { live_up: match.live_up + delta });
+    applyLive({ live_up: match.live_up + delta });
   }
 
   function resetLiveUp() {
-    updateMatch(match.id, { live_up: 0 });
+    applyLive({ live_up: 0 });
   }
 
   function setLiveThru(hole: number | null) {
-    updateMatch(match.id, { live_thru: hole });
-  }
-
-  function finalizeFromLive() {
-    const leader = liveLeader(match.live_up);
-    const result: MatchResult = leader === "gray" ? "gray_won" : leader === "aqua" ? "aqua_won" : "halved";
-    setMatchResult(match.id, result);
-    setScoring(false);
-  }
-
-  function setResultAndClose(result: MatchResult) {
-    setMatchResult(match.id, result);
-    setScoring(false);
+    applyLive({ live_thru: hole });
   }
 
   const liveLeaderTeam = liveLeader(match.live_up);
@@ -83,16 +79,6 @@ export function MatchRow({ match, players }: { match: Match; players: Player[] }
 
   const isLiveInProgress = match.result === "not_played" && (match.live_up !== 0 || match.live_thru !== null);
 
-  // Standard match-play margin, e.g. "3/2" (won with holes to spare) or "1 UP" (won on the last hole).
-  const finalMarginLabel = (() => {
-    if (match.result !== "gray_won" && match.result !== "aqua_won") return null;
-    if (match.live_thru === null) return null;
-    const upBy = Math.abs(match.live_up);
-    if (upBy === 0) return null;
-    const remaining = 18 - match.live_thru;
-    return remaining > 0 && upBy > remaining ? `${upBy}/${remaining}` : `${upBy} UP`;
-  })();
-
   const leadingSide: TeamId | null =
     match.result === "gray_won"
       ? "gray"
@@ -102,7 +88,9 @@ export function MatchRow({ match, players }: { match: Match; players: Player[] }
           ? liveLeaderTeam
           : null;
 
-  const marginBadgeText = match.result === "not_played" ? (isLiveInProgress ? liveUpLabel(match.live_up) : null) : finalMarginLabel;
+  const marginBadgeText = match.result === "not_played"
+    ? (isLiveInProgress ? liveUpLabel(match.live_up) : null)
+    : matchMarginLabel(match.live_up, match.live_thru);
 
   // A halved match gets "A/S" beside both team names, same spot a win's margin goes beside the winner.
   function sideBadgeText(team: TeamId) {
@@ -234,17 +222,23 @@ export function MatchRow({ match, players }: { match: Match; players: Player[] }
         </div>
       </div>
 
-      <div className="p-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${resultColor}`}>
-            {RESULT_LABELS[match.result]}
-            {(match.result === "gray_won" || match.result === "aqua_won" || match.result === "halved") &&
-              ` · Gray ${fmtPts(match.points_gray)} – ${fmtPts(match.points_aqua)} Aqua`}
-          </span>
-        </div>
+      {(match.result !== "not_played" || match.note) && (
+        <div className="p-3">
+          {match.result !== "not_played" && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${resultColor}`}>
+                {RESULT_LABELS[match.result]} · Gray {fmtPts(match.points_gray)} – {fmtPts(match.points_aqua)} Aqua
+              </span>
+            </div>
+          )}
 
-        {match.note && <p className="mt-2 text-[11px] italic text-ink-light/60">⚠ {match.note}</p>}
-      </div>
+          {match.note && (
+            <p className={`text-[11px] italic text-ink-light/60 ${match.result !== "not_played" ? "mt-2" : ""}`}>
+              ⚠ {match.note}
+            </p>
+          )}
+        </div>
+      )}
 
       {scoring && (
         <ModalShell title="Oppdater stilling" onClose={() => setScoring(false)}>
@@ -301,7 +295,7 @@ export function MatchRow({ match, players }: { match: Match; players: Player[] }
                 className="rounded-xl border border-card-border bg-white px-3 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
               >
                 <option value="">–</option>
-                {Array.from({ length: 18 }, (_, i) => i + 1).map((hole) => (
+                {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((hole) => (
                   <option key={hole} value={hole}>
                     {hole}
                   </option>
@@ -309,33 +303,9 @@ export function MatchRow({ match, players }: { match: Match; players: Player[] }
               </select>
             </label>
 
-            <button
-              onClick={finalizeFromLive}
-              className="w-full rounded-xl border border-gold-deep/50 bg-gold/10 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20"
-            >
-              Sett som endelig stilling
-            </button>
-
-            <div>
-              <h3 className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-ink-light">
-                Eller sett resultat direkte
-              </h3>
-              <div className="flex flex-wrap justify-center gap-1.5">
-                {RESULT_OPTIONS.map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => setResultAndClose(r)}
-                    className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
-                      match.result === r
-                        ? "border-gold-deep bg-gold/20 text-gold-deep"
-                        : "border-card-border text-ink-light hover:border-gold-deep/40 hover:text-ink"
-                    }`}
-                  >
-                    {RESULT_LABELS[r]}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <p className="text-center text-xs text-ink-light/60">
+              Resultatet settes automatisk når kampen er avgjort.
+            </p>
           </div>
         </ModalShell>
       )}

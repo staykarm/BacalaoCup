@@ -93,10 +93,7 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
     // Deliberately far apart from the "won" fill below, so a decided/leading match reads
     // clearly different at a glance from one that's still all square.
     const flat = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-flat";
-    const bold =
-      team === "gray"
-        ? "bg-gradient-to-br from-gray-team-bg to-gray-team-won"
-        : "bg-gradient-to-br from-aqua-team-flat to-aqua-team-won";
+    const bold = team === "gray" ? "bg-gray-team-won" : "bg-aqua-team-won";
     if (leadingSide === null) return flat;
     // The trailing/losing side fades to near-white so it blends into the card instead of competing for attention.
     return leadingSide === team ? bold : "bg-card";

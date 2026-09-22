@@ -73,9 +73,7 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
       <div className="space-y-5">
         <div
           className={`flex items-center gap-3 rounded-2xl p-4 ${
-            side === "gray"
-              ? "bg-gradient-to-br from-gray-team-bg to-gray-team-deep"
-              : "bg-gradient-to-br from-aqua-team-bg to-aqua-team-deep"
+            side === "gray" ? "bg-gray-team-deep" : "bg-aqua-team-deep"
           }`}
         >
           <Image

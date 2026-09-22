@@ -90,20 +90,24 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
   }
 
   function sideBg(team: TeamId) {
-    const flat = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-bg";
+    // Deliberately far apart from the "won" fill below, so a decided/leading match reads
+    // clearly different at a glance from one that's still all square.
+    const flat = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-flat";
     const bold =
       team === "gray"
-        ? "bg-gradient-to-br from-gray-team-bg to-gray-team-deep"
-        : "bg-gradient-to-br from-aqua-team-bg to-aqua-team-deep";
+        ? "bg-gradient-to-br from-gray-team-bg to-gray-team-won"
+        : "bg-gradient-to-br from-aqua-team-flat to-aqua-team-won";
     if (leadingSide === null) return flat;
     // The trailing/losing side fades to near-white so it blends into the card instead of competing for attention.
     return leadingSide === team ? bold : "bg-card";
   }
 
   function sideText(team: TeamId) {
-    // Gray's fill is a light gray, so it needs dark ink text; Aqua's fill stays dark, so white gives the strongest contrast.
-    const base = team === "gray" ? "text-ink" : "text-white";
-    return leadingSide === null || leadingSide === team ? base : "text-ink-light/30";
+    // Aqua's fill is always fairly saturated, so white text always wins there. Gray's flat
+    // fill is light (needs dark ink), but its "won" fill is now dark enough to need white too.
+    if (leadingSide !== null && leadingSide !== team) return "text-ink-light/30";
+    if (team === "aqua") return "text-white";
+    return leadingSide === team ? "text-white" : "text-ink";
   }
 
   return (

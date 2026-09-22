@@ -6,7 +6,8 @@ import { ModalShell } from "./ModalShell";
 
 export function BaneinfoModal({ onClose }: { onClose: () => void }) {
   const { days } = useTournament();
-  const sortedDays = [...days].sort((a, b) => a.sort_order - b.sort_order);
+  // A day with no course (e.g. a travel-only departure day) has no baneinfo to show.
+  const sortedDays = [...days].filter((d) => d.course).sort((a, b) => a.sort_order - b.sort_order);
 
   return (
     <ModalShell title="Baneinfo" onClose={onClose}>
@@ -50,9 +51,7 @@ export function BaneinfoModal({ onClose }: { onClose: () => void }) {
                   </div>
                 </>
               ) : (
-                <p className="text-sm italic text-ink-light/60">
-                  {day.course ? `Ingen info lagret for «${day.course}» ennå.` : "Bane ikke oppgitt ennå."}
-                </p>
+                <p className="text-sm italic text-ink-light/60">Ingen info lagret for «{day.course}» ennå.</p>
               )}
             </div>
           );

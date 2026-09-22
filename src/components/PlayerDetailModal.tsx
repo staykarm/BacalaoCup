@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
-import { RESULT_LABELS, TeamId } from "@/lib/types";
+import { liveLeader } from "@/lib/scoring";
+import { computePlayerStats } from "@/lib/stats";
+import { Match, RESULT_LABELS, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
 
 function fmt(n: number) {
@@ -45,6 +47,23 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
 
   const history = playerYearStats.filter((h) => h.player_id === playerId).sort((a, b) => b.year - a.year);
 
+  // A match that's genuinely untouched (not played, no live progress) is self-evident and
+  // adds no signal — only show it once it's finalized or actually under way.
+  const isLive = (m: Match) => m.result === "not_played" && (m.live_up !== 0 || m.live_thru !== null);
+  const relevantMatches = playedMatches.filter((m) => m.result !== "not_played" || isLive(m));
+
+  // If a live match holds its current lead, this is what the player's side would score.
+  function liveProjectedPoints(m: Match): number {
+    const leader = liveLeader(m.live_up);
+    if (leader === side) return m.points;
+    if (leader === null) return m.points / 2;
+    return 0;
+  }
+
+  const rankedPlayers = computePlayerStats(matches, players);
+  const overallRank = rankedPlayers.findIndex((s) => s.player.id === playerId) + 1;
+  const teamRank = rankedPlayers.filter((s) => s.player.team_id === side).findIndex((s) => s.player.id === playerId) + 1;
+
   return (
     <ModalShell title={player.name} onClose={onClose}>
       <div className="space-y-5">
@@ -75,36 +94,47 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
                 </span>
               )}
             </div>
-            <div className={`mt-0.5 text-sm font-bold ${side === "gray" ? "text-ink" : "text-white"}`}>
-              {wins}-{halved}-{losses} &middot; {fmt(pointsContributed)} p denne turneringen
+            <div className={`mt-1 text-lg font-bold ${side === "gray" ? "text-ink" : "text-white"}`}>
+              {wins}-{halved}-{losses}
+            </div>
+            <div className={`mt-0.5 text-[11px] font-semibold ${side === "gray" ? "text-ink/60" : "text-white/60"}`}>
+              #{overallRank} på MVP totalt &middot; #{teamRank} i laget
+            </div>
+          </div>
+          <div className="shrink-0 text-right">
+            <div className={`font-display text-4xl font-bold ${side === "gray" ? "text-ink" : "text-white"}`}>
+              {fmt(pointsContributed)}
+            </div>
+            <div className={`text-[11px] font-semibold uppercase tracking-wide ${side === "gray" ? "text-ink/60" : "text-white/60"}`}>
+              poeng
             </div>
           </div>
         </div>
 
         <section>
           <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-ink-light">Kamper</h3>
-          {playedMatches.length === 0 ? (
-            <p className="text-sm italic text-ink-light/60">Ingen kamper satt opp ennå.</p>
+          {relevantMatches.length === 0 ? (
+            <p className="text-sm italic text-ink-light/60">Ingen kamper spilt ennå.</p>
           ) : (
             <div className="space-y-2">
-              {playedMatches.map((m) => {
+              {relevantMatches.map((m) => {
                 const session = sessionOf(m.session_id);
                 const day = dayOf(m.session_id);
                 const opponents = (side === "gray" ? [m.aqua_player1, m.aqua_player2] : [m.gray_player1, m.gray_player2])
                   .map(nameOf)
                   .filter((n): n is string => !!n)
                   .join(" / ");
+                const live = isLive(m);
+                const liveLeaderTeam = live ? liveLeader(m.live_up) : null;
                 const myPoints = side === "gray" ? m.points_gray : m.points_aqua;
                 const accent =
-                  m.result === myResult
+                  m.result === myResult || (live && liveLeaderTeam === side)
                     ? side === "gray"
                       ? "border-l-gray-team"
                       : "border-l-aqua-team"
-                    : m.result === "halved"
+                    : m.result === "halved" || (live && liveLeaderTeam === null)
                       ? "border-l-gold"
-                      : m.result === "not_played"
-                        ? "border-l-card-border"
-                        : "border-l-transparent";
+                      : "border-l-transparent";
 
                 return (
                   <div
@@ -118,8 +148,11 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
                       <div className="truncate text-ink-light/60">vs {opponents || "?"}</div>
                     </div>
                     <div className="shrink-0 text-right">
-                      <div className="font-semibold text-ink">{RESULT_LABELS[m.result]}</div>
-                      {m.result !== "not_played" && <div className="text-gold-deep">{fmt(myPoints)} p</div>}
+                      <div className="font-semibold text-ink">{live ? "Pågår" : RESULT_LABELS[m.result]}</div>
+                      <div className="text-gold-deep">
+                        {live && "≈"}
+                        {fmt(live ? liveProjectedPoints(m) : myPoints)} p
+                      </div>
                     </div>
                   </div>
                 );

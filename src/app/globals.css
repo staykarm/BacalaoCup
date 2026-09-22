@@ -17,13 +17,13 @@
 
   --color-gray-team: #a7adba;
   --color-gray-team-light: #d3d7de;
-  --color-gray-team-deep: #565c6b;
-  --color-gray-team-bg: #3a3f4c;
+  --color-gray-team-deep: #a4abb8;
+  --color-gray-team-bg: #c8cdd7;
 
-  --color-aqua-team: #2fb7e6;
-  --color-aqua-team-light: #7fd6f5;
-  --color-aqua-team-deep: #0d5a82;
-  --color-aqua-team-bg: #0c3a56;
+  --color-aqua-team: #1e5fbf;
+  --color-aqua-team-light: #7fb4f0;
+  --color-aqua-team-deep: #0a2e63;
+  --color-aqua-team-bg: #0c2d57;
 }
 
 @theme inline {

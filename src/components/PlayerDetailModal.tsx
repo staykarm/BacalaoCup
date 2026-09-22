@@ -65,13 +65,17 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
           <div className="min-w-0 flex-1">
             <div
               className={`text-[11px] font-bold uppercase tracking-wide ${
-                side === "gray" ? "text-gray-team-light" : "text-aqua-team-light"
+                side === "gray" ? "text-ink" : "text-aqua-team-light"
               }`}
             >
               {side === "gray" ? "Gray (Joys)" : "Aquarellos"}
-              {player.hcp !== null && <span className="ml-2 text-white/50">HCP {fmt(player.hcp)}</span>}
+              {player.hcp !== null && (
+                <span className={`ml-2 ${side === "gray" ? "text-ink/60" : "text-white/50"}`}>
+                  HCP {fmt(player.hcp)}
+                </span>
+              )}
             </div>
-            <div className="mt-0.5 text-sm font-bold text-white">
+            <div className={`mt-0.5 text-sm font-bold ${side === "gray" ? "text-ink" : "text-white"}`}>
               {wins}V {halved}D {losses}T &middot; {fmt(pointsContributed)} p denne turneringen
             </div>
           </div>

@@ -123,7 +123,8 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
   }
 
   function sideText(team: TeamId) {
-    const base = team === "gray" ? "text-gray-team-light" : "text-aqua-team-light";
+    // Gray's fill is a light gray, so it needs dark ink text; Aqua's fill stays dark, so it keeps light text.
+    const base = team === "gray" ? "text-ink" : "text-aqua-team-light";
     return leadingSide === null || leadingSide === team ? base : "text-foreground/30";
   }
 
@@ -161,7 +162,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
       <div className="flex items-stretch overflow-hidden rounded-t-2xl">
         <div className={`flex min-w-0 flex-1 items-center gap-2 px-3 py-3 sm:px-4 sm:py-4 ${sideBg("gray")}`}>
           {leadingSide === "gray" && marginBadgeText && (
-            <span className="shrink-0 rounded-full bg-navy-deep/30 px-2 py-1 text-sm font-extrabold text-white shadow-sm sm:text-base">
+            <span className="shrink-0 rounded-full bg-navy-deep/60 px-2 py-1 text-sm font-extrabold text-white shadow-sm sm:text-base">
               {marginBadgeText}
             </span>
           )}
@@ -245,7 +246,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
             className="hidden h-5 w-5 shrink-0 rounded-full object-cover opacity-80 sm:block sm:h-6 sm:w-6"
           />
           {leadingSide === "aqua" && marginBadgeText && (
-            <span className="shrink-0 rounded-full bg-navy-deep/30 px-2 py-1 text-sm font-extrabold text-white shadow-sm sm:text-base">
+            <span className="shrink-0 rounded-full bg-navy-deep/60 px-2 py-1 text-sm font-extrabold text-white shadow-sm sm:text-base">
               {marginBadgeText}
             </span>
           )}

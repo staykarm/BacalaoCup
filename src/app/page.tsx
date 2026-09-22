@@ -17,7 +17,7 @@ export default function Home() {
 
   if (error) {
     return (
-      <div className="mx-auto mt-10 max-w-md rounded-xl border border-red-500/40 bg-red-950/30 p-4 text-sm text-red-200">
+      <div className="mx-auto mt-10 max-w-md rounded-2xl border border-red-500/40 bg-red-950/30 p-4 text-sm text-red-200">
         <p className="font-semibold">Kunne ikke laste data fra Supabase</p>
         <p className="mt-1 text-red-300/80">{error}</p>
         <p className="mt-2 text-red-300/60">

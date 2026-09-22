@@ -113,18 +113,30 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
   const marginBadgeText = match.result === "not_played" ? (isLiveInProgress ? liveUpLabel(match.live_up) : null) : finalMarginLabel;
 
   function sideBg(team: TeamId) {
-    const solid = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-bg";
-    if (leadingSide === null) return solid;
-    return leadingSide === team ? solid : "bg-navy-light/40";
+    const flat = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-bg";
+    const bold =
+      team === "gray"
+        ? "bg-gradient-to-br from-gray-team-bg to-gray-team-deep"
+        : "bg-gradient-to-br from-aqua-team-bg to-aqua-team-deep";
+    if (leadingSide === null) return flat;
+    return leadingSide === team ? bold : "bg-navy-deep";
   }
 
   function sideText(team: TeamId) {
     const base = team === "gray" ? "text-gray-team-light" : "text-aqua-team-light";
-    return leadingSide === null || leadingSide === team ? base : `${base}/60`;
+    return leadingSide === null || leadingSide === team ? base : "text-foreground/30";
   }
 
   return (
-    <div className="relative rounded-xl border border-navy-lighter/50 bg-navy-light/30 transition hover:border-navy-lighter">
+    <div
+      className={`relative rounded-2xl border-2 bg-navy-light/60 shadow-sm transition hover:border-navy-lighter ${
+        leadingSide === "gray"
+          ? "border-gray-team"
+          : leadingSide === "aqua"
+            ? "border-aqua-team"
+            : "border-navy-lighter/50"
+      }`}
+    >
       {locked ? (
         <span
           title="Denne runden er låst av admin"
@@ -146,10 +158,10 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
         {fmtPts(match.points)}p
       </div>
 
-      <div className="flex items-stretch overflow-hidden rounded-t-xl">
+      <div className="flex items-stretch overflow-hidden rounded-t-2xl">
         <div className={`flex min-w-0 flex-1 items-center gap-2 px-3 py-3 sm:px-4 sm:py-4 ${sideBg("gray")}`}>
           {leadingSide === "gray" && marginBadgeText && (
-            <span className="shrink-0 text-sm font-extrabold text-gray-team-light sm:text-base">
+            <span className="shrink-0 rounded-full bg-navy-deep/30 px-2 py-1 text-sm font-extrabold text-white shadow-sm sm:text-base">
               {marginBadgeText}
             </span>
           )}
@@ -233,7 +245,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
             className="hidden h-5 w-5 shrink-0 rounded-full object-cover opacity-80 sm:block sm:h-6 sm:w-6"
           />
           {leadingSide === "aqua" && marginBadgeText && (
-            <span className="shrink-0 text-sm font-extrabold text-aqua-team-light sm:text-base">
+            <span className="shrink-0 rounded-full bg-navy-deep/30 px-2 py-1 text-sm font-extrabold text-white shadow-sm sm:text-base">
               {marginBadgeText}
             </span>
           )}
@@ -256,7 +268,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
                 <button
                   key={r}
                   onClick={() => setMatchResult(match.id, r)}
-                  className={`rounded-md border px-2 py-1 text-[11px] font-medium transition ${
+                  className={`rounded-lg border px-2 py-1 text-[11px] font-medium transition ${
                     match.result === r
                       ? "border-gold bg-gold/20 text-gold"
                       : "border-navy-lighter/50 text-foreground/50 hover:border-navy-lighter hover:text-foreground/80"
@@ -270,12 +282,12 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
         </div>
 
         {!locked && match.result === "not_played" && (
-          <div className="mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-navy-lighter/50 bg-navy-light/50 px-3 py-2">
+          <div className="mt-2 flex flex-wrap items-center gap-3 rounded-xl border border-navy-lighter/50 bg-navy-lighter/40 px-3 py-2">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => bumpLiveUp(1)}
                 aria-label="Gray ett hull opp"
-                className="shrink-0 rounded-md border border-gray-team-deep/60 bg-gray-team-bg/30 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-team-light hover:bg-gray-team-bg/50"
+                className="shrink-0 rounded-lg border border-gray-team-deep/60 bg-gray-team-bg/30 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-team-light hover:bg-gray-team-bg/50"
               >
                 Gray
               </button>
@@ -287,14 +299,14 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
               <button
                 onClick={() => bumpLiveUp(-1)}
                 aria-label="Aqua ett hull opp"
-                className="shrink-0 rounded-md border border-aqua-team-deep/60 bg-aqua-team-bg/30 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-aqua-team-light hover:bg-aqua-team-bg/50"
+                className="shrink-0 rounded-lg border border-aqua-team-deep/60 bg-aqua-team-bg/30 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-aqua-team-light hover:bg-aqua-team-bg/50"
               >
                 Aqua
               </button>
               {match.live_up !== 0 && (
                 <button
                   onClick={resetLiveUp}
-                  className="rounded-md border border-navy-lighter/60 px-2 py-1 text-[11px] text-foreground/50 hover:bg-navy-lighter/40"
+                  className="rounded-lg border border-navy-lighter/60 px-2 py-1 text-[11px] text-foreground/50 hover:bg-navy-lighter/40"
                 >
                   A/S
                 </button>
@@ -306,7 +318,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
               <select
                 value={match.live_thru ?? ""}
                 onChange={(e) => setLiveThru(e.target.value ? Number(e.target.value) : null)}
-                className="rounded-lg border border-navy-lighter/60 bg-navy px-2 py-1 text-sm text-foreground focus:border-gold/60 focus:outline-none"
+                className="rounded-xl border border-navy-lighter/60 bg-navy px-2 py-1 text-sm text-foreground focus:border-gold/60 focus:outline-none"
               >
                 <option value="">–</option>
                 {Array.from({ length: 18 }, (_, i) => i + 1).map((hole) => (
@@ -319,7 +331,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
 
             <button
               onClick={finalizeFromLive}
-              className="ml-auto rounded-md border border-gold/50 bg-gold/10 px-2.5 py-1.5 text-[11px] font-semibold text-gold hover:bg-gold/20"
+              className="ml-auto rounded-lg border border-gold/50 bg-gold/10 px-2.5 py-1.5 text-[11px] font-semibold text-gold hover:bg-gold/20"
             >
               Sett som endelig stilling
             </button>
@@ -329,7 +341,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
         {match.note && <p className="mt-2 text-[11px] italic text-foreground/40">⚠ {match.note}</p>}
 
         {editing && (
-          <div className="mt-3 space-y-3 rounded-lg border border-navy-lighter/60 bg-navy-light/60 p-3">
+          <div className="mt-3 space-y-3 rounded-xl border border-navy-lighter/60 bg-navy-lighter/50 p-3">
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex items-center gap-2 text-xs text-foreground/60">
                 Tid
@@ -338,7 +350,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
                   value={draft.start_time ?? ""}
                   onChange={(e) => setDraft({ ...draft, start_time: e.target.value })}
                   placeholder="14:20"
-                  className="w-20 rounded-lg border border-navy-lighter/60 bg-navy px-2 py-1.5 text-sm focus:border-gold/60 focus:outline-none"
+                  className="w-20 rounded-xl border border-navy-lighter/60 bg-navy px-2 py-1.5 text-sm focus:border-gold/60 focus:outline-none"
                 />
               </label>
               <label className="flex items-center gap-2 text-xs text-foreground/60">
@@ -349,7 +361,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
                   min="0"
                   value={draft.points}
                   onChange={(e) => setDraft({ ...draft, points: Number(e.target.value) })}
-                  className="w-20 rounded-lg border border-navy-lighter/60 bg-navy px-2 py-1.5 text-sm focus:border-gold/60 focus:outline-none"
+                  className="w-20 rounded-xl border border-navy-lighter/60 bg-navy px-2 py-1.5 text-sm focus:border-gold/60 focus:outline-none"
                 />
               </label>
             </div>
@@ -403,20 +415,20 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
                 value={draft.note ?? ""}
                 onChange={(e) => setDraft({ ...draft, note: e.target.value || null })}
                 rows={2}
-                className="mt-1 w-full rounded-lg border border-navy-lighter/60 bg-navy px-2 py-1.5 text-sm focus:border-gold/60 focus:outline-none"
+                className="mt-1 w-full rounded-xl border border-navy-lighter/60 bg-navy px-2 py-1.5 text-sm focus:border-gold/60 focus:outline-none"
               />
             </label>
 
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setEditing(false)}
-                className="rounded-lg border border-navy-lighter/60 px-3 py-1.5 text-xs text-foreground/60 hover:bg-navy-lighter/30"
+                className="rounded-xl border border-navy-lighter/60 px-3 py-1.5 text-xs text-foreground/60 hover:bg-navy-lighter/30"
               >
                 Avbryt
               </button>
               <button
                 onClick={save}
-                className="rounded-lg border border-gold/60 bg-gold/20 px-3 py-1.5 text-xs font-semibold text-gold hover:bg-gold/30"
+                className="rounded-xl border border-gold/60 bg-gold/20 px-3 py-1.5 text-xs font-semibold text-gold hover:bg-gold/30"
               >
                 Lagre
               </button>

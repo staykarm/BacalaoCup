@@ -32,7 +32,7 @@ export function MeldingerModal({ onClose }: { onClose: () => void }) {
 
         <div className="space-y-2">
           {messages.map((m) => (
-            <div key={m.id} className="rounded-xl border border-navy-lighter/50 bg-navy-light/40 p-3">
+            <div key={m.id} className="rounded-2xl border border-navy-lighter/50 bg-navy-lighter/30 p-3">
               <div className="mb-1 flex items-baseline justify-between gap-2">
                 <span className="text-sm font-semibold text-gold">{m.author}</span>
                 <span className="text-[11px] text-foreground/40">{fmtTime(m.created_at)}</span>
@@ -48,7 +48,7 @@ export function MeldingerModal({ onClose }: { onClose: () => void }) {
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
             placeholder="Ditt navn"
-            className="w-full rounded-lg border border-navy-lighter/60 bg-navy px-3 py-2 text-sm focus:border-gold/60 focus:outline-none"
+            className="w-full rounded-xl border border-navy-lighter/60 bg-navy px-3 py-2 text-sm focus:border-gold/60 focus:outline-none"
           />
           <div className="flex gap-2">
             <textarea
@@ -56,12 +56,12 @@ export function MeldingerModal({ onClose }: { onClose: () => void }) {
               onChange={(e) => setBody(e.target.value)}
               placeholder="Skriv en melding til alle..."
               rows={2}
-              className="flex-1 rounded-lg border border-navy-lighter/60 bg-navy px-3 py-2 text-sm focus:border-gold/60 focus:outline-none"
+              className="flex-1 rounded-xl border border-navy-lighter/60 bg-navy px-3 py-2 text-sm focus:border-gold/60 focus:outline-none"
             />
             <button
               onClick={send}
               disabled={sending || !author.trim() || !body.trim()}
-              className="shrink-0 rounded-lg border border-gold/60 bg-gold/20 px-4 py-2 text-sm font-semibold text-gold hover:bg-gold/30 disabled:opacity-40"
+              className="shrink-0 rounded-xl border border-gold/60 bg-gold/20 px-4 py-2 text-sm font-semibold text-gold hover:bg-gold/30 disabled:opacity-40"
             >
               Send
             </button>

@@ -15,7 +15,7 @@ export function PlayerSelect({ players, team, value, onChange, className }: Play
     <select
       value={value ?? ""}
       onChange={(e) => onChange(e.target.value || null)}
-      className={`rounded-lg border border-navy-lighter/60 bg-navy-deep px-2 py-1.5 text-sm text-foreground focus:border-gold/60 focus:outline-none ${className ?? ""}`}
+      className={`rounded-xl border border-navy-lighter/60 bg-navy-deep px-2 py-1.5 text-sm text-foreground focus:border-gold/60 focus:outline-none ${className ?? ""}`}
     >
       <option value="">—</option>
       {options.map((p) => (

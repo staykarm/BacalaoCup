@@ -111,5 +111,5 @@ export function MapView() {
     }
   }, [locations]);
 
-  return <div ref={mapRef} className="h-72 w-full rounded-xl sm:h-96" />;
+  return <div ref={mapRef} className="h-72 w-full rounded-2xl sm:h-96" />;
 }

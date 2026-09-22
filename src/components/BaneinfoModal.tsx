@@ -15,23 +15,23 @@ export function BaneinfoModal({ onClose }: { onClose: () => void }) {
           const info = day.course ? COURSE_INFO[day.course] : undefined;
 
           return (
-            <div key={day.id} className="rounded-xl border border-navy-lighter/50 bg-navy-light/40 p-4">
+            <div key={day.id} className="rounded-2xl border border-navy-lighter/50 bg-navy-lighter/30 p-4">
               <div className="mb-2 text-xs font-bold uppercase tracking-widest text-gold">{day.label}</div>
 
               {info ? (
                 <>
-                  <div className="mb-1 font-serif text-lg font-bold text-foreground/90">{info.name}</div>
+                  <div className="mb-1 font-display text-lg font-bold text-foreground/90">{info.name}</div>
                   <div className="mb-3 text-xs uppercase tracking-wide text-foreground/40">{info.location}</div>
                   <div className="mb-3 grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="rounded-lg bg-navy-deep/40 px-2 py-1.5">
+                    <div className="rounded-xl bg-navy-light/40 px-2 py-1.5">
                       <div className="font-bold text-gold">Par {info.par}</div>
                       <div className="text-foreground/40">par</div>
                     </div>
-                    <div className="rounded-lg bg-navy-deep/40 px-2 py-1.5">
+                    <div className="rounded-xl bg-navy-light/40 px-2 py-1.5">
                       <div className="font-bold text-gold">{info.length}</div>
                       <div className="text-foreground/40">lengde</div>
                     </div>
-                    <div className="rounded-lg bg-navy-deep/40 px-2 py-1.5">
+                    <div className="rounded-xl bg-navy-light/40 px-2 py-1.5">
                       <div className="font-bold text-gold">{info.year}</div>
                       <div className="text-foreground/40">åpnet</div>
                     </div>

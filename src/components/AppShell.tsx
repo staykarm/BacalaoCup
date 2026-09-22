@@ -16,7 +16,7 @@ function SyncErrorToast() {
   if (!syncError) return null;
 
   return (
-    <div className="fixed bottom-24 left-1/2 z-40 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-xl border border-red-500/40 bg-red-950/90 px-4 py-3 text-sm text-red-200 shadow-lg backdrop-blur sm:bottom-28">
+    <div className="fixed bottom-24 left-1/2 z-40 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-2xl border border-red-500/40 bg-red-950/90 px-4 py-3 text-sm text-red-200 shadow-lg backdrop-blur sm:bottom-28">
       <div className="flex items-start gap-3">
         <p className="flex-1">
           <span className="font-semibold">Klarte ikke å lagre.</span> Sjekk nettforbindelsen og prøv igjen.
@@ -69,7 +69,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <button
               key={item.key}
               onClick={() => setOpenModal(item.key)}
-              className="flex shrink-0 flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-foreground/60 transition hover:bg-navy-lighter/40 hover:text-gold"
+              className="flex shrink-0 flex-col items-center gap-0.5 rounded-2xl px-3 py-1.5 text-foreground/60 transition hover:bg-navy-lighter/40 hover:text-gold"
             >
               <span className="text-lg leading-none" aria-hidden>
                 {item.icon}

@@ -27,7 +27,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
           Midlertidig admin-panel, åpent for alle mens vi tester appen.
         </p>
 
-        <div className="rounded-xl border border-navy-lighter/50 bg-navy-light/40 p-4">
+        <div className="rounded-2xl border border-navy-lighter/50 bg-navy-lighter/30 p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-foreground/80">Aktiv runde</h3>
           <p className="mb-3 text-xs text-foreground/60">
             Kun den valgte runden kan redigeres — resten låses for alle andre spillere.
@@ -35,7 +35,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
           <select
             value={activeSessionId ?? ""}
             onChange={(e) => setActiveSession(e.target.value || null)}
-            className="w-full rounded-lg border border-navy-lighter/60 bg-navy px-3 py-2 text-sm focus:border-gold/60 focus:outline-none"
+            className="w-full rounded-xl border border-navy-lighter/60 bg-navy px-3 py-2 text-sm focus:border-gold/60 focus:outline-none"
           >
             <option value="">Ingen — alle runder åpne</option>
             {sortedDays.map((day) => (
@@ -53,7 +53,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
           </select>
         </div>
 
-        <div className="rounded-xl border border-red-500/40 bg-red-950/20 p-4">
+        <div className="rounded-2xl border border-red-500/40 bg-red-950/20 p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-red-300">Nullstill resultater</h3>
           <p className="mb-3 text-xs text-foreground/60">
             Setter alle kamper tilbake til «Ikke spilt» og nullstiller live-stilling, hull og poeng. Kan ikke
@@ -68,13 +68,13 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
               <button
                 onClick={confirmReset}
                 disabled={resetting}
-                className="rounded-lg border border-red-500/60 bg-red-500/20 px-3 py-1.5 text-xs font-bold text-red-200 hover:bg-red-500/30 disabled:opacity-40"
+                className="rounded-xl border border-red-500/60 bg-red-500/20 px-3 py-1.5 text-xs font-bold text-red-200 hover:bg-red-500/30 disabled:opacity-40"
               >
                 {resetting ? "Nullstiller..." : "Ja, nullstill alt"}
               </button>
               <button
                 onClick={() => setConfirming(false)}
-                className="rounded-lg border border-navy-lighter/60 px-3 py-1.5 text-xs text-foreground/60 hover:bg-navy-lighter/30"
+                className="rounded-xl border border-navy-lighter/60 px-3 py-1.5 text-xs text-foreground/60 hover:bg-navy-lighter/30"
               >
                 Avbryt
               </button>
@@ -82,7 +82,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
           ) : (
             <button
               onClick={() => setConfirming(true)}
-              className="rounded-lg border border-red-500/60 bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-300 hover:bg-red-500/20"
+              className="rounded-xl border border-red-500/60 bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-300 hover:bg-red-500/20"
             >
               Nullstill alle resultater
             </button>

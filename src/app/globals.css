@@ -33,6 +33,7 @@
   --color-ink-light: var(--color-ink-light);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-outfit);
 
   --color-navy-deep: var(--color-navy-deep);
   --color-navy: var(--color-navy);

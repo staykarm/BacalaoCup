@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
 import { RESULT_LABELS, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
@@ -31,9 +32,10 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
     .sort((a, b) => a.sort_order - b.sort_order);
 
   const side: TeamId = player.team_id;
-  const wins = playedMatches.filter((m) => m.result === (side === "gray" ? "gray_won" : "aqua_won")).length;
+  const myResult = side === "gray" ? "gray_won" : "aqua_won";
+  const wins = playedMatches.filter((m) => m.result === myResult).length;
   const losses = playedMatches.filter(
-    (m) => m.result !== "not_played" && m.result !== "halved" && m.result !== (side === "gray" ? "gray_won" : "aqua_won")
+    (m) => m.result !== "not_played" && m.result !== "halved" && m.result !== myResult
   ).length;
   const halved = playedMatches.filter((m) => m.result === "halved").length;
   const pointsContributed = playedMatches.reduce(
@@ -46,22 +48,33 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
   return (
     <ModalShell title={player.name} onClose={onClose}>
       <div className="space-y-5">
-        <div className="flex flex-wrap items-center gap-3">
-          <span
-            className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${
-              side === "gray" ? "bg-gray-team-bg text-gray-team-light" : "bg-aqua-team-bg text-aqua-team-light"
-            }`}
-          >
-            {side === "gray" ? "Gray (Joys)" : "Aquarellos"}
-          </span>
-          {player.hcp !== null && (
-            <span className="rounded-full border border-navy-lighter/50 px-2 py-0.5 text-[11px] text-foreground/60">
-              HCP {fmt(player.hcp)}
-            </span>
-          )}
-          <span className="text-sm font-bold text-foreground/90">
-            {wins}V {halved}D {losses}T &middot; {fmt(pointsContributed)} p denne turneringen
-          </span>
+        <div
+          className={`flex items-center gap-3 rounded-2xl p-4 ${
+            side === "gray"
+              ? "bg-gradient-to-br from-gray-team-bg to-gray-team-deep"
+              : "bg-gradient-to-br from-aqua-team-bg to-aqua-team-deep"
+          }`}
+        >
+          <Image
+            src={side === "gray" ? "/logos/gray.png" : "/logos/aquarellos.png"}
+            alt=""
+            width={44}
+            height={44}
+            className="h-11 w-11 shrink-0 rounded-full object-cover"
+          />
+          <div className="min-w-0 flex-1">
+            <div
+              className={`text-[11px] font-bold uppercase tracking-wide ${
+                side === "gray" ? "text-gray-team-light" : "text-aqua-team-light"
+              }`}
+            >
+              {side === "gray" ? "Gray (Joys)" : "Aquarellos"}
+              {player.hcp !== null && <span className="ml-2 text-white/50">HCP {fmt(player.hcp)}</span>}
+            </div>
+            <div className="mt-0.5 text-sm font-bold text-white">
+              {wins}V {halved}D {losses}T &middot; {fmt(pointsContributed)} p denne turneringen
+            </div>
+          </div>
         </div>
 
         <section>
@@ -78,11 +91,21 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
                   .filter((n): n is string => !!n)
                   .join(" / ");
                 const myPoints = side === "gray" ? m.points_gray : m.points_aqua;
+                const accent =
+                  m.result === myResult
+                    ? side === "gray"
+                      ? "border-l-gray-team"
+                      : "border-l-aqua-team"
+                    : m.result === "halved"
+                      ? "border-l-gold"
+                      : m.result === "not_played"
+                        ? "border-l-navy-lighter"
+                        : "border-l-transparent";
 
                 return (
                   <div
                     key={m.id}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-navy-lighter/50 bg-navy-light/40 px-3 py-2 text-xs"
+                    className={`flex items-center justify-between gap-3 rounded-2xl border-l-4 bg-navy-light/50 px-3 py-2.5 text-xs ${accent}`}
                   >
                     <div className="min-w-0">
                       <div className="truncate font-semibold text-foreground/80">
@@ -92,9 +115,7 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
                     </div>
                     <div className="shrink-0 text-right">
                       <div className="font-semibold text-foreground/80">{RESULT_LABELS[m.result]}</div>
-                      {m.result !== "not_played" && (
-                        <div className="text-gold">{fmt(myPoints)} p</div>
-                      )}
+                      {m.result !== "not_played" && <div className="text-gold">{fmt(myPoints)} p</div>}
                     </div>
                   </div>
                 );
@@ -112,7 +133,7 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
               {history.map((h) => (
                 <div
                   key={h.year}
-                  className="flex items-center justify-between gap-2 rounded-lg bg-navy-light/30 px-3 py-1.5 text-xs text-foreground/60"
+                  className="flex items-center justify-between gap-2 rounded-2xl bg-navy-light/30 px-3 py-1.5 text-xs text-foreground/60"
                 >
                   <span className="font-semibold text-foreground/80">{h.year}</span>
                   {h.record && <span>{h.record}</span>}

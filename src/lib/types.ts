@@ -32,7 +32,7 @@ export interface Day {
   sort_order: number;
 }
 
-export type SessionFormat = "fourball" | "greensome" | "singles" | "scramble";
+export type SessionFormat = "fourball" | "greensome" | "singles" | "scramble" | "mixed";
 
 export interface Session {
   id: string;
@@ -105,6 +105,7 @@ export const FORMAT_LABELS: Record<SessionFormat, string> = {
   greensome: "Greensome",
   singles: "Singles",
   scramble: "Scramble",
+  mixed: "Fourball + Singles",
 };
 
 export const RESULT_LABELS: Record<MatchResult, string> = {

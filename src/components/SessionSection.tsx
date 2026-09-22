@@ -29,6 +29,14 @@ export function SessionSection({
   const isActive = activeSessionId === session.id;
   const leader: "gray" | "aqua" | null = gray === aqua ? null : gray > aqua ? "gray" : "aqua";
 
+  // A merged (mixed-format) session can hold matches worth different points, so derive the
+  // "Xp/kamp" text from the matches themselves rather than trusting the session's single value.
+  const matchPointValues = [...new Set(matches.map((m) => m.points))];
+  const pointsLabel =
+    matchPointValues.length <= 1
+      ? `${fmt(session.points_per_match)}p/kamp`
+      : `${fmt(Math.min(...matchPointValues))}–${fmt(Math.max(...matchPointValues))}p/kamp`;
+
   const cardClass = isActive
     ? leader === "gray"
       ? "border-gray-team bg-gray-team-bg/30 border-l-4"
@@ -59,7 +67,7 @@ export function SessionSection({
               {isActive && <span className="text-gold-deep"> - pågår</span>}
             </div>
             <div className={`text-[11px] uppercase tracking-wide ${textClass}`}>
-              {FORMAT_LABELS[session.format]} &middot; {fmt(session.points_per_match)}p/kamp &middot;{" "}
+              {FORMAT_LABELS[session.format]} &middot; {pointsLabel} &middot;{" "}
               {played}/{matches.length} spilt
             </div>
           </div>

@@ -60,6 +60,10 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
     return 0;
   }
 
+  const liveMatches = relevantMatches.filter(isLive);
+  const projectedExtra = liveMatches.reduce((sum, m) => sum + liveProjectedPoints(m), 0);
+  const projectedTotal = pointsContributed + projectedExtra;
+
   const rankedPlayers = computePlayerStats(matches, players);
   const overallRank = rankedPlayers.findIndex((s) => s.player.id === playerId) + 1;
   const teamRank = rankedPlayers.filter((s) => s.player.team_id === side).findIndex((s) => s.player.id === playerId) + 1;
@@ -69,9 +73,7 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
       <div className="space-y-5">
         <div
           className={`flex items-center gap-3 rounded-2xl p-4 ${
-            side === "gray"
-              ? "bg-gradient-to-br from-gray-team-bg to-gray-team-deep"
-              : "bg-gradient-to-br from-aqua-team-bg to-aqua-team-deep"
+            side === "gray" ? "bg-gray-team-deep" : "bg-aqua-team-deep"
           }`}
         >
           <Image
@@ -103,7 +105,8 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
           </div>
           <div className="shrink-0 text-right">
             <div className={`font-display text-4xl font-bold ${side === "gray" ? "text-ink" : "text-white"}`}>
-              {fmt(pointsContributed)}
+              {projectedExtra > 0 && "≈"}
+              {fmt(projectedTotal)}
             </div>
             <div className={`text-[11px] font-semibold uppercase tracking-wide ${side === "gray" ? "text-ink/60" : "text-white/60"}`}>
               poeng

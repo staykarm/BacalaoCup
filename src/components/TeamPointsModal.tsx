@@ -21,10 +21,7 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
     .filter((s) => s.player.team_id === team)
     .sort((a, b) => b.pointsContributed - a.pointsContributed);
 
-  const bannerClass =
-    team === "gray"
-      ? "bg-gradient-to-br from-gray-team-bg to-gray-team-deep"
-      : "bg-gradient-to-br from-aqua-team-bg to-aqua-team-deep";
+  const bannerClass = team === "gray" ? "bg-gray-team-deep" : "bg-aqua-team-deep";
   // The gray fill is light, so its banner needs dark ink text; the list rows sit on
   // the app's regular dark chrome regardless of team, so that accent stays light.
   const bannerText = team === "gray" ? "text-ink" : "text-white";

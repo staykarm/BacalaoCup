@@ -8,18 +8,28 @@ export interface AgendaEvent {
   address?: string;
 }
 
-const astoria = RESTAURANTS.find((r) => r.name === "Brasserie Astoria");
-const laSala = RESTAURANTS.find((r) => r.name === "La Sala");
+const wedLunch = RESTAURANTS.find((r) => r.day === "wed" && r.name === "La Cabaña");
+const thuLunch = RESTAURANTS.find((r) => r.day === "thu" && r.name === "Hacienda Los Naranjos");
+const friLunch = RESTAURANTS.find((r) => r.day === "fri" && r.time === "Lunsj");
+const friDinner = RESTAURANTS.find((r) => r.day === "fri" && r.name === "Brasserie Astoria");
+const satLunch = RESTAURANTS.find((r) => r.day === "sat" && r.time === "Frokost/lunsj");
+const satDinner = RESTAURANTS.find((r) => r.day === "sat" && r.name === "La Sala");
 const houseAddress = "C. los Lirios, Nueva Andalucía, 29660 Marbella, Málaga";
 
 /** Extra agenda entries (dinners, social events) keyed by `day.id`, alongside golf and transport. */
 export const AGENDA_EXTRAS: Record<string, AgendaEvent[]> = {
-  wed: [{ time: "13:00", label: "Lunsj", icon: "🥪" }],
+  wed: [{ time: "13:00", label: `Lunsj: ${wedLunch?.name}`, icon: "🥪", address: wedLunch?.address }],
   thu: [
-    { time: "14:00", label: "Lunsj", icon: "🥪" },
+    { time: "14:00", label: `Lunsj: ${thuLunch?.name}`, icon: "🥪", address: thuLunch?.address },
     { time: "15:00", label: "Pool Party", icon: "🏊" },
     { time: "19:30", label: "BBQ-middag", icon: "🍖", address: houseAddress },
   ],
-  fri: [{ time: "21:30", label: "Middag: Brasserie Astoria", icon: "🍽️", address: astoria?.address }],
-  sat: [{ time: "21:30", label: "Middag: La Sala", icon: "🍽️", address: laSala?.address }],
+  fri: [
+    { time: "13:00", label: `Lunsj: ${friLunch?.name}`, icon: "🥪", address: friLunch?.address },
+    { time: "21:30", label: `Middag: ${friDinner?.name}`, icon: "🍽️", address: friDinner?.address },
+  ],
+  sat: [
+    { time: "12:00", label: `Frokost/lunsj: ${satLunch?.name}`, icon: "🥪", address: satLunch?.address },
+    { time: "21:30", label: `Middag: ${satDinner?.name}`, icon: "🍽️", address: satDinner?.address },
+  ],
 };

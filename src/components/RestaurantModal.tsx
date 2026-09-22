@@ -18,7 +18,7 @@ export function RestaurantModal({ onClose }: { onClose: () => void }) {
           const day = days.find((d) => d.id === r.day);
 
           return (
-            <div key={r.name} className="rounded-2xl border border-card-border bg-white p-4">
+            <div key={`${r.day}-${r.name}-${r.time}`} className="rounded-2xl border border-card-border bg-white p-4">
               <div className="mb-2 text-xs font-bold uppercase tracking-widest text-gold-deep">
                 {day?.label ?? r.day} &middot; {r.time}
               </div>

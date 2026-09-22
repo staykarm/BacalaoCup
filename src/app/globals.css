@@ -23,11 +23,18 @@
   --color-gray-team-light: #d3d7de;
   --color-gray-team-deep: #a4abb8;
   --color-gray-team-bg: #c8cdd7;
+  /** Match-card "leading/won" fill for Gray — deliberately much darker than gray-team-deep
+   *  above, so a decided/leading match reads clearly different from an all-square one. */
+  --color-gray-team-won: #4d5361;
 
   --color-aqua-team: #2f6feb;
   --color-aqua-team-light: #8ec1ff;
   --color-aqua-team-deep: #123a8f;
   --color-aqua-team-bg: #1a56d6;
+  /** Match-card "not yet decided" fill for Aqua — a touch lighter than aqua-team-bg above. */
+  --color-aqua-team-flat: #3d72e6;
+  /** Match-card "leading/won" fill for Aqua — deeper than aqua-team-deep above. */
+  --color-aqua-team-won: #081d5c;
 }
 
 @theme inline {
@@ -55,11 +62,14 @@
   --color-gray-team-light: var(--color-gray-team-light);
   --color-gray-team-deep: var(--color-gray-team-deep);
   --color-gray-team-bg: var(--color-gray-team-bg);
+  --color-gray-team-won: var(--color-gray-team-won);
 
   --color-aqua-team: var(--color-aqua-team);
   --color-aqua-team-light: var(--color-aqua-team-light);
   --color-aqua-team-deep: var(--color-aqua-team-deep);
   --color-aqua-team-bg: var(--color-aqua-team-bg);
+  --color-aqua-team-flat: var(--color-aqua-team-flat);
+  --color-aqua-team-won: var(--color-aqua-team-won);
 }
 
 body {

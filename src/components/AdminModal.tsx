@@ -2,17 +2,42 @@
 
 import { useState } from "react";
 import { useTournament } from "@/context/TournamentContext";
+import { exportBackupToExcel } from "@/lib/exportBackup";
 import { TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
 
 export function AdminModal({ onClose }: { onClose: () => void }) {
-  const { days, sessions, activeSessionId, setActiveSession, resetAllMatches, updateSessionHandicap } =
-    useTournament();
+  const {
+    players,
+    days,
+    sessions,
+    matches,
+    matchHoles,
+    playerYearStats,
+    activeSessionId,
+    setActiveSession,
+    resetAllMatches,
+    updateSessionHandicap,
+  } = useTournament();
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [done, setDone] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
 
   const scrambleSessions = sessions.filter((s) => s.format === "scramble").sort((a, b) => a.sort_order - b.sort_order);
+
+  async function handleExport() {
+    setExporting(true);
+    setExportError(false);
+    try {
+      await exportBackupToExcel({ players, days, sessions, matches, matchHoles, playerYearStats });
+    } catch {
+      setExportError(true);
+    } finally {
+      setExporting(false);
+    }
+  }
 
   async function confirmReset() {
     setResetting(true);
@@ -30,6 +55,22 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
         <p className="text-xs text-ink-light">
           Midlertidig admin-panel, åpent for alle mens vi tester appen.
         </p>
+
+        <div className="rounded-2xl border border-card-border bg-white p-4">
+          <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Backup</h3>
+          <p className="mb-3 text-xs text-ink-light">
+            Laster ned alle kamper, scramble-score, hull-for-hull-resultater, spillere og historikk som et
+            Excel-ark.
+          </p>
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="rounded-xl border border-gold-deep/60 bg-gold/10 px-3 py-1.5 text-xs font-bold text-gold-deep hover:bg-gold/20 disabled:opacity-40"
+          >
+            {exporting ? "Lager Excel-fil..." : "Eksporter til Excel"}
+          </button>
+          {exportError && <p className="mt-2 text-xs text-red-700">Klarte ikke å lage filen. Prøv igjen.</p>}
+        </div>
 
         <div className="rounded-2xl border border-card-border bg-white p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Aktiv runde</h3>

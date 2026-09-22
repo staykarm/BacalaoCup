@@ -30,6 +30,8 @@ export interface Day {
   date: string;
   course: string | null;
   sort_order: number;
+  /** Admin: keep player names off this day's matches, e.g. for a surprise-pairings day. */
+  hide_names: boolean;
 }
 
 export type SessionFormat = "fourball" | "greensome" | "singles" | "scramble" | "mixed";
@@ -66,10 +68,12 @@ export interface Match {
   live_up: number;
   /** Which hole the match has reached, 1–18. Null if not started. */
   live_thru: number | null;
-  /** Scramble only: which team this flight belongs to (a scramble row has no named players). */
+  /** Scramble only: which team this flight belongs to. */
   flight_team: TeamId | null;
   /** Scramble only: this flight's score relative to par, e.g. -3, 0, 2. Null until entered. */
   score_vs_par: number | null;
+  /** Scramble only: the 3-4 players (from flight_team's roster) making up this flight. */
+  flight_players: string[];
 }
 
 export type HoleResult = "gray" | "aqua" | "halved";

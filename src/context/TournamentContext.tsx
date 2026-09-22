@@ -48,6 +48,8 @@ interface TournamentContextValue {
   setActiveSession: (sessionId: string | null) => Promise<void>;
   /** Admin: scramble-only team stroke handicap for a session. Pass team=null to clear it. */
   updateSessionHandicap: (sessionId: string, team: TeamId | null, strokes: number | null) => Promise<void>;
+  /** Admin: hide/show player names for every match on a day. */
+  updateDayHideNames: (dayId: string, hide: boolean) => Promise<void>;
   /**
    * Registers (or clears, when both are null) one hole's result for a match-play
    * match or score for a scramble flight, then derives and writes back that
@@ -242,6 +244,14 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           setActiveSessionId(next.active_session_id);
         }
       )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "days" },
+        (payload) => {
+          const next = payload.new as Day;
+          setDays((current) => current.map((d) => (d.id === next.id ? next : d)));
+        }
+      )
       .subscribe();
 
     return () => {
@@ -364,6 +374,15 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const updateDayHideNames = useCallback(async (dayId: string, hide: boolean) => {
+    setDays((current) => current.map((d) => (d.id === dayId ? { ...d, hide_names: hide } : d)));
+
+    const { error: updateError } = await supabase.from("days").update({ hide_names: hide }).eq("id", dayId);
+    if (updateError) {
+      setSyncError(updateError.message);
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       teams,
@@ -384,6 +403,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       activeSessionId,
       setActiveSession,
       updateSessionHandicap,
+      updateDayHideNames,
       setMatchHole,
     }),
     [
@@ -405,6 +425,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       activeSessionId,
       setActiveSession,
       updateSessionHandicap,
+      updateDayHideNames,
       setMatchHole,
     ]
   );

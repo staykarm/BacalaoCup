@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
 import { courseHoleNumber, HOLES_PER_MATCH, isFrontNine, scrambleResult } from "@/lib/scoring";
 import { getHoleInfo } from "@/lib/courseHoles";
-import { Match, Session, TeamId } from "@/lib/types";
+import { Match, Player, Session, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
 
 function fmtVsPar(n: number | null) {
@@ -24,14 +24,35 @@ function scoreCellClass(relative: number | null): string {
   return "border-transparent bg-black text-white";
 }
 
-function FlightRow({ flight, active, onClick }: { flight: Match; active: boolean; onClick: () => void }) {
+function FlightRow({
+  flight,
+  players,
+  hideNames,
+  active,
+  onClick,
+}: {
+  flight: Match;
+  players: Player[];
+  hideNames: boolean;
+  active: boolean;
+  onClick: () => void;
+}) {
   const team = flight.flight_team as TeamId;
+  // Same flat team fills MatchRow uses for its "not yet decided" state, so a scramble
+  // flight reads as clearly gray/blue as any other day's match card.
+  const bg = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-flat";
+  const text = team === "gray" ? "text-ink" : "text-white";
+  const subtext = team === "gray" ? "text-ink-light/70" : "text-white/70";
+  const names = hideNames
+    ? []
+    : flight.flight_players.map((id) => players.find((p) => p.id === id)?.name ?? id);
+
   return (
     <button
       onClick={() => active && onClick()}
       disabled={!active}
-      className={`flex w-full items-center gap-3 rounded-xl border border-card-border bg-white px-3 py-2.5 text-left ${
-        active ? "hover:border-gold-deep/40" : "cursor-default opacity-60"
+      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left ${bg} ${
+        active ? "hover:brightness-105" : "cursor-default opacity-70"
       }`}
     >
       <Image
@@ -41,18 +62,31 @@ function FlightRow({ flight, active, onClick }: { flight: Match; active: boolean
         height={22}
         className="h-[22px] w-[22px] shrink-0 rounded-full object-cover"
       />
-      <span className="flex-1 text-sm text-ink-light">{flight.start_time ?? "--:--"}</span>
-      <span
-        className={`font-display text-lg font-bold ${flight.score_vs_par === null ? "text-ink-light/40" : "text-ink"}`}
-      >
+      <div className="min-w-0 flex-1">
+        <div className={`truncate text-xs font-bold uppercase tracking-wide ${text}`}>
+          {names.length > 0 ? names.join(" / ") : team === "gray" ? "Gray (Joys)" : "Aquarellos"}
+        </div>
+        <div className={`text-[11px] ${subtext}`}>{flight.start_time ?? "--:--"}</div>
+      </div>
+      <span className={`font-display text-lg font-bold ${flight.score_vs_par === null ? `${text} opacity-40` : text}`}>
         {fmtVsPar(flight.score_vs_par)}
       </span>
-      <span className="text-[11px] text-ink-light/60">{flight.live_thru !== null ? `Hull ${flight.live_thru}` : ""}</span>
+      <span className={`text-[11px] ${subtext}`}>{flight.live_thru !== null ? `Hull ${flight.live_thru}` : ""}</span>
     </button>
   );
 }
 
-export function ScrambleFlights({ session, matches }: { session: Session; matches: Match[] }) {
+export function ScrambleFlights({
+  session,
+  matches,
+  players,
+  hideNames = false,
+}: {
+  session: Session;
+  matches: Match[];
+  players: Player[];
+  hideNames?: boolean;
+}) {
   const { matchHoles, sessions, days, activeSessionId, setMatchHole } = useTournament();
   const [editingFlightId, setEditingFlightId] = useState<string | null>(null);
   const isActiveSession = session.id === activeSessionId;
@@ -114,7 +148,14 @@ export function ScrambleFlights({ session, matches }: { session: Session; matche
 
       <div className="space-y-2">
         {flights.map((f) => (
-          <FlightRow key={f.id} flight={f} active={isActiveSession} onClick={() => setEditingFlightId(f.id)} />
+          <FlightRow
+            key={f.id}
+            flight={f}
+            players={players}
+            hideNames={hideNames}
+            active={isActiveSession}
+            onClick={() => setEditingFlightId(f.id)}
+          />
         ))}
       </div>
 
@@ -141,8 +182,14 @@ export function ScrambleFlights({ session, matches }: { session: Session; matche
           <div className="space-y-4">
             <div className="text-center">
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-light">
-                {editingFlight.flight_team === "gray" ? "Gray (Joys)" : "Aquarellos"} &middot;{" "}
-                {editingFlight.start_time ?? "--:--"}
+                {!hideNames && editingFlight.flight_players.length > 0
+                  ? editingFlight.flight_players
+                      .map((id) => players.find((p) => p.id === id)?.name ?? id)
+                      .join(" / ")
+                  : editingFlight.flight_team === "gray"
+                    ? "Gray (Joys)"
+                    : "Aquarellos"}{" "}
+                &middot; {editingFlight.start_time ?? "--:--"}
               </p>
               <p className="font-display text-3xl font-bold text-ink">{fmtVsPar(editingFlight.score_vs_par)}</p>
             </div>

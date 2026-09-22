@@ -3,8 +3,49 @@
 import { useState } from "react";
 import { useTournament } from "@/context/TournamentContext";
 import { exportBackupToExcel } from "@/lib/exportBackup";
-import { TeamId } from "@/lib/types";
+import { Match, Player, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
+
+function FlightRosterEditor({
+  match,
+  roster,
+  onToggle,
+}: {
+  match: Match;
+  roster: Player[];
+  onToggle: (playerId: string) => void;
+}) {
+  const selected = new Set(match.flight_players);
+  const team = match.flight_team as TeamId;
+  return (
+    <div className="rounded-xl border border-card-border bg-card-deep p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-xs font-semibold text-ink-light">
+          {team === "gray" ? "Gray" : "Aqua"} &middot; {match.start_time ?? "--:--"}
+        </span>
+        <span className="text-[11px] text-ink-light/60">{selected.size} valgt</span>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {roster.map((p) => {
+          const active = selected.has(p.id);
+          const activeClass =
+            team === "gray" ? "border-gray-team bg-gray-team-bg text-ink" : "border-aqua-team bg-aqua-team-deep text-white";
+          return (
+            <button
+              key={p.id}
+              onClick={() => onToggle(p.id)}
+              className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition ${
+                active ? activeClass : "border-card-border bg-white text-ink-light hover:border-gold-deep/40"
+              }`}
+            >
+              {p.name}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export function AdminModal({ onClose }: { onClose: () => void }) {
   const {
@@ -18,6 +59,8 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
     setActiveSession,
     resetAllMatches,
     updateSessionHandicap,
+    updateDayHideNames,
+    updateMatch,
   } = useTournament();
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -48,6 +91,15 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
   }
 
   const sortedDays = [...days].sort((a, b) => a.sort_order - b.sort_order);
+  const playableDays = sortedDays.filter((day) => sessions.some((s) => s.day_id === day.id));
+
+  function toggleFlightPlayer(match: (typeof matches)[number], playerId: string) {
+    const current = match.flight_players;
+    const next = current.includes(playerId)
+      ? current.filter((id) => id !== playerId)
+      : [...current, playerId];
+    updateMatch(match.id, { flight_players: next });
+  }
 
   return (
     <ModalShell title="Admin" onClose={onClose}>
@@ -139,6 +191,58 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
         )}
+
+        {scrambleSessions.length > 0 && (
+          <div className="rounded-2xl border border-card-border bg-white p-4">
+            <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Scramble-lag</h3>
+            <p className="mb-3 text-xs text-ink-light">
+              Velg hvilke spillere som er i hver flight. Grå: to lag med fire spillere. Aqua: ett lag med tre og
+              ett med fire.
+            </p>
+            <div className="space-y-4">
+              {scrambleSessions.map((s) => {
+                const flights = matches
+                  .filter((m) => m.session_id === s.id)
+                  .sort((a, b) => a.sort_order - b.sort_order);
+                return (
+                  <div key={s.id}>
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-light">{s.name}</p>
+                    <div className="space-y-2">
+                      {flights.map((f) => (
+                        <FlightRosterEditor
+                          key={f.id}
+                          match={f}
+                          roster={players.filter((p) => p.team_id === f.flight_team)}
+                          onToggle={(playerId) => toggleFlightPlayer(f, playerId)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="rounded-2xl border border-card-border bg-white p-4">
+          <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Skjul spillernavn</h3>
+          <p className="mb-3 text-xs text-ink-light">
+            Skjuler navnene på kampene den dagen — alt annet (registrering, poeng) fungerer som normalt.
+          </p>
+          <div className="space-y-2">
+            {playableDays.map((day) => (
+              <label key={day.id} className="flex items-center justify-between gap-2 text-sm text-ink">
+                <span>{day.label}</span>
+                <input
+                  type="checkbox"
+                  checked={day.hide_names}
+                  onChange={(e) => updateDayHideNames(day.id, e.target.checked)}
+                  className="h-4 w-4 accent-gold-deep"
+                />
+              </label>
+            ))}
+          </div>
+        </div>
 
         <div className="rounded-2xl border border-red-300 bg-red-50 p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-red-700">Nullstill resultater</h3>

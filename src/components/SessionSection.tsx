@@ -16,11 +16,13 @@ export function SessionSection({
   matches,
   players,
   defaultOpen = false,
+  hideNames = false,
 }: {
   session: Session;
   matches: Match[];
   players: Player[];
   defaultOpen?: boolean;
+  hideNames?: boolean;
 }) {
   const { activeSessionId } = useTournament();
   const [open, setOpen] = useState(defaultOpen);
@@ -87,9 +89,11 @@ export function SessionSection({
       {open && (
         <div className={`space-y-2 border-t px-3 pb-3 pt-3 ${borderTClass}`}>
           {isScramble ? (
-            <ScrambleFlights session={session} matches={matches} />
+            <ScrambleFlights session={session} matches={matches} players={players} hideNames={hideNames} />
           ) : (
-            matches.map((m) => <MatchRow key={m.id} match={m} players={players} session={session} />)
+            matches.map((m) => (
+              <MatchRow key={m.id} match={m} players={players} session={session} hideNames={hideNames} />
+            ))
           )}
         </div>
       )}

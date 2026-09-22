@@ -36,14 +36,26 @@ function fmtPts(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
 
-export function MatchRow({ match, players, session }: { match: Match; players: Player[]; session: Session }) {
+export function MatchRow({
+  match,
+  players,
+  session,
+  hideNames = false,
+}: {
+  match: Match;
+  players: Player[];
+  session: Session;
+  hideNames?: boolean;
+}) {
   const { matchHoles, sessions, days, activeSessionId, setMatchHole } = useTournament();
   const [scoring, setScoring] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const isActiveSession = session.id === activeSessionId;
 
-  const grayPlayers = sidePlayers(match, "gray", players);
-  const aquaPlayers = sidePlayers(match, "aqua", players);
+  // Genuinely blank (not just anonymized) so this falls back to the same generic
+  // team-name display already used when a match has no named players at all.
+  const grayPlayers = hideNames ? [] : sidePlayers(match, "gray", players);
+  const aquaPlayers = hideNames ? [] : sidePlayers(match, "aqua", players);
 
   const frontNine = isFrontNine(session, sessions);
   const course = days.find((d) => d.id === session.day_id)?.course ?? null;

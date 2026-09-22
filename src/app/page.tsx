@@ -81,6 +81,7 @@ export default function Home() {
                 .sort((a, b) => a.sort_order - b.sort_order)}
               players={players}
               defaultOpen={defaultOpen}
+              hideNames={currentDay?.hide_names ?? false}
             />
           );
         })}

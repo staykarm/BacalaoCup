@@ -128,13 +128,14 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
         ? "bg-gradient-to-br from-gray-team-bg to-gray-team-deep"
         : "bg-gradient-to-br from-aqua-team-bg to-aqua-team-deep";
     if (leadingSide === null) return flat;
-    return leadingSide === team ? bold : "bg-navy-deep";
+    // The trailing/losing side fades to near-white so it blends into the card instead of competing for attention.
+    return leadingSide === team ? bold : "bg-card";
   }
 
   function sideText(team: TeamId) {
     // Gray's fill is a light gray, so it needs dark ink text; Aqua's fill stays dark, so it keeps light text.
     const base = team === "gray" ? "text-ink" : "text-aqua-team-light";
-    return leadingSide === null || leadingSide === team ? base : "text-foreground/30";
+    return leadingSide === null || leadingSide === team ? base : "text-ink-light/30";
   }
 
   return (

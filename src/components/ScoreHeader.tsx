@@ -48,20 +48,13 @@ export function ScoreHeader({
           <span className={`h-1.5 w-1.5 rounded-full ${isLive ? "animate-pulse bg-red-500" : "bg-gold"}`} />
         </div>
 
-        <p className="mt-1 text-center text-[10px] font-semibold uppercase tracking-wide sm:text-[11px]">
-          {winner ? (
+        {winner && (
+          <p className="mt-1 text-center text-[10px] font-semibold uppercase tracking-wide sm:text-[11px]">
             <span className={winner === "gray" ? "text-gray-team-light" : "text-aqua-team-light"}>
               🏆 {winner === "gray" ? "Gray (Joys)" : "Aquarellos"} har vunnet cupen!
             </span>
-          ) : (
-            <>
-              <span className="text-gray-team-light">Gray trenger {fmt(clinch.gray)}p</span>
-              <span className="text-foreground/40"> &middot; </span>
-              <span className="text-aqua-team-light">Aqua trenger {fmt(clinch.aqua)}p</span>
-              <span className="text-foreground/40"> til seier</span>
-            </>
-          )}
-        </p>
+          </p>
+        )}
 
         <div className="mt-2 grid grid-cols-3 items-center gap-2">
           <button
@@ -115,6 +108,8 @@ export function ScoreHeader({
           aquaSettled={settled.aqua}
           aquaLive={aquaLive}
           possible={possible}
+          clinchGray={winner ? null : clinch.gray}
+          clinchAqua={winner ? null : clinch.aqua}
           className="mx-auto mt-2 max-w-md"
         />
       </div>

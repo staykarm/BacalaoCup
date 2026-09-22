@@ -24,20 +24,18 @@ export function pointsForResult(
  * "Decided" only once every flight on both sides has a score entered.
  */
 export function scrambleResult(flights: Match[], session: Session) {
-  const grayScores = flights.filter((f) => f.flight_team === "gray").map((f) => f.score_vs_par);
-  const aquaScores = flights.filter((f) => f.flight_team === "aqua").map((f) => f.score_vs_par);
-  const decided =
-    grayScores.length > 0 &&
-    aquaScores.length > 0 &&
-    grayScores.every((s): s is number => s !== null) &&
-    aquaScores.every((s): s is number => s !== null);
+  const grayFlights = flights.filter((f) => f.flight_team === "gray");
+  const aquaFlights = flights.filter((f) => f.flight_team === "aqua");
+  const allPlayedOut = (fs: Match[]) =>
+    fs.length > 0 && fs.every((f) => f.live_thru !== null && f.live_thru >= HOLES_PER_MATCH);
+  const decided = allPlayedOut(grayFlights) && allPlayedOut(aquaFlights);
 
   if (!decided) {
     return { decided: false, grayTotal: null, aquaTotal: null, winner: null } as const;
   }
 
-  const grayTotal = (grayScores as number[]).reduce((a, b) => a + b, 0);
-  const aquaTotal = (aquaScores as number[]).reduce((a, b) => a + b, 0);
+  const grayTotal = grayFlights.reduce((a, f) => a + (f.score_vs_par ?? 0), 0);
+  const aquaTotal = aquaFlights.reduce((a, f) => a + (f.score_vs_par ?? 0), 0);
   const grayNet = grayTotal - (session.handicap_team === "gray" ? (session.handicap_strokes ?? 0) : 0);
   const aquaNet = aquaTotal - (session.handicap_team === "aqua" ? (session.handicap_strokes ?? 0) : 0);
   const winner: TeamId | null = grayNet === aquaNet ? null : grayNet < aquaNet ? "gray" : "aqua";

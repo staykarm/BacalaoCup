@@ -63,17 +63,6 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
         ? "text-aqua-team-deep"
         : "text-gold-deep";
 
-  // This pill sits on the (now near-white) card body, so it needs readable-on-light colors,
-  // even though it's still deliberately team/result-colored per side.
-  const resultColor =
-    match.result === "gray_won"
-      ? "border-gray-team text-ink"
-      : match.result === "aqua_won"
-        ? "border-aqua-team text-aqua-team-deep"
-        : match.result === "halved"
-          ? "border-gold-deep text-gold-deep"
-          : "border-card-border text-ink-light/60";
-
   const isLiveInProgress = match.result === "not_played" && (match.live_up !== 0 || match.live_thru !== null);
 
   const leadingSide: TeamId | null =
@@ -219,21 +208,9 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
         </div>
       </div>
 
-      {(match.result !== "not_played" || match.note) && (
+      {match.note && (
         <div className="p-3">
-          {match.result !== "not_played" && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${resultColor}`}>
-                {RESULT_LABELS[match.result]} · Gray {fmtPts(match.points_gray)} – {fmtPts(match.points_aqua)} Aqua
-              </span>
-            </div>
-          )}
-
-          {match.note && (
-            <p className={`text-[11px] italic text-ink-light/60 ${match.result !== "not_played" ? "mt-2" : ""}`}>
-              ⚠ {match.note}
-            </p>
-          )}
+          <p className="text-[11px] italic text-ink-light/60">⚠ {match.note}</p>
         </div>
       )}
 

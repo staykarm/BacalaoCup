@@ -201,19 +201,38 @@ export function courseHoleNumber(relativeHole: number, frontNine: boolean): numb
 }
 
 /**
- * Derives a match-play match's live_up/live_thru/result/points from its per-hole
- * results. Order-independent — a hole can be entered or corrected out of sequence
- * and the totals stay correct, since every match has exactly HOLES_PER_MATCH holes
- * regardless of which ones are filled in so far.
+ * A fourball/greensome match where one side is down a player gives that lone
+ * player's side a 1-hole head start, per club handicap convention. 0 when both
+ * sides field the same number of players (including singles, 1v1).
  */
-export function deriveMatchPlayFromHoles(holes: MatchHole[], points: number) {
+export function startingUpFor(match: Match): number {
+  const grayCount = [match.gray_player1, match.gray_player2].filter(Boolean).length;
+  const aquaCount = [match.aqua_player1, match.aqua_player2].filter(Boolean).length;
+  if (grayCount === 2 && aquaCount === 1) return -1;
+  if (aquaCount === 2 && grayCount === 1) return 1;
+  return 0;
+}
+
+/**
+ * Derives a match-play match's live_up/live_thru/result/points from its per-hole
+ * results, plus any starting head start (see startingUpFor). Order-independent —
+ * a hole can be entered or corrected out of sequence and the totals stay correct,
+ * since every match has exactly HOLES_PER_MATCH holes regardless of which ones are
+ * filled in so far. The head start only ever applies once live_thru is non-null
+ * (i.e. once the first hole is actually recorded) since it's folded into the same
+ * sum as the hole results, not a value that shows before any hole is played.
+ */
+export function deriveMatchPlayFromHoles(holes: MatchHole[], points: number, startingUp = 0) {
   const played = holes.filter((h) => h.result !== null);
-  const live_up = played.reduce((sum, h) => {
-    if (h.result === "gray") return sum + 1;
-    if (h.result === "aqua") return sum - 1;
-    return sum;
-  }, 0);
   const live_thru = played.length > 0 ? played.length : null;
+  const live_up =
+    live_thru === null
+      ? 0
+      : played.reduce((sum, h) => {
+          if (h.result === "gray") return sum + 1;
+          if (h.result === "aqua") return sum - 1;
+          return sum;
+        }, startingUp);
   const result = autoResultFromLive(live_up, live_thru);
   const { points_gray, points_aqua } = pointsForResult(result, points);
   return { live_up, live_thru, result, points_gray, points_aqua };

@@ -10,18 +10,16 @@ import {
   useState,
 } from "react";
 import { supabase } from "@/lib/supabase";
-import { deriveMatchPlayFromHoles, deriveScrambleFromHoles } from "@/lib/scoring";
+import { deriveMatchPlayFromHoles, deriveScrambleFromHoles, startingUpFor } from "@/lib/scoring";
 import {
   Day,
   HoleResult,
   InfoPage,
   InfoPageId,
-  LocationType,
   MapLocation,
   Match,
   MatchHole,
   MatchResult,
-  Message,
   Player,
   PlayerYearStat,
   Session,
@@ -36,7 +34,6 @@ interface TournamentContextValue {
   sessions: Session[];
   matches: Match[];
   matchHoles: MatchHole[];
-  messages: Message[];
   infoPages: InfoPage[];
   locations: MapLocation[];
   playerYearStats: PlayerYearStat[];
@@ -46,10 +43,7 @@ interface TournamentContextValue {
   syncError: string | null;
   clearSyncError: () => void;
   updateMatch: (id: string, patch: Partial<Match>) => Promise<void>;
-  postMessage: (author: string, body: string) => Promise<void>;
   updateInfoPage: (id: InfoPageId, content: string) => Promise<void>;
-  addLocation: (type: LocationType, name: string, address: string | null, notes: string | null) => Promise<void>;
-  deleteLocation: (id: string) => Promise<void>;
   updateLocationCoords: (id: string, lat: number, lng: number) => Promise<void>;
   /** Admin: resets every match back to not-played with no live score or result. */
   resetAllMatches: () => Promise<void>;
@@ -79,7 +73,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [matchHoles, setMatchHoles] = useState<MatchHole[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [infoPages, setInfoPages] = useState<InfoPage[]>([]);
   const [locations, setLocations] = useState<MapLocation[]>([]);
   const [playerYearStats, setPlayerYearStats] = useState<PlayerYearStat[]>([]);
@@ -102,7 +95,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           sessionsRes,
           matchesRes,
           matchHolesRes,
-          messagesRes,
           infoPagesRes,
           locationsRes,
           playerYearStatsRes,
@@ -114,7 +106,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           supabase.from("sessions").select("*").order("sort_order"),
           supabase.from("matches").select("*").order("sort_order"),
           supabase.from("match_holes").select("*"),
-          supabase.from("messages").select("*").order("created_at"),
           supabase.from("info_pages").select("*"),
           supabase.from("locations").select("*").order("sort_order"),
           supabase.from("player_year_stats").select("*").order("year", { ascending: false }),
@@ -130,7 +121,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           sessionsRes.error ||
           matchesRes.error ||
           matchHolesRes.error ||
-          messagesRes.error ||
           infoPagesRes.error ||
           locationsRes.error ||
           playerYearStatsRes.error ||
@@ -148,7 +138,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         setSessions(sessionsRes.data ?? []);
         setMatches(matchesRes.data ?? []);
         setMatchHoles(matchHolesRes.data ?? []);
-        setMessages(messagesRes.data ?? []);
         setInfoPages(infoPagesRes.data ?? []);
         setLocations(locationsRes.data ?? []);
         setPlayerYearStats(playerYearStatsRes.data ?? []);
@@ -231,27 +220,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const channel = supabase
-      .channel("messages-and-info-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "messages" },
-        (payload) => {
-          setMessages((current) => {
-            if (payload.eventType === "INSERT") {
-              const next = payload.new as Message;
-              if (current.some((m) => m.id === next.id)) return current;
-              return [...current, next].sort(
-                (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-              );
-            }
-            if (payload.eventType === "DELETE") {
-              const old = payload.old as Message;
-              return current.filter((m) => m.id !== old.id);
-            }
-            return current;
-          });
-        }
-      )
+      .channel("info-and-locations-realtime")
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "info_pages" },
@@ -341,27 +310,19 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
 
       const holesForMatch = nextHoles.filter((h) => h.match_id === match.id);
       const derived = isMatchPlay
-        ? deriveMatchPlayFromHoles(holesForMatch, match.points)
+        ? deriveMatchPlayFromHoles(
+            holesForMatch,
+            match.points,
+            // A match's starting head start only ever takes effect once its session is
+            // the active one — otherwise a stray/early hole entry would prematurely
+            // shift the season's projected score before the round has really begun.
+            match.session_id === activeSessionId ? startingUpFor(match) : 0
+          )
         : deriveScrambleFromHoles(holesForMatch);
       await updateMatch(match.id, derived);
     },
-    [matchHoles, updateMatch]
+    [matchHoles, updateMatch, activeSessionId]
   );
-
-  const postMessage = useCallback(async (author: string, body: string) => {
-    const { data, error: insertError } = await supabase
-      .from("messages")
-      .insert({ author, body })
-      .select()
-      .single();
-    if (insertError) {
-      setSyncError(insertError.message);
-      return;
-    }
-    if (data) {
-      setMessages((current) => (current.some((m) => m.id === data.id) ? current : [...current, data]));
-    }
-  }, []);
 
   const updateInfoPage = useCallback(async (id: InfoPageId, content: string) => {
     setInfoPages((current) => current.map((p) => (p.id === id ? { ...p, content } : p)));
@@ -372,33 +333,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       .eq("id", id);
     if (updateError) {
       setSyncError(updateError.message);
-    }
-  }, []);
-
-  const addLocation = useCallback(
-    async (type: LocationType, name: string, address: string | null, notes: string | null) => {
-      const sort_order = locations.filter((l) => l.type === type).length;
-      const { data, error: insertError } = await supabase
-        .from("locations")
-        .insert({ type, name, address, notes, sort_order })
-        .select()
-        .single();
-      if (insertError) {
-        setSyncError(insertError.message);
-        return;
-      }
-      if (data) {
-        setLocations((current) => (current.some((l) => l.id === data.id) ? current : [...current, data]));
-      }
-    },
-    [locations]
-  );
-
-  const deleteLocation = useCallback(async (id: string) => {
-    setLocations((current) => current.filter((l) => l.id !== id));
-    const { error: deleteError } = await supabase.from("locations").delete().eq("id", id);
-    if (deleteError) {
-      setSyncError(deleteError.message);
     }
   }, []);
 
@@ -467,7 +401,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       sessions,
       matches,
       matchHoles,
-      messages,
       infoPages,
       locations,
       playerYearStats,
@@ -476,10 +409,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       syncError,
       clearSyncError,
       updateMatch,
-      postMessage,
       updateInfoPage,
-      addLocation,
-      deleteLocation,
       updateLocationCoords,
       resetAllMatches,
       activeSessionId,
@@ -494,7 +424,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       sessions,
       matches,
       matchHoles,
-      messages,
       infoPages,
       locations,
       playerYearStats,
@@ -503,10 +432,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       syncError,
       clearSyncError,
       updateMatch,
-      postMessage,
       updateInfoPage,
-      addLocation,
-      deleteLocation,
       updateLocationCoords,
       resetAllMatches,
       activeSessionId,

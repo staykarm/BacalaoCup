@@ -7,7 +7,6 @@ import { ScoreHeader } from "./ScoreHeader";
 import { MvpModal } from "./MvpModal";
 import { AgendaModal } from "./AgendaModal";
 import { BaneinfoModal } from "./BaneinfoModal";
-import { InfoPageModal } from "./InfoPageModal";
 import { RestaurantModal } from "./RestaurantModal";
 import { KartModal } from "./KartModal";
 import { AdminModal } from "./AdminModal";
@@ -35,14 +34,13 @@ function SyncErrorToast() {
   );
 }
 
-type ModalKey = "mvp" | "agenda" | "baneinfo" | "kart" | "praktisk" | "restaurant" | "admin" | null;
+type ModalKey = "mvp" | "agenda" | "baneinfo" | "kart" | "restaurant" | "admin" | null;
 
 const NAV_ITEMS: { key: Exclude<ModalKey, null | "admin">; label: string; icon: string }[] = [
   { key: "mvp", label: "MVP", icon: "🏆" },
   { key: "agenda", label: "Agenda", icon: "📅" },
   { key: "baneinfo", label: "Baneinfo", icon: "⛳" },
   { key: "kart", label: "Kart", icon: "🗺️" },
-  { key: "praktisk", label: "Praktisk", icon: "ℹ️" },
   { key: "restaurant", label: "Restaurant", icon: "🍽️" },
 ];
 
@@ -77,9 +75,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {openModal === "agenda" && <AgendaModal onClose={() => setOpenModal(null)} />}
       {openModal === "baneinfo" && <BaneinfoModal onClose={() => setOpenModal(null)} />}
       {openModal === "kart" && <KartModal onClose={() => setOpenModal(null)} />}
-      {openModal === "praktisk" && (
-        <InfoPageModal pageId="praktisk" title="Praktisk info" onClose={() => setOpenModal(null)} />
-      )}
       {openModal === "restaurant" && <RestaurantModal onClose={() => setOpenModal(null)} />}
       {openModal === "admin" && <AdminModal onClose={() => setOpenModal(null)} />}
       {openTeam && <TeamPointsModal team={openTeam} onClose={() => setOpenTeam(null)} />}

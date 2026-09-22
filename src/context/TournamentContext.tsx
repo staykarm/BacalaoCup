@@ -14,8 +14,6 @@ import { deriveMatchPlayFromHoles, deriveScrambleFromHoles, startingUpFor } from
 import {
   Day,
   HoleResult,
-  InfoPage,
-  InfoPageId,
   MapLocation,
   Match,
   MatchHole,
@@ -34,7 +32,6 @@ interface TournamentContextValue {
   sessions: Session[];
   matches: Match[];
   matchHoles: MatchHole[];
-  infoPages: InfoPage[];
   locations: MapLocation[];
   playerYearStats: PlayerYearStat[];
   loading: boolean;
@@ -43,7 +40,6 @@ interface TournamentContextValue {
   syncError: string | null;
   clearSyncError: () => void;
   updateMatch: (id: string, patch: Partial<Match>) => Promise<void>;
-  updateInfoPage: (id: InfoPageId, content: string) => Promise<void>;
   updateLocationCoords: (id: string, lat: number, lng: number) => Promise<void>;
   /** Admin: resets every match back to not-played with no live score or result. */
   resetAllMatches: () => Promise<void>;
@@ -73,7 +69,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [matchHoles, setMatchHoles] = useState<MatchHole[]>([]);
-  const [infoPages, setInfoPages] = useState<InfoPage[]>([]);
   const [locations, setLocations] = useState<MapLocation[]>([]);
   const [playerYearStats, setPlayerYearStats] = useState<PlayerYearStat[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -95,7 +90,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           sessionsRes,
           matchesRes,
           matchHolesRes,
-          infoPagesRes,
           locationsRes,
           playerYearStatsRes,
           appSettingsRes,
@@ -106,7 +100,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           supabase.from("sessions").select("*").order("sort_order"),
           supabase.from("matches").select("*").order("sort_order"),
           supabase.from("match_holes").select("*"),
-          supabase.from("info_pages").select("*"),
           supabase.from("locations").select("*").order("sort_order"),
           supabase.from("player_year_stats").select("*").order("year", { ascending: false }),
           supabase.from("app_settings").select("*").eq("id", "singleton").maybeSingle(),
@@ -121,7 +114,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           sessionsRes.error ||
           matchesRes.error ||
           matchHolesRes.error ||
-          infoPagesRes.error ||
           locationsRes.error ||
           playerYearStatsRes.error ||
           appSettingsRes.error;
@@ -138,7 +130,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         setSessions(sessionsRes.data ?? []);
         setMatches(matchesRes.data ?? []);
         setMatchHoles(matchHolesRes.data ?? []);
-        setInfoPages(infoPagesRes.data ?? []);
         setLocations(locationsRes.data ?? []);
         setPlayerYearStats(playerYearStatsRes.data ?? []);
         setActiveSessionId(appSettingsRes.data?.active_session_id ?? null);
@@ -221,14 +212,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const channel = supabase
       .channel("info-and-locations-realtime")
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "info_pages" },
-        (payload) => {
-          const next = payload.new as InfoPage;
-          setInfoPages((current) => current.map((p) => (p.id === next.id ? next : p)));
-        }
-      )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "locations" },
@@ -324,18 +307,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     [matchHoles, updateMatch, activeSessionId]
   );
 
-  const updateInfoPage = useCallback(async (id: InfoPageId, content: string) => {
-    setInfoPages((current) => current.map((p) => (p.id === id ? { ...p, content } : p)));
-
-    const { error: updateError } = await supabase
-      .from("info_pages")
-      .update({ content, updated_at: new Date().toISOString() })
-      .eq("id", id);
-    if (updateError) {
-      setSyncError(updateError.message);
-    }
-  }, []);
-
   const updateLocationCoords = useCallback(async (id: string, lat: number, lng: number) => {
     setLocations((current) => current.map((l) => (l.id === id ? { ...l, lat, lng } : l)));
     const { error: updateError } = await supabase.from("locations").update({ lat, lng }).eq("id", id);
@@ -401,7 +372,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       sessions,
       matches,
       matchHoles,
-      infoPages,
       locations,
       playerYearStats,
       loading,
@@ -409,7 +379,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       syncError,
       clearSyncError,
       updateMatch,
-      updateInfoPage,
       updateLocationCoords,
       resetAllMatches,
       activeSessionId,
@@ -424,7 +393,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       sessions,
       matches,
       matchHoles,
-      infoPages,
       locations,
       playerYearStats,
       loading,
@@ -432,7 +400,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       syncError,
       clearSyncError,
       updateMatch,
-      updateInfoPage,
       updateLocationCoords,
       resetAllMatches,
       activeSessionId,

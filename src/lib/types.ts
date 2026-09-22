@@ -88,22 +88,6 @@ export interface MatchHole {
   score_vs_par: number | null;
 }
 
-export interface Message {
-  id: string;
-  author: string;
-  body: string;
-  created_at: string;
-}
-
-export type InfoPageId = "praktisk" | "restaurant";
-
-export interface InfoPage {
-  id: InfoPageId;
-  title: string;
-  content: string;
-  updated_at: string;
-}
-
 export type LocationType = "course" | "house" | "restaurant";
 
 export interface MapLocation {

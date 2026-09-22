@@ -4,7 +4,15 @@ import { useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
 import { HoleResult, Match, Player, RESULT_LABELS, Session, TeamId } from "@/lib/types";
-import { courseHoleNumber, HOLES_PER_MATCH, isFrontNine, liveLeader, liveUpLabel, matchMarginLabel } from "@/lib/scoring";
+import {
+  courseHoleNumber,
+  HOLES_PER_MATCH,
+  isFrontNine,
+  liveLeader,
+  liveUpLabel,
+  matchMarginLabel,
+  startingUpFor,
+} from "@/lib/scoring";
 import { getHoleInfo } from "@/lib/courseHoles";
 import { PlayerDetailModal } from "./PlayerDetailModal";
 import { ModalShell } from "./ModalShell";
@@ -42,6 +50,8 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
   const holeByNumber = new Map(
     matchHoles.filter((h) => h.match_id === match.id).map((h) => [h.hole_number, h.result])
   );
+  // An uneven side (2 players vs 1) gets a 1-hole head start — shown as a fixed "Hull 0".
+  const headStart = startingUpFor(match);
 
   const liveLeaderTeam = liveLeader(match.live_up);
   const liveColor =
@@ -147,12 +157,12 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
           onClick={() => isActiveSession && setScoring(true)}
           disabled={!isActiveSession}
           aria-label="Oppdater stilling"
-          className={`flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 bg-navy-deep px-1 py-3 text-center transition sm:w-24 sm:py-4 ${
-            isActiveSession ? "hover:bg-navy-lighter" : "cursor-default opacity-60"
-          }`}
+          className={`flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 px-1 py-3 text-center transition sm:w-24 sm:py-4 ${
+            match.result !== "not_played" ? "bg-black" : "bg-navy-deep"
+          } ${isActiveSession ? "hover:bg-navy-lighter" : "cursor-default opacity-60"}`}
         >
           {match.result !== "not_played" ? (
-            <span className="text-sm font-extrabold text-foreground/70 sm:text-base">F</span>
+            <span className="text-sm font-extrabold text-white sm:text-base">F</span>
           ) : isLiveInProgress ? (
             <>
               <span className={`text-xs font-extrabold sm:text-sm ${liveColor}`}>
@@ -236,6 +246,7 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
                     <td className="w-9 pr-1 text-left text-[9px] font-semibold uppercase tracking-wide text-ink-light/70">
                       Hull
                     </td>
+                    {headStart !== 0 && <td className="text-[11px] font-bold text-ink-light/70">0</td>}
                     {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => (
                       <td key={relHole} className="text-[11px] font-bold text-ink">
                         {courseHoleNumber(relHole, frontNine)}
@@ -246,6 +257,7 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
                     <td className="pr-1 text-left text-[9px] font-semibold uppercase tracking-wide text-ink-light/70">
                       Par
                     </td>
+                    {headStart !== 0 && <td className="text-[10px] text-ink-light/40">–</td>}
                     {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => (
                       <td key={relHole} className="text-[10px] text-ink-light">
                         {getHoleInfo(course, courseHoleNumber(relHole, frontNine)).par ?? "–"}
@@ -256,6 +268,7 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
                     <td className="pr-1 text-left text-[9px] font-semibold uppercase tracking-wide text-ink-light/70">
                       Idx
                     </td>
+                    {headStart !== 0 && <td className="text-[10px] text-ink-light/40">–</td>}
                     {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => (
                       <td key={relHole} className="text-[10px] text-ink-light/70">
                         {getHoleInfo(course, courseHoleNumber(relHole, frontNine)).index ?? "–"}
@@ -264,6 +277,24 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
                   </tr>
                   <tr>
                     <td />
+                    {headStart !== 0 && (
+                      <td>
+                        <div
+                          title={
+                            headStart > 0
+                              ? "Gray starter 1 opp (ujevnt lag)"
+                              : "Aqua starter 1 opp (ujevnt lag)"
+                          }
+                          className={`flex h-16 w-8 items-center justify-center rounded border text-[8px] font-bold uppercase leading-none ${
+                            headStart > 0
+                              ? "border-gray-team bg-gray-team-bg text-ink"
+                              : "border-aqua-team bg-aqua-team-deep text-white"
+                          }`}
+                        >
+                          {headStart > 0 ? "Grå" : "Blå"}
+                        </div>
+                      </td>
+                    )}
                     {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => {
                       const result = holeByNumber.get(relHole) ?? null;
                       return (
@@ -277,13 +308,21 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
                                   : opt.key === "aqua"
                                     ? "border-aqua-team bg-aqua-team-deep text-white"
                                     : "border-gold-deep bg-gold/20 text-gold-deep";
+                              // Even unpressed, each button carries a faint tint of its own color
+                              // so the three options stay visually distinct before you pick one.
+                              const inactiveClass =
+                                opt.key === "gray"
+                                  ? "border-card-border bg-gray-team-bg/30 text-ink-light/50 hover:bg-gray-team-bg/50"
+                                  : opt.key === "aqua"
+                                    ? "border-card-border bg-aqua-team-light/25 text-ink-light/50 hover:bg-aqua-team-light/40"
+                                    : "border-card-border bg-gold/15 text-ink-light/50 hover:bg-gold/25";
                               return (
                                 <button
                                   key={opt.key}
                                   onClick={() => setMatchHole(match, relHole, { result: active ? null : opt.key })}
                                   aria-label={`Hull ${courseHoleNumber(relHole, frontNine)} ${opt.label}`}
                                   className={`h-5 w-8 rounded border text-[8px] font-bold uppercase leading-none transition ${
-                                    active ? activeClass : "border-card-border bg-white text-ink-light/40 hover:bg-card-deep"
+                                    active ? activeClass : inactiveClass
                                   }`}
                                 >
                                   {opt.label[0]}
@@ -301,6 +340,12 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
 
             <p className="text-center text-xs text-ink-light/60">
               Velg Grå, Delt eller Blå for hvert hull. Stillingen regnes ut automatisk.
+              {headStart !== 0 && (
+                <>
+                  {" "}
+                  Hull 0 er hodestarten {headStart > 0 ? "Gray" : "Aqua"} får for å spille én spiller kort.
+                </>
+              )}
             </p>
           </div>
         </ModalShell>

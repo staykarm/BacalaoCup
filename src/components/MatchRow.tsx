@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
 import { Match, MatchResult, Player, RESULT_LABELS, Session, TeamId } from "@/lib/types";
 import { liveLeader, liveUpLabel } from "@/lib/scoring";
-import { PlayerSelect } from "./PlayerSelect";
 import { PlayerDetailModal } from "./PlayerDetailModal";
 import { ModalShell } from "./ModalShell";
 
@@ -26,35 +25,13 @@ const RESULT_OPTIONS: MatchResult[] = ["gray_won", "halved", "aqua_won", "not_pl
 
 export function MatchRow({ match, session, players }: { match: Match; session: Session; players: Player[] }) {
   const { updateMatch, setMatchResult, activeSessionId } = useTournament();
-  const [editing, setEditing] = useState(false);
   const [scoring, setScoring] = useState(false);
-  const [draft, setDraft] = useState(match);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   const locked = activeSessionId !== null && session.id !== activeSessionId;
 
-  const maxPlayersPerSide = session.format === "scramble" ? 0 : session.format === "singles" ? 1 : 2;
-
   const grayPlayers = sidePlayers(match, "gray", players);
   const aquaPlayers = sidePlayers(match, "aqua", players);
-
-  function startEdit() {
-    setDraft(match);
-    setEditing(true);
-  }
-
-  async function save() {
-    await updateMatch(match.id, {
-      start_time: draft.start_time,
-      points: draft.points,
-      gray_player1: draft.gray_player1,
-      gray_player2: draft.gray_player2,
-      aqua_player1: draft.aqua_player1,
-      aqua_player2: draft.aqua_player2,
-      note: draft.note,
-    });
-    setEditing(false);
-  }
 
   function bumpLiveUp(delta: number) {
     updateMatch(match.id, { live_up: match.live_up + delta });
@@ -156,21 +133,13 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
             : "border-card-border"
       }`}
     >
-      {locked ? (
+      {locked && (
         <span
           title="Denne runden er låst av admin"
           className="absolute right-1.5 top-1.5 z-10 rounded-full border border-navy-lighter/60 bg-navy-deep/70 px-1.5 py-1 text-[10px] text-foreground/40 backdrop-blur"
         >
           🔒
         </span>
-      ) : (
-        <button
-          onClick={startEdit}
-          aria-label="Rediger kamp"
-          className="absolute right-1.5 top-1.5 z-10 rounded-full border border-navy-lighter/60 bg-navy-deep/70 px-1.5 py-1 text-[10px] text-foreground/60 backdrop-blur hover:bg-navy-lighter/60"
-        >
-          ✎
-        </button>
       )}
 
       <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/50 bg-navy-deep px-2 py-0.5 text-[10px] font-bold text-gold shadow">
@@ -287,102 +256,6 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
         </div>
 
         {match.note && <p className="mt-2 text-[11px] italic text-ink-light/60">⚠ {match.note}</p>}
-
-        {editing && (
-          <div className="mt-3 space-y-3 rounded-xl border border-card-border bg-card-deep p-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <label className="flex items-center gap-2 text-xs text-ink-light">
-                Tid
-                <input
-                  type="text"
-                  value={draft.start_time ?? ""}
-                  onChange={(e) => setDraft({ ...draft, start_time: e.target.value })}
-                  placeholder="14:20"
-                  className="w-20 rounded-xl border border-card-border bg-white px-2 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
-                />
-              </label>
-              <label className="flex items-center gap-2 text-xs text-ink-light">
-                Poeng
-                <input
-                  type="number"
-                  step="0.5"
-                  min="0"
-                  value={draft.points}
-                  onChange={(e) => setDraft({ ...draft, points: Number(e.target.value) })}
-                  className="w-20 rounded-xl border border-card-border bg-white px-2 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
-                />
-              </label>
-            </div>
-
-            {maxPlayersPerSide > 0 && (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <div className="text-[11px] font-semibold uppercase text-ink">Gray</div>
-                  <PlayerSelect
-                    players={players}
-                    team="gray"
-                    value={draft.gray_player1}
-                    onChange={(v) => setDraft({ ...draft, gray_player1: v })}
-                    className="w-full"
-                  />
-                  {maxPlayersPerSide === 2 && (
-                    <PlayerSelect
-                      players={players}
-                      team="gray"
-                      value={draft.gray_player2}
-                      onChange={(v) => setDraft({ ...draft, gray_player2: v })}
-                      className="w-full"
-                    />
-                  )}
-                </div>
-                <div className="space-y-1.5">
-                  <div className="text-[11px] font-semibold uppercase text-aqua-team-deep">Aqua</div>
-                  <PlayerSelect
-                    players={players}
-                    team="aqua"
-                    value={draft.aqua_player1}
-                    onChange={(v) => setDraft({ ...draft, aqua_player1: v })}
-                    className="w-full"
-                  />
-                  {maxPlayersPerSide === 2 && (
-                    <PlayerSelect
-                      players={players}
-                      team="aqua"
-                      value={draft.aqua_player2}
-                      onChange={(v) => setDraft({ ...draft, aqua_player2: v })}
-                      className="w-full"
-                    />
-                  )}
-                </div>
-              </div>
-            )}
-
-            <label className="block text-xs text-ink-light">
-              Notat
-              <textarea
-                value={draft.note ?? ""}
-                onChange={(e) => setDraft({ ...draft, note: e.target.value || null })}
-                rows={2}
-                className="mt-1 w-full rounded-xl border border-card-border bg-white px-2 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
-              />
-            </label>
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setEditing(false)}
-                className="rounded-xl border border-card-border px-3 py-1.5 text-xs text-ink-light hover:bg-white"
-              >
-                Avbryt
-              </button>
-              <button
-                onClick={save}
-                className="rounded-xl border border-gold-deep/60 bg-gold/20 px-3 py-1.5 text-xs font-semibold text-gold-deep hover:bg-gold/30"
-              >
-                Lagre
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {scoring && (

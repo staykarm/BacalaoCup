@@ -6,15 +6,15 @@ import { useTournament } from "@/context/TournamentContext";
 import { Match, MatchResult, Player, RESULT_LABELS, Session, TeamId } from "@/lib/types";
 import { liveLeader, liveUpLabel } from "@/lib/scoring";
 import { PlayerSelect } from "./PlayerSelect";
+import { PlayerDetailModal } from "./PlayerDetailModal";
 
-function sideNames(match: Match, team: TeamId, players: Player[]) {
+function sidePlayers(match: Match, team: TeamId, players: Player[]) {
   const ids = team === "gray"
     ? [match.gray_player1, match.gray_player2]
     : [match.aqua_player1, match.aqua_player2];
-  const names = ids
+  return ids
     .filter((id): id is string => !!id)
-    .map((id) => players.find((p) => p.id === id)?.name ?? id);
-  return names;
+    .map((id) => ({ id, name: players.find((p) => p.id === id)?.name ?? id }));
 }
 
 function fmtPts(n: number) {
@@ -24,14 +24,17 @@ function fmtPts(n: number) {
 const RESULT_OPTIONS: MatchResult[] = ["gray_won", "halved", "aqua_won", "not_played"];
 
 export function MatchRow({ match, session, players }: { match: Match; session: Session; players: Player[] }) {
-  const { updateMatch, setMatchResult } = useTournament();
+  const { updateMatch, setMatchResult, activeSessionId } = useTournament();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(match);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+
+  const locked = activeSessionId !== null && session.id !== activeSessionId;
 
   const maxPlayersPerSide = session.format === "scramble" ? 0 : session.format === "singles" ? 1 : 2;
 
-  const grayNames = sideNames(match, "gray", players);
-  const aquaNames = sideNames(match, "aqua", players);
+  const grayPlayers = sidePlayers(match, "gray", players);
+  const aquaPlayers = sidePlayers(match, "aqua", players);
 
   function startEdit() {
     setDraft(match);
@@ -122,13 +125,22 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
 
   return (
     <div className="relative rounded-xl border border-navy-lighter/50 bg-navy-light/30 transition hover:border-navy-lighter">
-      <button
-        onClick={startEdit}
-        aria-label="Rediger kamp"
-        className="absolute right-1.5 top-1.5 z-10 rounded-full border border-navy-lighter/60 bg-navy-deep/70 px-1.5 py-1 text-[10px] text-foreground/60 backdrop-blur hover:bg-navy-lighter/60"
-      >
-        ✎
-      </button>
+      {locked ? (
+        <span
+          title="Denne runden er låst av admin"
+          className="absolute right-1.5 top-1.5 z-10 rounded-full border border-navy-lighter/60 bg-navy-deep/70 px-1.5 py-1 text-[10px] text-foreground/40 backdrop-blur"
+        >
+          🔒
+        </span>
+      ) : (
+        <button
+          onClick={startEdit}
+          aria-label="Rediger kamp"
+          className="absolute right-1.5 top-1.5 z-10 rounded-full border border-navy-lighter/60 bg-navy-deep/70 px-1.5 py-1 text-[10px] text-foreground/60 backdrop-blur hover:bg-navy-lighter/60"
+        >
+          ✎
+        </button>
+      )}
 
       <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/50 bg-navy-deep px-2 py-0.5 text-[10px] font-bold text-gold shadow">
         {fmtPts(match.points)}p
@@ -149,14 +161,21 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
             className="hidden h-5 w-5 shrink-0 rounded-full object-cover opacity-80 sm:block sm:h-6 sm:w-6"
           />
           <div className="flex min-w-0 flex-col gap-0.5">
-            {(grayNames.length > 0 ? grayNames : ["Gray (Joys)"]).map((name) => (
-              <span
-                key={name}
-                className={`truncate text-xs font-bold uppercase tracking-wide sm:text-sm ${sideText("gray")}`}
-              >
-                {name}
+            {grayPlayers.length > 0 ? (
+              grayPlayers.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setSelectedPlayerId(p.id)}
+                  className={`truncate text-left text-xs font-bold uppercase tracking-wide hover:underline sm:text-sm ${sideText("gray")}`}
+                >
+                  {p.name}
+                </button>
+              ))
+            ) : (
+              <span className={`truncate text-xs font-bold uppercase tracking-wide sm:text-sm ${sideText("gray")}`}>
+                Gray (Joys)
               </span>
-            ))}
+            )}
           </div>
         </div>
 
@@ -190,14 +209,21 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
           className={`flex min-w-0 flex-1 items-center justify-end gap-2 px-3 py-3 text-right sm:px-4 sm:py-4 ${sideBg("aqua")}`}
         >
           <div className="flex min-w-0 flex-col items-end gap-0.5">
-            {(aquaNames.length > 0 ? aquaNames : ["Aquarellos"]).map((name) => (
-              <span
-                key={name}
-                className={`truncate text-xs font-bold uppercase tracking-wide sm:text-sm ${sideText("aqua")}`}
-              >
-                {name}
+            {aquaPlayers.length > 0 ? (
+              aquaPlayers.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setSelectedPlayerId(p.id)}
+                  className={`truncate text-right text-xs font-bold uppercase tracking-wide hover:underline sm:text-sm ${sideText("aqua")}`}
+                >
+                  {p.name}
+                </button>
+              ))
+            ) : (
+              <span className={`truncate text-xs font-bold uppercase tracking-wide sm:text-sm ${sideText("aqua")}`}>
+                Aquarellos
               </span>
-            ))}
+            )}
           </div>
           <Image
             src="/logos/aquarellos.png"
@@ -222,24 +248,28 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
               ` · Gray ${fmtPts(match.points_gray)} – ${fmtPts(match.points_aqua)} Aqua`}
           </span>
 
-          <div className="ml-auto flex flex-wrap gap-1.5">
-            {RESULT_OPTIONS.map((r) => (
-              <button
-                key={r}
-                onClick={() => setMatchResult(match.id, r)}
-                className={`rounded-md border px-2 py-1 text-[11px] font-medium transition ${
-                  match.result === r
-                    ? "border-gold bg-gold/20 text-gold"
-                    : "border-navy-lighter/50 text-foreground/50 hover:border-navy-lighter hover:text-foreground/80"
-                }`}
-              >
-                {RESULT_LABELS[r]}
-              </button>
-            ))}
-          </div>
+          {locked ? (
+            <span className="ml-auto text-[11px] italic text-foreground/40">🔒 Runden er låst</span>
+          ) : (
+            <div className="ml-auto flex flex-wrap gap-1.5">
+              {RESULT_OPTIONS.map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setMatchResult(match.id, r)}
+                  className={`rounded-md border px-2 py-1 text-[11px] font-medium transition ${
+                    match.result === r
+                      ? "border-gold bg-gold/20 text-gold"
+                      : "border-navy-lighter/50 text-foreground/50 hover:border-navy-lighter hover:text-foreground/80"
+                  }`}
+                >
+                  {RESULT_LABELS[r]}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {match.result === "not_played" && (
+        {!locked && match.result === "not_played" && (
           <div className="mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-navy-lighter/50 bg-navy-light/50 px-3 py-2">
             <div className="flex items-center gap-2">
               <button
@@ -394,6 +424,10 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
           </div>
         )}
       </div>
+
+      {selectedPlayerId && (
+        <PlayerDetailModal playerId={selectedPlayerId} onClose={() => setSelectedPlayerId(null)} />
+      )}
     </div>
   );
 }

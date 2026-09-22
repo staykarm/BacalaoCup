@@ -90,6 +90,8 @@ export interface MapLocation {
   address: string | null;
   notes: string | null;
   sort_order: number;
+  lat: number | null;
+  lng: number | null;
 }
 
 export const LOCATION_TYPE_LABELS: Record<LocationType, string> = {

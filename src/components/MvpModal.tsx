@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useTournament } from "@/context/TournamentContext";
 import { computePlayerStats } from "@/lib/stats";
 import { Player, PlayerYearStat, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
+import { PlayerDetailModal } from "./PlayerDetailModal";
 
 function fmt(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
@@ -13,15 +15,17 @@ function PlayerCard({
   player,
   stat,
   history,
+  onClick,
 }: {
   player: Player;
   stat: ReturnType<typeof computePlayerStats>[number];
   history: PlayerYearStat[];
+  onClick: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-navy-lighter/40 bg-black/10 p-3">
+    <button onClick={onClick} className="w-full rounded-xl border border-navy-lighter/40 bg-black/10 p-3 text-left hover:border-navy-lighter">
       <div className="flex items-center justify-between gap-2">
-        <span className="font-semibold text-foreground/90">{player.name}</span>
+        <span className="font-semibold text-foreground/90 hover:underline">{player.name}</span>
         {player.hcp !== null && (
           <span className="shrink-0 rounded-full border border-navy-lighter/50 px-2 py-0.5 text-[11px] text-foreground/60">
             HCP {fmt(player.hcp)}
@@ -51,7 +55,7 @@ function PlayerCard({
           ))}
         </div>
       )}
-    </div>
+    </button>
   );
 }
 
@@ -62,6 +66,7 @@ function TeamGroup({
   playerStats,
   playerYearStats,
   lighter,
+  onSelectPlayer,
 }: {
   team: TeamId;
   title: string;
@@ -69,6 +74,7 @@ function TeamGroup({
   playerStats: ReturnType<typeof computePlayerStats>;
   playerYearStats: PlayerYearStat[];
   lighter?: boolean;
+  onSelectPlayer: (id: string) => void;
 }) {
   const rows = players
     .map((p) => ({ player: p, stat: playerStats.find((s) => s.player.id === p.id)! }))
@@ -94,6 +100,7 @@ function TeamGroup({
             history={playerYearStats
               .filter((h) => h.player_id === player.id)
               .sort((a, b) => b.year - a.year)}
+            onClick={() => onSelectPlayer(player.id)}
           />
         ))}
       </div>
@@ -106,6 +113,7 @@ export function MvpModal({ onClose }: { onClose: () => void }) {
   const playerStats = computePlayerStats(matches, players);
   const grayPlayers = players.filter((p) => p.team_id === "gray");
   const aquaPlayers = players.filter((p) => p.team_id === "aqua");
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   return (
     <ModalShell title="MVP" onClose={onClose}>
@@ -117,6 +125,7 @@ export function MvpModal({ onClose }: { onClose: () => void }) {
           playerStats={playerStats}
           playerYearStats={playerYearStats}
           lighter
+          onSelectPlayer={setSelectedPlayerId}
         />
         <TeamGroup
           team="aqua"
@@ -124,8 +133,13 @@ export function MvpModal({ onClose }: { onClose: () => void }) {
           players={aquaPlayers}
           playerStats={playerStats}
           playerYearStats={playerYearStats}
+          onSelectPlayer={setSelectedPlayerId}
         />
       </div>
+
+      {selectedPlayerId && (
+        <PlayerDetailModal playerId={selectedPlayerId} onClose={() => setSelectedPlayerId(null)} />
+      )}
     </ModalShell>
   );
 }

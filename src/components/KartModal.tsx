@@ -1,9 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useTournament } from "@/context/TournamentContext";
 import { LOCATION_TYPE_LABELS, LocationType, MapLocation } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
+
+const MapView = dynamic(() => import("./MapView").then((m) => m.MapView), {
+  ssr: false,
+  loading: () => <div className="h-72 w-full rounded-xl bg-navy-deep/40 sm:h-96" />,
+});
 
 const TYPE_ORDER: LocationType[] = ["course", "house", "restaurant"];
 
@@ -11,44 +17,30 @@ function mapsUrl(address: string) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
 
-function mapsEmbedUrl(address: string) {
-  return `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
-}
-
-function LocationCard({ location, onDelete }: { location: MapLocation; onDelete: () => void }) {
+function LocationRow({ location, onDelete }: { location: MapLocation; onDelete: () => void }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-navy-lighter/50 bg-navy-light/40">
-      <div className="flex items-start justify-between gap-2 p-3">
-        <div className="min-w-0">
-          <div className="font-semibold text-foreground/90">{location.name}</div>
-          {location.address && (
-            <a
-              href={mapsUrl(location.address)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-0.5 block truncate text-xs text-gold hover:underline"
-            >
-              {location.address}
-            </a>
-          )}
-          {location.notes && <p className="mt-1 text-xs text-foreground/60">{location.notes}</p>}
-        </div>
-        <button
-          onClick={onDelete}
-          aria-label="Slett"
-          className="shrink-0 rounded-full border border-navy-lighter/60 px-2 py-1 text-xs text-foreground/50 hover:bg-navy-lighter/40"
-        >
-          ✕
-        </button>
+    <div className="flex items-start justify-between gap-2 rounded-xl border border-navy-lighter/50 bg-navy-light/40 p-3">
+      <div className="min-w-0">
+        <div className="font-semibold text-foreground/90">{location.name}</div>
+        {location.address && (
+          <a
+            href={mapsUrl(location.address)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-0.5 block truncate text-xs text-gold hover:underline"
+          >
+            {location.address}
+          </a>
+        )}
+        {location.notes && <p className="mt-1 text-xs text-foreground/60">{location.notes}</p>}
       </div>
-      {location.address && (
-        <iframe
-          title={location.name}
-          src={mapsEmbedUrl(location.address)}
-          className="h-40 w-full border-0"
-          loading="lazy"
-        />
-      )}
+      <button
+        onClick={onDelete}
+        aria-label="Slett"
+        className="shrink-0 rounded-full border border-navy-lighter/60 px-2 py-1 text-xs text-foreground/50 hover:bg-navy-lighter/40"
+      >
+        ✕
+      </button>
     </div>
   );
 }
@@ -76,6 +68,8 @@ export function KartModal({ onClose }: { onClose: () => void }) {
   return (
     <ModalShell title="Kart" onClose={onClose}>
       <div className="space-y-6">
+        <MapView />
+
         {TYPE_ORDER.map((type) => {
           const items = locations.filter((l) => l.type === type).sort((a, b) => a.sort_order - b.sort_order);
 
@@ -93,9 +87,9 @@ export function KartModal({ onClose }: { onClose: () => void }) {
                 </button>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {items.map((loc) => (
-                  <LocationCard key={loc.id} location={loc} onDelete={() => deleteLocation(loc.id)} />
+                  <LocationRow key={loc.id} location={loc} onDelete={() => deleteLocation(loc.id)} />
                 ))}
                 {items.length === 0 && (
                   <p className="text-xs italic text-foreground/40">Ingen lagt inn ennå.</p>

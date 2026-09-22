@@ -47,8 +47,12 @@ interface TournamentContextValue {
   updateInfoPage: (id: InfoPageId, content: string) => Promise<void>;
   addLocation: (type: LocationType, name: string, address: string | null, notes: string | null) => Promise<void>;
   deleteLocation: (id: string) => Promise<void>;
+  updateLocationCoords: (id: string, lat: number, lng: number) => Promise<void>;
   /** Admin: resets every match back to not-played with no live score or result. */
   resetAllMatches: () => Promise<void>;
+  /** Admin: null means every round is open for editing. */
+  activeSessionId: string | null;
+  setActiveSession: (sessionId: string | null) => Promise<void>;
 }
 
 const TournamentContext = createContext<TournamentContextValue | null>(null);
@@ -63,6 +67,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const [infoPages, setInfoPages] = useState<InfoPage[]>([]);
   const [locations, setLocations] = useState<MapLocation[]>([]);
   const [playerYearStats, setPlayerYearStats] = useState<PlayerYearStat[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -84,6 +89,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           infoPagesRes,
           locationsRes,
           playerYearStatsRes,
+          appSettingsRes,
         ] = await Promise.all([
           supabase.from("teams").select("*"),
           supabase.from("players").select("*"),
@@ -94,6 +100,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           supabase.from("info_pages").select("*"),
           supabase.from("locations").select("*").order("sort_order"),
           supabase.from("player_year_stats").select("*").order("year", { ascending: false }),
+          supabase.from("app_settings").select("*").eq("id", "singleton").maybeSingle(),
         ]);
 
         if (cancelled) return;
@@ -107,7 +114,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           messagesRes.error ||
           infoPagesRes.error ||
           locationsRes.error ||
-          playerYearStatsRes.error;
+          playerYearStatsRes.error ||
+          appSettingsRes.error;
 
         if (firstError) {
           setError(firstError.message);
@@ -124,6 +132,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         setInfoPages(infoPagesRes.data ?? []);
         setLocations(locationsRes.data ?? []);
         setPlayerYearStats(playerYearStatsRes.data ?? []);
+        setActiveSessionId(appSettingsRes.data?.active_session_id ?? null);
         setLoading(false);
       } catch (err) {
         if (cancelled) return;
@@ -211,12 +220,24 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
               if (current.some((l) => l.id === next.id)) return current;
               return [...current, next].sort((a, b) => a.sort_order - b.sort_order);
             }
+            if (payload.eventType === "UPDATE") {
+              const next = payload.new as MapLocation;
+              return current.map((l) => (l.id === next.id ? next : l));
+            }
             if (payload.eventType === "DELETE") {
               const old = payload.old as MapLocation;
               return current.filter((l) => l.id !== old.id);
             }
             return current;
           });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "app_settings" },
+        (payload) => {
+          const next = payload.new as { active_session_id: string | null };
+          setActiveSessionId(next.active_session_id);
         }
       )
       .subscribe();
@@ -299,6 +320,25 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const updateLocationCoords = useCallback(async (id: string, lat: number, lng: number) => {
+    setLocations((current) => current.map((l) => (l.id === id ? { ...l, lat, lng } : l)));
+    const { error: updateError } = await supabase.from("locations").update({ lat, lng }).eq("id", id);
+    if (updateError) {
+      setSyncError(updateError.message);
+    }
+  }, []);
+
+  const setActiveSession = useCallback(async (sessionId: string | null) => {
+    setActiveSessionId(sessionId);
+    const { error: updateError } = await supabase
+      .from("app_settings")
+      .update({ active_session_id: sessionId })
+      .eq("id", "singleton");
+    if (updateError) {
+      setSyncError(updateError.message);
+    }
+  }, []);
+
   const resetAllMatches = useCallback(async () => {
     const reset = {
       result: "not_played" as MatchResult,
@@ -336,7 +376,10 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       updateInfoPage,
       addLocation,
       deleteLocation,
+      updateLocationCoords,
       resetAllMatches,
+      activeSessionId,
+      setActiveSession,
     }),
     [
       teams,
@@ -358,7 +401,10 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       updateInfoPage,
       addLocation,
       deleteLocation,
+      updateLocationCoords,
       resetAllMatches,
+      activeSessionId,
+      setActiveSession,
     ]
   );
 

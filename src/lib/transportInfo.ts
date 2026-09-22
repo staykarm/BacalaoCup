@@ -22,4 +22,5 @@ export const TRANSPORT_INFO: Record<string, TransportLeg[]> = {
     { time: "12:00", from: "Puerto Banús-området", to: "Mijas Golf (Los Lagos)" },
     { time: "19:00", from: "Mijas Golf (Los Lagos)", to: "Puerto Banús-området" },
   ],
+  sun: [{ time: "08:30", from: "Puerto Banús-området", to: "Malaga lufthavn" }],
 };

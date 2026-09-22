@@ -5,11 +5,13 @@ import { useTournament } from "@/context/TournamentContext";
 import { SessionSection } from "@/components/SessionSection";
 
 export default function Home() {
-  const { days, sessions, matches, players, loading, error } = useTournament();
+  const { days, sessions, matches, players, loading, error, activeSessionId } = useTournament();
   const [activeDay, setActiveDay] = useState<string | null>(null);
 
   const sortedDays = useMemo(() => [...days].sort((a, b) => a.sort_order - b.sort_order), [days]);
-  const currentDayId = activeDay ?? sortedDays[0]?.id ?? null;
+  const activeRoundDayId = sessions.find((s) => s.id === activeSessionId)?.day_id ?? null;
+  // Default to whichever day holds the active round, so opening the app lands on it directly.
+  const currentDayId = activeDay ?? activeRoundDayId ?? sortedDays[0]?.id ?? null;
 
   if (loading) {
     return <div className="flex justify-center py-20 text-ink-light">Laster turneringsdata…</div>;
@@ -59,17 +61,22 @@ export default function Home() {
       )}
 
       <div className="space-y-3">
-        {daySessions.map((session, i) => (
-          <SessionSection
-            key={session.id}
-            session={session}
-            matches={matches
-              .filter((m) => m.session_id === session.id)
-              .sort((a, b) => a.sort_order - b.sort_order)}
-            players={players}
-            defaultOpen={i === 0}
-          />
-        ))}
+        {daySessions.map((session, i) => {
+          // Open the active round by default; if it's not on this day (or none is set), fall back to the first.
+          const dayHasActiveSession = daySessions.some((s) => s.id === activeSessionId);
+          const defaultOpen = dayHasActiveSession ? session.id === activeSessionId : i === 0;
+          return (
+            <SessionSection
+              key={session.id}
+              session={session}
+              matches={matches
+                .filter((m) => m.session_id === session.id)
+                .sort((a, b) => a.sort_order - b.sort_order)}
+              players={players}
+              defaultOpen={defaultOpen}
+            />
+          );
+        })}
       </div>
     </div>
   );

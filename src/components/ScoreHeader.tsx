@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
-import { hasLiveMatches, projectedPoints } from "@/lib/scoring";
+import { hasLiveMatches, pointsToClinch, projectedPoints, totalPoints } from "@/lib/scoring";
 import { TeamId } from "@/lib/types";
 import { ScoreBar } from "./ScoreBar";
 
@@ -17,9 +17,16 @@ export function ScoreHeader({
   onOpenAdmin: () => void;
   onOpenTeam: (team: TeamId) => void;
 }) {
-  const { matches } = useTournament();
-  const { gray, aqua, possible } = projectedPoints(matches);
+  const { matches, sessions } = useTournament();
+  const { gray, aqua, possible } = projectedPoints(matches, sessions);
+  const settled = totalPoints(matches, sessions);
+  const grayLive = Math.max(0, gray - settled.gray);
+  const aquaLive = Math.max(0, aqua - settled.aqua);
   const isLive = hasLiveMatches(matches);
+
+  // "Won" is based on officially finalized points only — a live lead can still flip.
+  const clinch = pointsToClinch(settled.gray, settled.aqua, settled.possible);
+  const winner: TeamId | null = clinch.gray === 0 ? "gray" : clinch.aqua === 0 ? "aqua" : null;
 
   return (
     <header className="sticky top-0 z-40 border-b border-navy-lighter/60 bg-navy-deep/90 backdrop-blur supports-[backdrop-filter]:bg-navy-deep/75">
@@ -40,6 +47,21 @@ export function ScoreHeader({
           </p>
           <span className={`h-1.5 w-1.5 rounded-full ${isLive ? "animate-pulse bg-red-500" : "bg-gold"}`} />
         </div>
+
+        <p className="mt-1 text-center text-[10px] font-semibold uppercase tracking-wide sm:text-[11px]">
+          {winner ? (
+            <span className={winner === "gray" ? "text-gray-team-light" : "text-aqua-team-light"}>
+              🏆 {winner === "gray" ? "Gray (Joys)" : "Aquarellos"} har vunnet cupen!
+            </span>
+          ) : (
+            <>
+              <span className="text-gray-team-light">Gray trenger {fmt(clinch.gray)}p</span>
+              <span className="text-foreground/40"> &middot; </span>
+              <span className="text-aqua-team-light">Aqua trenger {fmt(clinch.aqua)}p</span>
+              <span className="text-foreground/40"> til seier</span>
+            </>
+          )}
+        </p>
 
         <div className="mt-2 grid grid-cols-3 items-center gap-2">
           <button
@@ -87,7 +109,14 @@ export function ScoreHeader({
           </button>
         </div>
 
-        <ScoreBar gray={gray} aqua={aqua} possible={possible} className="mx-auto mt-2 max-w-md" />
+        <ScoreBar
+          graySettled={settled.gray}
+          grayLive={grayLive}
+          aquaSettled={settled.aqua}
+          aquaLive={aquaLive}
+          possible={possible}
+          className="mx-auto mt-2 max-w-md"
+        />
       </div>
     </header>
   );

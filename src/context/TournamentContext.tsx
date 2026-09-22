@@ -24,6 +24,7 @@ import {
   PlayerYearStat,
   Session,
   Team,
+  TeamId,
 } from "@/lib/types";
 
 interface TournamentContextValue {
@@ -50,9 +51,11 @@ interface TournamentContextValue {
   updateLocationCoords: (id: string, lat: number, lng: number) => Promise<void>;
   /** Admin: resets every match back to not-played with no live score or result. */
   resetAllMatches: () => Promise<void>;
-  /** Admin: null means every round is open for editing. */
+  /** Admin: which round is marked "- pågår" in the UI. Purely informational — doesn't restrict editing. */
   activeSessionId: string | null;
   setActiveSession: (sessionId: string | null) => Promise<void>;
+  /** Admin: scramble-only team stroke handicap for a session. Pass team=null to clear it. */
+  updateSessionHandicap: (sessionId: string, team: TeamId | null, strokes: number | null) => Promise<void>;
 }
 
 const TournamentContext = createContext<TournamentContextValue | null>(null);
@@ -346,14 +349,31 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       points_aqua: 0,
       live_up: 0,
       live_thru: null,
+      score_vs_par: null,
     };
     setMatches((current) => current.map((m) => ({ ...m, ...reset })));
 
-    const { error: updateError } = await supabase.from("matches").update(reset).neq("id", "");
+    // matches.id is a uuid column, so a `!= ''` filter fails to cast and the update never
+    // runs server-side (it looked like it worked locally, but nothing was actually reset).
+    // `id IS NOT NULL` is always true for real rows without attempting any uuid cast.
+    const { error: updateError } = await supabase.from("matches").update(reset).not("id", "is", null);
     if (updateError) {
       setSyncError(updateError.message);
     }
   }, []);
+
+  const updateSessionHandicap = useCallback(
+    async (sessionId: string, team: TeamId | null, strokes: number | null) => {
+      const patch = { handicap_team: team, handicap_strokes: team ? strokes : null };
+      setSessions((current) => current.map((s) => (s.id === sessionId ? { ...s, ...patch } : s)));
+
+      const { error: updateError } = await supabase.from("sessions").update(patch).eq("id", sessionId);
+      if (updateError) {
+        setSyncError(updateError.message);
+      }
+    },
+    []
+  );
 
   const value = useMemo(
     () => ({
@@ -380,6 +400,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       resetAllMatches,
       activeSessionId,
       setActiveSession,
+      updateSessionHandicap,
     }),
     [
       teams,
@@ -405,6 +426,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       resetAllMatches,
       activeSessionId,
       setActiveSession,
+      updateSessionHandicap,
     ]
   );
 

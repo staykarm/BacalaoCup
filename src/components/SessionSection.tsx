@@ -5,6 +5,7 @@ import { Match, Player, Session, FORMAT_LABELS } from "@/lib/types";
 import { projectedPoints } from "@/lib/scoring";
 import { useTournament } from "@/context/TournamentContext";
 import { MatchRow } from "./MatchRow";
+import { ScrambleFlights } from "./ScrambleFlights";
 
 function fmt(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
@@ -24,10 +25,22 @@ export function SessionSection({
   const { activeSessionId } = useTournament();
   const [open, setOpen] = useState(defaultOpen);
 
-  const { gray, aqua } = projectedPoints(matches);
-  const played = matches.filter((m) => m.result !== "not_played").length;
+  const { gray, aqua } = projectedPoints(matches, [session]);
+  const isScramble = session.format === "scramble";
+  const played = isScramble
+    ? matches.filter((m) => m.score_vs_par !== null).length
+    : matches.filter((m) => m.result !== "not_played").length;
   const isActive = activeSessionId === session.id;
   const leader: "gray" | "aqua" | null = gray === aqua ? null : gray > aqua ? "gray" : "aqua";
+
+  // A merged (mixed-format) session can hold matches worth different points, so derive the
+  // "Xp/kamp" text from the matches themselves rather than trusting the session's single value.
+  const matchPointValues = [...new Set(matches.map((m) => m.points))];
+  const pointsLabel = isScramble
+    ? `${fmt(session.points_per_match)}p`
+    : matchPointValues.length <= 1
+      ? `${fmt(session.points_per_match)}p/kamp`
+      : `${fmt(Math.min(...matchPointValues))}–${fmt(Math.max(...matchPointValues))}p/kamp`;
 
   const cardClass = isActive
     ? leader === "gray"
@@ -40,7 +53,6 @@ export function SessionSection({
   // Every leader tint (gray, aqua, gold) and the inactive state all sit on a light fill now, so text stays ink-based throughout.
   const textClass = "text-ink-light/60";
   const titleClass = "text-ink";
-  const badgeClass = "border-gold-deep/50 bg-gold/10 text-gold-deep";
   const grayScoreText = "text-ink";
   const aquaScoreText = "text-aqua-team-deep";
   const dashText = "text-ink-light/40";
@@ -55,17 +67,13 @@ export function SessionSection({
         <div className="flex items-center gap-3">
           <span className={`transition-transform ${textClass} ${open ? "rotate-90" : ""}`}>▶</span>
           <div>
-            <div className={`flex items-center gap-2 font-semibold ${titleClass}`}>
+            <div className={`font-semibold ${titleClass}`}>
               {session.name}
-              {isActive && (
-                <span className={`rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${badgeClass}`}>
-                  Aktiv runde
-                </span>
-              )}
+              {isActive && <span className="text-gold-deep"> - pågår</span>}
             </div>
             <div className={`text-[11px] uppercase tracking-wide ${textClass}`}>
-              {FORMAT_LABELS[session.format]} &middot; {fmt(session.points_per_match)}p/kamp &middot;{" "}
-              {played}/{matches.length} spilt
+              {FORMAT_LABELS[session.format]} &middot; {pointsLabel} &middot;{" "}
+              {played}/{matches.length} {isScramble ? "score registrert" : "spilt"}
             </div>
           </div>
         </div>
@@ -78,9 +86,11 @@ export function SessionSection({
 
       {open && (
         <div className={`space-y-2 border-t px-3 pb-3 pt-3 ${borderTClass}`}>
-          {matches.map((m) => (
-            <MatchRow key={m.id} match={m} session={session} players={players} />
-          ))}
+          {isScramble ? (
+            <ScrambleFlights session={session} matches={matches} />
+          ) : (
+            matches.map((m) => <MatchRow key={m.id} match={m} players={players} />)
+          )}
         </div>
       )}
     </div>

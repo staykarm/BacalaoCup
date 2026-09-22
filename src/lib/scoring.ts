@@ -1,4 +1,4 @@
-import { Match, MatchResult, TeamId } from "./types";
+import { Match, MatchResult, Session, TeamId } from "./types";
 
 export function pointsForResult(
   result: MatchResult,
@@ -17,46 +17,125 @@ export function pointsForResult(
   }
 }
 
-export function totalPoints(matches: Match[]) {
-  return matches.reduce(
+/**
+ * A scramble session isn't match-play: each team fields two flights, and the whole
+ * session's points go entirely to whichever team has the lower combined score-vs-par
+ * across its two flights (net of an optional team handicap) — never split per row.
+ * "Decided" only once every flight on both sides has a score entered.
+ */
+export function scrambleResult(flights: Match[], session: Session) {
+  const grayScores = flights.filter((f) => f.flight_team === "gray").map((f) => f.score_vs_par);
+  const aquaScores = flights.filter((f) => f.flight_team === "aqua").map((f) => f.score_vs_par);
+  const decided =
+    grayScores.length > 0 &&
+    aquaScores.length > 0 &&
+    grayScores.every((s): s is number => s !== null) &&
+    aquaScores.every((s): s is number => s !== null);
+
+  if (!decided) {
+    return { decided: false, grayTotal: null, aquaTotal: null, winner: null } as const;
+  }
+
+  const grayTotal = (grayScores as number[]).reduce((a, b) => a + b, 0);
+  const aquaTotal = (aquaScores as number[]).reduce((a, b) => a + b, 0);
+  const grayNet = grayTotal - (session.handicap_team === "gray" ? (session.handicap_strokes ?? 0) : 0);
+  const aquaNet = aquaTotal - (session.handicap_team === "aqua" ? (session.handicap_strokes ?? 0) : 0);
+  const winner: TeamId | null = grayNet === aquaNet ? null : grayNet < aquaNet ? "gray" : "aqua";
+
+  return { decided: true, grayTotal, aquaTotal, winner } as const;
+}
+
+function sessionPoints(sessionMatches: Match[], session: Session | undefined) {
+  if (session?.format === "scramble") {
+    if (!session) return { gray: 0, aqua: 0 };
+    const result = scrambleResult(sessionMatches, session);
+    if (!result.decided) return { gray: 0, aqua: 0 };
+    if (result.winner === "gray") return { gray: session.points_per_match, aqua: 0 };
+    if (result.winner === "aqua") return { gray: 0, aqua: session.points_per_match };
+    return { gray: session.points_per_match / 2, aqua: session.points_per_match / 2 };
+  }
+  return sessionMatches.reduce(
     (acc, m) => {
       acc.gray += m.points_gray;
       acc.aqua += m.points_aqua;
-      acc.possible += m.points;
       return acc;
     },
-    { gray: 0, aqua: 0, possible: 0 }
+    { gray: 0, aqua: 0 }
   );
 }
 
+function groupBySession(matches: Match[]) {
+  const bySession = new Map<string, Match[]>();
+  for (const m of matches) {
+    const list = bySession.get(m.session_id) ?? [];
+    list.push(m);
+    bySession.set(m.session_id, list);
+  }
+  return bySession;
+}
+
+/** Total points still possible for a session: 1 pool of points_per_match for a scramble session, or the sum of each match's own points otherwise. */
+function sessionPossible(sessionMatches: Match[], session: Session | undefined) {
+  if (session?.format === "scramble") return session.points_per_match;
+  return sessionMatches.reduce((sum, m) => sum + m.points, 0);
+}
+
+export function totalPoints(matches: Match[], sessions: Session[]) {
+  const sessionById = new Map(sessions.map((s) => [s.id, s]));
+  const bySession = groupBySession(matches);
+  let gray = 0;
+  let aqua = 0;
+  let possible = 0;
+  for (const [sessionId, sessionMatches] of bySession) {
+    const session = sessionById.get(sessionId);
+    const points = sessionPoints(sessionMatches, session);
+    gray += points.gray;
+    aqua += points.aqua;
+    possible += sessionPossible(sessionMatches, session);
+  }
+  return { gray, aqua, possible };
+}
+
 /**
- * Same as totalPoints, but a match still in progress (not yet finalized)
- * counts toward whichever team currently leads it live — so the standing
- * updates hole by hole instead of waiting for the match to be locked in.
- * Once at least one hole has been played, a match that's all square splits
- * its points evenly between the teams, same as a halved final result. A
- * match that hasn't started yet still contributes nothing.
+ * Same as totalPoints, but a match-play match still in progress (not yet finalized)
+ * counts toward whichever team currently leads it live — so the standing updates
+ * hole by hole instead of waiting for the match to be locked in. Once at least one
+ * hole has been played, a match that's all square splits its points evenly between
+ * the teams, same as a halved final result. A match that hasn't started yet still
+ * contributes nothing. A scramble session has no partial/live state — it only
+ * contributes once every flight's score has been entered, same as totalPoints.
  */
-export function projectedPoints(matches: Match[]) {
-  return matches.reduce(
-    (acc, m) => {
-      if (m.result !== "not_played") {
-        acc.gray += m.points_gray;
-        acc.aqua += m.points_aqua;
-      } else if (m.live_thru !== null || m.live_up !== 0) {
-        const leader = liveLeader(m.live_up);
-        if (leader === "gray") acc.gray += m.points;
-        else if (leader === "aqua") acc.aqua += m.points;
-        else {
-          acc.gray += m.points / 2;
-          acc.aqua += m.points / 2;
+export function projectedPoints(matches: Match[], sessions: Session[]) {
+  const sessionById = new Map(sessions.map((s) => [s.id, s]));
+  const bySession = groupBySession(matches);
+  let gray = 0;
+  let aqua = 0;
+  let possible = 0;
+  for (const [sessionId, sessionMatches] of bySession) {
+    const session = sessionById.get(sessionId);
+    if (session?.format === "scramble") {
+      const points = sessionPoints(sessionMatches, session);
+      gray += points.gray;
+      aqua += points.aqua;
+    } else {
+      for (const m of sessionMatches) {
+        if (m.result !== "not_played") {
+          gray += m.points_gray;
+          aqua += m.points_aqua;
+        } else if (m.live_thru !== null || m.live_up !== 0) {
+          const leader = liveLeader(m.live_up);
+          if (leader === "gray") gray += m.points;
+          else if (leader === "aqua") aqua += m.points;
+          else {
+            gray += m.points / 2;
+            aqua += m.points / 2;
+          }
         }
       }
-      acc.possible += m.points;
-      return acc;
-    },
-    { gray: 0, aqua: 0, possible: 0 }
-  );
+    }
+    possible += sessionPossible(sessionMatches, session);
+  }
+  return { gray, aqua, possible };
 }
 
 /** True if any not-yet-finalized match currently has a live score entered. */

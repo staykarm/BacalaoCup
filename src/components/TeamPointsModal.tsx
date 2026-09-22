@@ -25,7 +25,11 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
     team === "gray"
       ? "bg-gradient-to-br from-gray-team-bg to-gray-team-deep"
       : "bg-gradient-to-br from-aqua-team-bg to-aqua-team-deep";
-  const accentText = team === "gray" ? "text-gray-team-light" : "text-aqua-team-light";
+  // The gray fill is light, so its banner needs dark ink text; the list rows sit on
+  // the app's regular dark chrome regardless of team, so that accent stays light.
+  const bannerText = team === "gray" ? "text-ink" : "text-white";
+  const bannerSubtext = team === "gray" ? "text-ink/60" : "text-white/70";
+  const listAccentText = team === "gray" ? "text-gray-team-light" : "text-aqua-team-light";
 
   return (
     <ModalShell title={teamName} onClose={onClose}>
@@ -38,8 +42,8 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
             height={48}
             className="h-12 w-12 rounded-full object-cover"
           />
-          <div className="font-display text-4xl font-bold text-white">{fmt(teamTotal)}</div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-white/70">poeng tatt</div>
+          <div className={`font-display text-4xl font-bold ${bannerText}`}>{fmt(teamTotal)}</div>
+          <div className={`text-xs font-semibold uppercase tracking-wide ${bannerSubtext}`}>poeng tatt</div>
         </div>
 
         <section>
@@ -60,7 +64,7 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
                   <span className="text-xs text-foreground/50">
                     {s.wins}V {s.halved}D {s.losses}T
                   </span>
-                  <span className={`font-bold ${accentText}`}>{fmt(s.pointsContributed)} p</span>
+                  <span className={`font-bold ${listAccentText}`}>{fmt(s.pointsContributed)} p</span>
                 </div>
               </div>
             ))}

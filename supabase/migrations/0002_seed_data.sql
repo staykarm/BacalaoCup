@@ -47,21 +47,21 @@ on conflict (id) do nothing;
 
 -- Onsdag: Fourball 1
 insert into matches (session_id, start_time, points, gray_player1, gray_player2, aqua_player1, aqua_player2, sort_order, note) values
-  ('wed_fb1', '14:20', 2, 'jerry', 'chris', 'glenn_stian', null, 1, 'Kun én Aqua-spiller lesbar i original – verifiser'),
+  ('wed_fb1', '14:20', 2, 'jerry', 'chris', 'glenn_stian', null, 1, null),
   ('wed_fb1', '14:30', 2, 'jokke', 'alex', 'lading', 'jonna', 2, null),
   ('wed_fb1', '14:40', 2, 'jon', 'stein_erik', 'joffy', 'eirik', 3, null),
   ('wed_fb1', '14:50', 2, 'reka', 'andre', 'marius', 'terje', 4, null);
 
 -- Onsdag: Fourball 2
 insert into matches (session_id, start_time, points, gray_player1, gray_player2, aqua_player1, aqua_player2, sort_order, note) values
-  ('wed_fb2', '16:50', 2, 'jerry', 'chris', 'lading', null, 1, 'Kun én Aqua-spiller lesbar i original – verifiser'),
+  ('wed_fb2', '16:50', 2, 'jerry', 'chris', 'lading', null, 1, null),
   ('wed_fb2', '17:00', 2, 'jokke', 'alex', 'glenn_stian', 'jonna', 2, null),
   ('wed_fb2', '17:10', 2, 'jon', 'stein_erik', 'marius', 'terje', 3, null),
   ('wed_fb2', '17:20', 2, 'reka', 'andre', 'joffy', 'eirik', 4, null);
 
 -- Torsdag: Fourball 3
 insert into matches (session_id, start_time, points, gray_player1, gray_player2, aqua_player1, aqua_player2, sort_order, note) values
-  ('thu_fb3', '08:40', 2, 'alex', 'andre', 'eirik', null, 1, 'Kun én Aqua-spiller lesbar i original – verifiser'),
+  ('thu_fb3', '08:40', 2, 'alex', 'andre', 'eirik', null, 1, null),
   ('thu_fb3', '08:50', 2, 'reka', 'chris', 'marius', 'joffy', 2, null),
   ('thu_fb3', '09:00', 2, 'jon', 'jokke', 'terje', 'jonna', 3, null),
   ('thu_fb3', '09:10', 2, 'jerry', 'stein_erik', 'glenn_stian', 'lading', 4, null);
@@ -81,7 +81,7 @@ insert into matches (session_id, start_time, points, gray_player1, aqua_player1,
 
 -- Fredag: Greensome 1
 insert into matches (session_id, start_time, points, gray_player1, gray_player2, aqua_player1, aqua_player2, sort_order, note) values
-  ('fri_gs1', '10:36', 2, 'chris', 'jokke', 'terje', null, 1, 'Kun én Aqua-spiller lesbar i original – verifiser'),
+  ('fri_gs1', '10:36', 2, 'chris', 'jokke', 'terje', null, 1, null),
   ('fri_gs1', '10:46', 2, 'stein_erik', 'jerry', 'joffy', 'glenn_stian', 2, null),
   ('fri_gs1', '10:56', 2, 'reka', 'jon', 'marius', 'eirik', 3, null),
   ('fri_gs1', '11:06', 2, 'andre', 'alex', 'jonna', 'lading', 4, null);

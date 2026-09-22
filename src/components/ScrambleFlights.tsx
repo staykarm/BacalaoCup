@@ -14,20 +14,25 @@ function fmtVsPar(n: number | null) {
   return n > 0 ? `+${n}` : `${n}`;
 }
 
-const HOLE_BUTTONS: { label: string; value: number }[] = [
-  { label: "Eagle", value: -2 },
-  { label: "Birdie", value: -1 },
-  { label: "Par", value: 0 },
-  { label: "Bogey", value: 1 },
-  { label: "Dobbel Bogey", value: 2 },
-];
+/** Eagle-or-better: yellow/white. Birdie: red/white. Par: black on white. Bogey: white on blue. Double-or-worse: white on black. */
+function scoreCellClass(relative: number | null): string {
+  if (relative === null) return "border-card-border bg-white text-ink-light/30";
+  if (relative <= -2) return "border-transparent bg-yellow-500 text-white";
+  if (relative === -1) return "border-transparent bg-red-600 text-white";
+  if (relative === 0) return "border-card-border bg-white text-ink";
+  if (relative === 1) return "border-transparent bg-blue-700 text-white";
+  return "border-transparent bg-black text-white";
+}
 
-function FlightRow({ flight, onClick }: { flight: Match; onClick: () => void }) {
+function FlightRow({ flight, active, onClick }: { flight: Match; active: boolean; onClick: () => void }) {
   const team = flight.flight_team as TeamId;
   return (
     <button
-      onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-xl border border-card-border bg-white px-3 py-2.5 text-left hover:border-gold-deep/40"
+      onClick={() => active && onClick()}
+      disabled={!active}
+      className={`flex w-full items-center gap-3 rounded-xl border border-card-border bg-white px-3 py-2.5 text-left ${
+        active ? "hover:border-gold-deep/40" : "cursor-default opacity-60"
+      }`}
     >
       <Image
         src={team === "gray" ? "/logos/gray.png" : "/logos/aquarellos.png"}
@@ -37,25 +42,23 @@ function FlightRow({ flight, onClick }: { flight: Match; onClick: () => void }) 
         className="h-[22px] w-[22px] shrink-0 rounded-full object-cover"
       />
       <span className="flex-1 text-sm text-ink-light">{flight.start_time ?? "--:--"}</span>
-      <span className="text-[11px] text-ink-light/60">
-        {flight.live_thru !== null ? `Hull ${flight.live_thru}/${HOLES_PER_MATCH}` : ""}
-      </span>
       <span
         className={`font-display text-lg font-bold ${flight.score_vs_par === null ? "text-ink-light/40" : "text-ink"}`}
       >
         {fmtVsPar(flight.score_vs_par)}
       </span>
+      <span className="text-[11px] text-ink-light/60">{flight.live_thru !== null ? `Hull ${flight.live_thru}` : ""}</span>
     </button>
   );
 }
 
 export function ScrambleFlights({ session, matches }: { session: Session; matches: Match[] }) {
-  const { matchHoles, sessions, days, setMatchHole } = useTournament();
+  const { matchHoles, sessions, days, activeSessionId, setMatchHole } = useTournament();
   const [editingFlightId, setEditingFlightId] = useState<string | null>(null);
-  const [editingHole, setEditingHole] = useState<number | null>(null);
+  const isActiveSession = session.id === activeSessionId;
   // Re-derived from the live `matches` prop every render, not a captured snapshot, so the
   // modal's totals stay in sync as holes are entered instead of freezing at open-time.
-  const editingFlight = matches.find((m) => m.id === editingFlightId) ?? null;
+  const editingFlight = isActiveSession ? matches.find((m) => m.id === editingFlightId) ?? null : null;
 
   const flights = [...matches].sort((a, b) => a.sort_order - b.sort_order);
   const grayFlights = matches.filter((m) => m.flight_team === "gray");
@@ -70,15 +73,18 @@ export function ScrambleFlights({ session, matches }: { session: Session; matche
   const frontNine = isFrontNine(session, sessions);
   const course = days.find((d) => d.id === session.day_id)?.course ?? null;
   const holesForFlight = editingFlight
-    ? new Map(
-        matchHoles.filter((h) => h.match_id === editingFlight.id).map((h) => [h.hole_number, h.score_vs_par])
-      )
+    ? new Map(matchHoles.filter((h) => h.match_id === editingFlight.id).map((h) => [h.hole_number, h.score_vs_par]))
     : new Map<number, number | null>();
 
-  function setHoleScore(value: number | null) {
-    if (!editingFlight || editingHole === null) return;
-    setMatchHole(editingFlight, editingHole, { score_vs_par: value });
-    setEditingHole(null);
+  function onStrokesChange(relHole: number, raw: string) {
+    if (!editingFlight) return;
+    const info = getHoleInfo(course, courseHoleNumber(relHole, frontNine));
+    if (raw === "") {
+      setMatchHole(editingFlight, relHole, { score_vs_par: null });
+      return;
+    }
+    if (info.par === null || !/^\d+$/.test(raw)) return;
+    setMatchHole(editingFlight, relHole, { score_vs_par: Number(raw) - info.par });
   }
 
   return (
@@ -108,7 +114,7 @@ export function ScrambleFlights({ session, matches }: { session: Session; matche
 
       <div className="space-y-2">
         {flights.map((f) => (
-          <FlightRow key={f.id} flight={f} onClick={() => setEditingFlightId(f.id)} />
+          <FlightRow key={f.id} flight={f} active={isActiveSession} onClick={() => setEditingFlightId(f.id)} />
         ))}
       </div>
 
@@ -167,25 +173,21 @@ export function ScrambleFlights({ session, matches }: { session: Session; matche
                   <tr>
                     <td />
                     {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => {
-                      const value = holesForFlight.get(relHole) ?? null;
-                      const label = value === null ? "–" : value > 0 ? `+${value}` : String(value);
-                      const colorClass =
-                        value === null
-                          ? "border-card-border bg-white text-ink-light/30"
-                          : value < 0
-                            ? "border-gold-deep bg-gold/15 text-gold-deep"
-                            : value === 0
-                              ? "border-card-border bg-card-deep text-ink"
-                              : "border-aqua-team-deep/40 bg-aqua-team-bg/40 text-aqua-team-deep";
+                      const par = getHoleInfo(course, courseHoleNumber(relHole, frontNine)).par;
+                      const relative = holesForFlight.get(relHole) ?? null;
+                      const strokes = par !== null && relative !== null ? par + relative : null;
                       return (
                         <td key={relHole}>
-                          <button
-                            onClick={() => setEditingHole(relHole)}
-                            aria-label={`Hull ${courseHoleNumber(relHole, frontNine)}`}
-                            className={`h-8 w-8 rounded-lg border text-xs font-bold transition ${colorClass}`}
-                          >
-                            {label}
-                          </button>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            disabled={par === null}
+                            value={strokes ?? ""}
+                            onChange={(e) => onStrokesChange(relHole, e.target.value.replace(/[^0-9]/g, ""))}
+                            aria-label={`Hull ${courseHoleNumber(relHole, frontNine)} slag`}
+                            className={`h-8 w-8 rounded-lg border text-center text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-gold-deep/60 disabled:opacity-40 ${scoreCellClass(relative)}`}
+                          />
                         </td>
                       );
                     })}
@@ -194,41 +196,9 @@ export function ScrambleFlights({ session, matches }: { session: Session; matche
               </table>
             </div>
 
-            <p className="text-center text-xs text-ink-light/60">Trykk et hull for å registrere slag mot par.</p>
-          </div>
-        </ModalShell>
-      )}
-
-      {editingFlight && editingHole !== null && (
-        <ModalShell title={`Hull ${courseHoleNumber(editingHole, frontNine)}`} onClose={() => setEditingHole(null)}>
-          <div className="space-y-5 text-center">
-            {(() => {
-              const info = getHoleInfo(course, courseHoleNumber(editingHole, frontNine));
-              return (
-                <p className="text-xs text-ink-light">
-                  {info.par !== null ? `Par ${info.par}` : "Par –"}
-                  {info.meters !== null && <> &middot; {info.meters} m</>}
-                  {info.index !== null && <> &middot; Idx {info.index}</>}
-                </p>
-              );
-            })()}
-            <div className="grid grid-cols-1 gap-2">
-              {HOLE_BUTTONS.map((b) => (
-                <button
-                  key={b.label}
-                  onClick={() => setHoleScore(b.value)}
-                  className="flex items-center justify-between rounded-xl border border-card-border px-4 py-3 text-sm font-semibold text-ink hover:border-gold-deep/40 hover:bg-card-deep"
-                >
-                  <span>{b.label}</span>
-                  <span className="text-ink-light">{b.value > 0 ? `+${b.value}` : b.value}</span>
-                </button>
-              ))}
-            </div>
-            {holesForFlight.get(editingHole) !== undefined && holesForFlight.get(editingHole) !== null && (
-              <button onClick={() => setHoleScore(null)} className="text-xs text-ink-light hover:text-ink">
-                Nullstill
-              </button>
-            )}
+            <p className="text-center text-xs text-ink-light/60">
+              Skriv inn antall slag for hvert hull — over/under par regnes ut automatisk.
+            </p>
           </div>
         </ModalShell>
       )}

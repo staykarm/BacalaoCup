@@ -9,12 +9,11 @@ import { getHoleInfo } from "@/lib/courseHoles";
 import { PlayerDetailModal } from "./PlayerDetailModal";
 import { ModalShell } from "./ModalShell";
 
-const HOLE_RESULT_CYCLE: (HoleResult | null)[] = [null, "gray", "halved", "aqua"];
-
-function nextHoleResult(current: HoleResult | null): HoleResult | null {
-  const idx = HOLE_RESULT_CYCLE.indexOf(current);
-  return HOLE_RESULT_CYCLE[(idx + 1) % HOLE_RESULT_CYCLE.length];
-}
+const HOLE_OPTIONS: { key: HoleResult; label: string }[] = [
+  { key: "gray", label: "Grå" },
+  { key: "halved", label: "Delt" },
+  { key: "aqua", label: "Blå" },
+];
 
 function sidePlayers(match: Match, team: TeamId, players: Player[]) {
   const ids = team === "gray"
@@ -30,9 +29,10 @@ function fmtPts(n: number) {
 }
 
 export function MatchRow({ match, players, session }: { match: Match; players: Player[]; session: Session }) {
-  const { matchHoles, sessions, days, setMatchHole } = useTournament();
+  const { matchHoles, sessions, days, activeSessionId, setMatchHole } = useTournament();
   const [scoring, setScoring] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const isActiveSession = session.id === activeSessionId;
 
   const grayPlayers = sidePlayers(match, "gray", players);
   const aquaPlayers = sidePlayers(match, "aqua", players);
@@ -42,11 +42,6 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
   const holeByNumber = new Map(
     matchHoles.filter((h) => h.match_id === match.id).map((h) => [h.hole_number, h.result])
   );
-
-  function cycleHole(relativeHole: number) {
-    const next = nextHoleResult(holeByNumber.get(relativeHole) ?? null);
-    setMatchHole(match, relativeHole, { result: next });
-  }
 
   const liveLeaderTeam = liveLeader(match.live_up);
   const liveColor =
@@ -135,13 +130,13 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
                 <button
                   key={p.id}
                   onClick={() => setSelectedPlayerId(p.id)}
-                  className={`truncate text-left text-xs font-bold uppercase tracking-wide hover:underline sm:text-sm ${sideText("gray")}`}
+                  className={`w-full text-left text-xs font-bold uppercase leading-tight tracking-wide hover:underline sm:text-sm ${sideText("gray")}`}
                 >
                   {p.name}
                 </button>
               ))
             ) : (
-              <span className={`truncate text-xs font-bold uppercase tracking-wide sm:text-sm ${sideText("gray")}`}>
+              <span className={`text-xs font-bold uppercase tracking-wide sm:text-sm ${sideText("gray")}`}>
                 Gray (Joys)
               </span>
             )}
@@ -149,9 +144,12 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
         </div>
 
         <button
-          onClick={() => setScoring(true)}
+          onClick={() => isActiveSession && setScoring(true)}
+          disabled={!isActiveSession}
           aria-label="Oppdater stilling"
-          className="flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 bg-navy-deep px-1 py-3 text-center transition hover:bg-navy-lighter sm:w-24 sm:py-4"
+          className={`flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 bg-navy-deep px-1 py-3 text-center transition sm:w-24 sm:py-4 ${
+            isActiveSession ? "hover:bg-navy-lighter" : "cursor-default opacity-60"
+          }`}
         >
           {match.result !== "not_played" ? (
             <span className="text-sm font-extrabold text-foreground/70 sm:text-base">F</span>
@@ -182,13 +180,13 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
                 <button
                   key={p.id}
                   onClick={() => setSelectedPlayerId(p.id)}
-                  className={`truncate text-right text-xs font-bold uppercase tracking-wide hover:underline sm:text-sm ${sideText("aqua")}`}
+                  className={`w-full text-right text-xs font-bold uppercase leading-tight tracking-wide hover:underline sm:text-sm ${sideText("aqua")}`}
                 >
                   {p.name}
                 </button>
               ))
             ) : (
-              <span className={`truncate text-xs font-bold uppercase tracking-wide sm:text-sm ${sideText("aqua")}`}>
+              <span className={`text-xs font-bold uppercase tracking-wide sm:text-sm ${sideText("aqua")}`}>
                 Aquarellos
               </span>
             )}
@@ -268,24 +266,31 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
                     <td />
                     {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => {
                       const result = holeByNumber.get(relHole) ?? null;
-                      const label = result === "gray" ? "G" : result === "aqua" ? "A" : result === "halved" ? "½" : "–";
-                      const colorClass =
-                        result === "gray"
-                          ? "border-gray-team bg-gray-team-bg text-ink"
-                          : result === "aqua"
-                            ? "border-aqua-team bg-aqua-team-deep text-white"
-                            : result === "halved"
-                              ? "border-gold-deep bg-gold/20 text-gold-deep"
-                              : "border-card-border bg-white text-ink-light/30";
                       return (
                         <td key={relHole}>
-                          <button
-                            onClick={() => cycleHole(relHole)}
-                            aria-label={`Hull ${courseHoleNumber(relHole, frontNine)}`}
-                            className={`h-8 w-8 rounded-lg border text-xs font-bold transition ${colorClass}`}
-                          >
-                            {label}
-                          </button>
+                          <div className="flex flex-col gap-0.5">
+                            {HOLE_OPTIONS.map((opt) => {
+                              const active = result === opt.key;
+                              const activeClass =
+                                opt.key === "gray"
+                                  ? "border-gray-team bg-gray-team-bg text-ink"
+                                  : opt.key === "aqua"
+                                    ? "border-aqua-team bg-aqua-team-deep text-white"
+                                    : "border-gold-deep bg-gold/20 text-gold-deep";
+                              return (
+                                <button
+                                  key={opt.key}
+                                  onClick={() => setMatchHole(match, relHole, { result: active ? null : opt.key })}
+                                  aria-label={`Hull ${courseHoleNumber(relHole, frontNine)} ${opt.label}`}
+                                  className={`h-5 w-8 rounded border text-[8px] font-bold uppercase leading-none transition ${
+                                    active ? activeClass : "border-card-border bg-white text-ink-light/40 hover:bg-card-deep"
+                                  }`}
+                                >
+                                  {opt.label[0]}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </td>
                       );
                     })}
@@ -295,7 +300,7 @@ export function MatchRow({ match, players, session }: { match: Match; players: P
             </div>
 
             <p className="text-center text-xs text-ink-light/60">
-              Trykk et hull for å bla mellom Gray, delt og Aqua. Stillingen regnes ut automatisk.
+              Velg Grå, Delt eller Blå for hvert hull. Stillingen regnes ut automatisk.
             </p>
           </div>
         </ModalShell>

@@ -39,7 +39,7 @@ export const COURSE_INFO: Record<string, CourseInfo> = {
     location: "Benahavís",
     designer: "Dave Thomas",
     year: "1999",
-    par: 73,
+    par: 72,
     length: "6 247 m",
     description:
       "Ligger i fjellene i Benahavís, ca. 20 minutter fra Marbella Club Hotel. Designeren Dave Thomas var selv Ryder Cup-spiller og nådde playoff i to British Open. Banen er kjent som en eksklusiv, velholdt layout med signaturpreg fra en av golfens mest erfarne banearkitekter.",

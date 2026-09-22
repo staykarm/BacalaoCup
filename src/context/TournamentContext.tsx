@@ -10,13 +10,16 @@ import {
   useState,
 } from "react";
 import { supabase } from "@/lib/supabase";
+import { deriveMatchPlayFromHoles, deriveScrambleFromHoles } from "@/lib/scoring";
 import {
   Day,
+  HoleResult,
   InfoPage,
   InfoPageId,
   LocationType,
   MapLocation,
   Match,
+  MatchHole,
   MatchResult,
   Message,
   Player,
@@ -32,6 +35,7 @@ interface TournamentContextValue {
   days: Day[];
   sessions: Session[];
   matches: Match[];
+  matchHoles: MatchHole[];
   messages: Message[];
   infoPages: InfoPage[];
   locations: MapLocation[];
@@ -54,6 +58,16 @@ interface TournamentContextValue {
   setActiveSession: (sessionId: string | null) => Promise<void>;
   /** Admin: scramble-only team stroke handicap for a session. Pass team=null to clear it. */
   updateSessionHandicap: (sessionId: string, team: TeamId | null, strokes: number | null) => Promise<void>;
+  /**
+   * Registers (or clears, when both are null) one hole's result for a match-play
+   * match or score for a scramble flight, then derives and writes back that
+   * match's aggregate live_up/live_thru/result/points (or score_vs_par/live_thru).
+   */
+  setMatchHole: (
+    match: Match,
+    holeNumber: number,
+    patch: { result?: HoleResult | null; score_vs_par?: number | null }
+  ) => Promise<void>;
 }
 
 const TournamentContext = createContext<TournamentContextValue | null>(null);
@@ -64,6 +78,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const [days, setDays] = useState<Day[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
+  const [matchHoles, setMatchHoles] = useState<MatchHole[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [infoPages, setInfoPages] = useState<InfoPage[]>([]);
   const [locations, setLocations] = useState<MapLocation[]>([]);
@@ -86,6 +101,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           daysRes,
           sessionsRes,
           matchesRes,
+          matchHolesRes,
           messagesRes,
           infoPagesRes,
           locationsRes,
@@ -97,6 +113,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           supabase.from("days").select("*").order("sort_order"),
           supabase.from("sessions").select("*").order("sort_order"),
           supabase.from("matches").select("*").order("sort_order"),
+          supabase.from("match_holes").select("*"),
           supabase.from("messages").select("*").order("created_at"),
           supabase.from("info_pages").select("*"),
           supabase.from("locations").select("*").order("sort_order"),
@@ -112,6 +129,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           daysRes.error ||
           sessionsRes.error ||
           matchesRes.error ||
+          matchHolesRes.error ||
           messagesRes.error ||
           infoPagesRes.error ||
           locationsRes.error ||
@@ -129,6 +147,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         setDays(daysRes.data ?? []);
         setSessions(sessionsRes.data ?? []);
         setMatches(matchesRes.data ?? []);
+        setMatchHoles(matchHolesRes.data ?? []);
         setMessages(messagesRes.data ?? []);
         setInfoPages(infoPagesRes.data ?? []);
         setLocations(locationsRes.data ?? []);
@@ -170,6 +189,36 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
               return current.filter((m) => m.id !== old.id);
             }
             return current;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("match-holes-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "match_holes" },
+        (payload) => {
+          setMatchHoles((current) => {
+            if (payload.eventType === "DELETE") {
+              const old = payload.old as MatchHole;
+              return current.filter((h) => !(h.match_id === old.match_id && h.hole_number === old.hole_number));
+            }
+            const next = payload.new as MatchHole;
+            const exists = current.some((h) => h.match_id === next.match_id && h.hole_number === next.hole_number);
+            if (exists) {
+              return current.map((h) =>
+                h.match_id === next.match_id && h.hole_number === next.hole_number ? next : h
+              );
+            }
+            return [...current, next];
           });
         }
       )
@@ -257,6 +306,48 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const setMatchHole = useCallback(
+    async (
+      match: Match,
+      holeNumber: number,
+      patch: { result?: HoleResult | null; score_vs_par?: number | null }
+    ) => {
+      const isMatchPlay = "result" in patch;
+      const cleared = isMatchPlay ? patch.result == null : patch.score_vs_par == null;
+
+      const filtered = matchHoles.filter((h) => !(h.match_id === match.id && h.hole_number === holeNumber));
+      const row: MatchHole = {
+        match_id: match.id,
+        hole_number: holeNumber,
+        result: patch.result ?? null,
+        score_vs_par: patch.score_vs_par ?? null,
+      };
+      const nextHoles = cleared ? filtered : [...filtered, row];
+      setMatchHoles(nextHoles);
+
+      if (cleared) {
+        const { error: deleteError } = await supabase
+          .from("match_holes")
+          .delete()
+          .eq("match_id", match.id)
+          .eq("hole_number", holeNumber);
+        if (deleteError) setSyncError(deleteError.message);
+      } else {
+        const { error: upsertError } = await supabase
+          .from("match_holes")
+          .upsert(row, { onConflict: "match_id,hole_number" });
+        if (upsertError) setSyncError(upsertError.message);
+      }
+
+      const holesForMatch = nextHoles.filter((h) => h.match_id === match.id);
+      const derived = isMatchPlay
+        ? deriveMatchPlayFromHoles(holesForMatch, match.points)
+        : deriveScrambleFromHoles(holesForMatch);
+      await updateMatch(match.id, derived);
+    },
+    [matchHoles, updateMatch]
+  );
+
   const postMessage = useCallback(async (author: string, body: string) => {
     const { data, error: insertError } = await supabase
       .from("messages")
@@ -340,6 +431,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       score_vs_par: null,
     };
     setMatches((current) => current.map((m) => ({ ...m, ...reset })));
+    setMatchHoles([]);
 
     // matches.id is a uuid column, so a `!= ''` filter fails to cast and the update never
     // runs server-side (it looked like it worked locally, but nothing was actually reset).
@@ -347,6 +439,10 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     const { error: updateError } = await supabase.from("matches").update(reset).not("id", "is", null);
     if (updateError) {
       setSyncError(updateError.message);
+    }
+    const { error: holesError } = await supabase.from("match_holes").delete().not("match_id", "is", null);
+    if (holesError) {
+      setSyncError(holesError.message);
     }
   }, []);
 
@@ -370,6 +466,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       days,
       sessions,
       matches,
+      matchHoles,
       messages,
       infoPages,
       locations,
@@ -388,6 +485,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       activeSessionId,
       setActiveSession,
       updateSessionHandicap,
+      setMatchHole,
     }),
     [
       teams,
@@ -395,6 +493,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       days,
       sessions,
       matches,
+      matchHoles,
       messages,
       infoPages,
       locations,
@@ -413,6 +512,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       activeSessionId,
       setActiveSession,
       updateSessionHandicap,
+      setMatchHole,
     ]
   );
 

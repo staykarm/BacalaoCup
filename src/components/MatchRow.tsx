@@ -3,10 +3,18 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
-import { Match, Player, RESULT_LABELS, TeamId } from "@/lib/types";
-import { autoResultFromLive, HOLES_PER_MATCH, liveLeader, liveUpLabel, matchMarginLabel, pointsForResult } from "@/lib/scoring";
+import { HoleResult, Match, Player, RESULT_LABELS, Session, TeamId } from "@/lib/types";
+import { courseHoleNumber, HOLES_PER_MATCH, isFrontNine, liveLeader, liveUpLabel, matchMarginLabel } from "@/lib/scoring";
+import { getHoleInfo } from "@/lib/courseHoles";
 import { PlayerDetailModal } from "./PlayerDetailModal";
 import { ModalShell } from "./ModalShell";
+
+const HOLE_RESULT_CYCLE: (HoleResult | null)[] = [null, "gray", "halved", "aqua"];
+
+function nextHoleResult(current: HoleResult | null): HoleResult | null {
+  const idx = HOLE_RESULT_CYCLE.indexOf(current);
+  return HOLE_RESULT_CYCLE[(idx + 1) % HOLE_RESULT_CYCLE.length];
+}
 
 function sidePlayers(match: Match, team: TeamId, players: Player[]) {
   const ids = team === "gray"
@@ -21,34 +29,23 @@ function fmtPts(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
 
-export function MatchRow({ match, players }: { match: Match; players: Player[] }) {
-  const { updateMatch } = useTournament();
+export function MatchRow({ match, players, session }: { match: Match; players: Player[]; session: Session }) {
+  const { matchHoles, sessions, days, setMatchHole } = useTournament();
   const [scoring, setScoring] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   const grayPlayers = sidePlayers(match, "gray", players);
   const aquaPlayers = sidePlayers(match, "aqua", players);
 
-  // The result and its points are always derived from the live hole-by-hole score —
-  // there's no manual "set result" step, so every live update recomputes both together.
-  function applyLive(patch: { live_up?: number; live_thru?: number | null }) {
-    const live_up = patch.live_up ?? match.live_up;
-    const live_thru = patch.live_thru !== undefined ? patch.live_thru : match.live_thru;
-    const result = autoResultFromLive(live_up, live_thru);
-    const { points_gray, points_aqua } = pointsForResult(result, match.points);
-    updateMatch(match.id, { live_up, live_thru, result, points_gray, points_aqua });
-  }
+  const frontNine = isFrontNine(session, sessions);
+  const course = days.find((d) => d.id === session.day_id)?.course ?? null;
+  const holeByNumber = new Map(
+    matchHoles.filter((h) => h.match_id === match.id).map((h) => [h.hole_number, h.result])
+  );
 
-  function bumpLiveUp(delta: number) {
-    applyLive({ live_up: match.live_up + delta });
-  }
-
-  function resetLiveUp() {
-    applyLive({ live_up: 0 });
-  }
-
-  function setLiveThru(hole: number | null) {
-    applyLive({ live_thru: hole });
+  function cycleHole(relativeHole: number) {
+    const next = nextHoleResult(holeByNumber.get(relativeHole) ?? null);
+    setMatchHole(match, relativeHole, { result: next });
   }
 
   const liveLeaderTeam = liveLeader(match.live_up);
@@ -257,54 +254,71 @@ export function MatchRow({ match, players }: { match: Match; players: Player[] }
               </p>
             </div>
 
-            <div className="flex items-center justify-center gap-2">
-              <button
-                onClick={() => bumpLiveUp(1)}
-                aria-label="Gray ett hull opp"
-                className="shrink-0 rounded-lg border border-gray-team-deep/60 bg-gray-team-bg/70 px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink hover:bg-gray-team-bg"
-              >
-                Gray
-              </button>
-              <span className={`w-24 shrink-0 text-center text-sm font-bold ${liveColorOnLight}`}>
-                {liveLeaderTeam === "gray" && "GRAY "}
-                {liveLeaderTeam === "aqua" && "AQUA "}
-                {liveUpLabel(match.live_up)}
-              </span>
-              <button
-                onClick={() => bumpLiveUp(-1)}
-                aria-label="Aqua ett hull opp"
-                className="shrink-0 rounded-lg border border-aqua-team-deep/60 bg-aqua-team-bg/70 px-3 py-2 text-xs font-bold uppercase tracking-wide text-aqua-team-light hover:bg-aqua-team-bg"
-              >
-                Aqua
-              </button>
-              {match.live_up !== 0 && (
-                <button
-                  onClick={resetLiveUp}
-                  className="rounded-lg border border-card-border px-2 py-1.5 text-xs text-ink-light hover:bg-card-deep"
-                >
-                  A/S
-                </button>
-              )}
+            <div className="overflow-x-auto">
+              <table className="w-full border-separate border-spacing-x-0.5 border-spacing-y-1 text-center">
+                <tbody>
+                  <tr>
+                    <td className="w-9 pr-1 text-left text-[9px] font-semibold uppercase tracking-wide text-ink-light/70">
+                      Hull
+                    </td>
+                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => (
+                      <td key={relHole} className="text-[11px] font-bold text-ink">
+                        {courseHoleNumber(relHole, frontNine)}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="pr-1 text-left text-[9px] font-semibold uppercase tracking-wide text-ink-light/70">
+                      Par
+                    </td>
+                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => (
+                      <td key={relHole} className="text-[10px] text-ink-light">
+                        {getHoleInfo(course, courseHoleNumber(relHole, frontNine)).par ?? "–"}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="pr-1 text-left text-[9px] font-semibold uppercase tracking-wide text-ink-light/70">
+                      Idx
+                    </td>
+                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => (
+                      <td key={relHole} className="text-[10px] text-ink-light/70">
+                        {getHoleInfo(course, courseHoleNumber(relHole, frontNine)).index ?? "–"}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td />
+                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => {
+                      const result = holeByNumber.get(relHole) ?? null;
+                      const label = result === "gray" ? "G" : result === "aqua" ? "A" : result === "halved" ? "½" : "–";
+                      const colorClass =
+                        result === "gray"
+                          ? "border-gray-team bg-gray-team-bg text-ink"
+                          : result === "aqua"
+                            ? "border-aqua-team bg-aqua-team-deep text-white"
+                            : result === "halved"
+                              ? "border-gold-deep bg-gold/20 text-gold-deep"
+                              : "border-card-border bg-white text-ink-light/30";
+                      return (
+                        <td key={relHole}>
+                          <button
+                            onClick={() => cycleHole(relHole)}
+                            aria-label={`Hull ${courseHoleNumber(relHole, frontNine)}`}
+                            className={`h-8 w-8 rounded-lg border text-xs font-bold transition ${colorClass}`}
+                          >
+                            {label}
+                          </button>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
-            <label className="flex items-center justify-center gap-2 text-sm text-ink-light">
-              Hull
-              <select
-                value={match.live_thru ?? ""}
-                onChange={(e) => setLiveThru(e.target.value ? Number(e.target.value) : null)}
-                className="rounded-xl border border-card-border bg-white px-3 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
-              >
-                <option value="">–</option>
-                {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((hole) => (
-                  <option key={hole} value={hole}>
-                    {hole}
-                  </option>
-                ))}
-              </select>
-            </label>
-
             <p className="text-center text-xs text-ink-light/60">
-              Resultatet settes automatisk når kampen er avgjort.
+              Trykk et hull for å bla mellom Gray, delt og Aqua. Stillingen regnes ut automatisk.
             </p>
           </div>
         </ModalShell>

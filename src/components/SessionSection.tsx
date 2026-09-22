@@ -89,7 +89,7 @@ export function SessionSection({
           {isScramble ? (
             <ScrambleFlights session={session} matches={matches} />
           ) : (
-            matches.map((m) => <MatchRow key={m.id} match={m} players={players} />)
+            matches.map((m) => <MatchRow key={m.id} match={m} players={players} session={session} />)
           )}
         </div>
       )}

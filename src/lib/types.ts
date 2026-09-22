@@ -72,6 +72,22 @@ export interface Match {
   score_vs_par: number | null;
 }
 
+export type HoleResult = "gray" | "aqua" | "halved";
+
+/**
+ * One hole's registered outcome for a match, keyed by (match_id, hole_number).
+ * hole_number is 1-9, relative to whichever nine the session plays — see
+ * `isFrontNine` in scoring.ts for the mapping to the course's real hole number.
+ * `result` is used for match-play matches, `score_vs_par` for scramble flights;
+ * a given match only ever uses one of the two, depending on its session format.
+ */
+export interface MatchHole {
+  match_id: string;
+  hole_number: number;
+  result: HoleResult | null;
+  score_vs_par: number | null;
+}
+
 export interface Message {
   id: string;
   author: string;

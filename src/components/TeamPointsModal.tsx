@@ -29,7 +29,7 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
   // the app's regular dark chrome regardless of team, so that accent stays light.
   const bannerText = team === "gray" ? "text-ink" : "text-white";
   const bannerSubtext = team === "gray" ? "text-ink/60" : "text-white/70";
-  const listAccentText = team === "gray" ? "text-gray-team-light" : "text-aqua-team-light";
+  const listAccentText = team === "gray" ? "text-ink" : "text-aqua-team-deep";
 
   return (
     <ModalShell title={teamName} onClose={onClose}>
@@ -47,21 +47,21 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
         </div>
 
         <section>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-foreground/50">
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-ink-light">
             Poeng per spiller
           </h3>
           <div className="space-y-2">
             {stats.map((s, i) => (
               <div
                 key={s.player.id}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-navy-lighter/40 bg-navy-lighter/20 px-3 py-2.5 text-sm"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-card-border bg-white px-3 py-2.5 text-sm"
               >
                 <div className="flex min-w-0 items-center gap-2">
-                  <span className="w-5 shrink-0 text-xs font-bold text-foreground/40">{i + 1}</span>
-                  <span className="truncate font-semibold text-foreground/90">{s.player.name}</span>
+                  <span className="w-5 shrink-0 text-xs font-bold text-ink-light/60">{i + 1}</span>
+                  <span className="truncate font-semibold text-ink">{s.player.name}</span>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
-                  <span className="text-xs text-foreground/50">
+                  <span className="text-xs text-ink-light">
                     {s.wins}V {s.halved}D {s.losses}T
                   </span>
                   <span className={`font-bold ${listAccentText}`}>{fmt(s.pointsContributed)} p</span>

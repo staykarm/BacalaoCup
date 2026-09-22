@@ -17,10 +17,10 @@ export default function Home() {
 
   if (error) {
     return (
-      <div className="mx-auto mt-10 max-w-md rounded-2xl border border-red-500/40 bg-red-950/30 p-4 text-sm text-red-200">
+      <div className="mx-auto mt-10 max-w-md rounded-2xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">
         <p className="font-semibold">Kunne ikke laste data fra Supabase</p>
-        <p className="mt-1 text-red-300/80">{error}</p>
-        <p className="mt-2 text-red-300/60">
+        <p className="mt-1 text-red-700/80">{error}</p>
+        <p className="mt-2 text-red-700/60">
           Sjekk at .env.local har riktig NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY, og at
           migrasjonene i supabase/migrations er kjørt.
         </p>
@@ -44,7 +44,7 @@ export default function Home() {
             className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${
               day.id === currentDayId
                 ? "border-gold bg-gold/15 text-gold-deep"
-                : "border-navy-lighter/30 bg-white/40 text-ink-light hover:border-navy-lighter/50 hover:text-ink"
+                : "border-card-border bg-card text-ink-light hover:border-gold-deep/30 hover:text-ink"
             }`}
           >
             {day.label}

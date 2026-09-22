@@ -8,7 +8,7 @@ import { ModalShell } from "./ModalShell";
 
 const MapView = dynamic(() => import("./MapView").then((m) => m.MapView), {
   ssr: false,
-  loading: () => <div className="h-72 w-full rounded-2xl bg-navy-light/40 sm:h-96" />,
+  loading: () => <div className="h-72 w-full rounded-2xl bg-card-deep sm:h-96" />,
 });
 
 const TYPE_ORDER: LocationType[] = ["course", "house", "restaurant"];
@@ -19,25 +19,25 @@ function mapsUrl(address: string) {
 
 function LocationRow({ location, onDelete }: { location: MapLocation; onDelete: () => void }) {
   return (
-    <div className="flex items-start justify-between gap-2 rounded-2xl border border-navy-lighter/50 bg-navy-lighter/30 p-3">
+    <div className="flex items-start justify-between gap-2 rounded-2xl border border-card-border bg-white p-3">
       <div className="min-w-0">
-        <div className="font-semibold text-foreground/90">{location.name}</div>
+        <div className="font-semibold text-ink">{location.name}</div>
         {location.address && (
           <a
             href={mapsUrl(location.address)}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-0.5 block truncate text-xs text-gold hover:underline"
+            className="mt-0.5 block truncate text-xs text-gold-deep hover:underline"
           >
             {location.address}
           </a>
         )}
-        {location.notes && <p className="mt-1 text-xs text-foreground/60">{location.notes}</p>}
+        {location.notes && <p className="mt-1 text-xs text-ink-light">{location.notes}</p>}
       </div>
       <button
         onClick={onDelete}
         aria-label="Slett"
-        className="shrink-0 rounded-full border border-navy-lighter/60 px-2 py-1 text-xs text-foreground/50 hover:bg-navy-lighter/40"
+        className="shrink-0 rounded-full border border-card-border px-2 py-1 text-xs text-ink-light hover:bg-card-deep"
       >
         ✕
       </button>
@@ -76,12 +76,12 @@ export function KartModal({ onClose }: { onClose: () => void }) {
           return (
             <section key={type}>
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-foreground/50">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-ink-light">
                   {LOCATION_TYPE_LABELS[type]}
                 </h3>
                 <button
                   onClick={() => startAdd(type)}
-                  className="rounded-lg border border-gold/50 bg-gold/10 px-2 py-1 text-[11px] font-semibold text-gold hover:bg-gold/20"
+                  className="rounded-lg border border-gold-deep/50 bg-gold/10 px-2 py-1 text-[11px] font-semibold text-gold-deep hover:bg-gold/20"
                 >
                   + Legg til
                 </button>
@@ -92,44 +92,44 @@ export function KartModal({ onClose }: { onClose: () => void }) {
                   <LocationRow key={loc.id} location={loc} onDelete={() => deleteLocation(loc.id)} />
                 ))}
                 {items.length === 0 && (
-                  <p className="text-xs italic text-foreground/40">Ingen lagt inn ennå.</p>
+                  <p className="text-xs italic text-ink-light/60">Ingen lagt inn ennå.</p>
                 )}
               </div>
 
               {adding === type && (
-                <div className="mt-3 space-y-2 rounded-xl border border-navy-lighter/60 bg-navy p-3">
+                <div className="mt-3 space-y-2 rounded-xl border border-card-border bg-card-deep p-3">
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Navn"
-                    className="w-full rounded-xl border border-navy-lighter/60 bg-navy-light/60 px-2 py-1.5 text-sm focus:border-gold/60 focus:outline-none"
+                    className="w-full rounded-xl border border-card-border bg-white px-2 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
                   />
                   <input
                     type="text"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="Adresse"
-                    className="w-full rounded-xl border border-navy-lighter/60 bg-navy-light/60 px-2 py-1.5 text-sm focus:border-gold/60 focus:outline-none"
+                    className="w-full rounded-xl border border-card-border bg-white px-2 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
                   />
                   <input
                     type="text"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Notat (valgfritt)"
-                    className="w-full rounded-xl border border-navy-lighter/60 bg-navy-light/60 px-2 py-1.5 text-sm focus:border-gold/60 focus:outline-none"
+                    className="w-full rounded-xl border border-card-border bg-white px-2 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
                   />
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => setAdding(null)}
-                      className="rounded-xl border border-navy-lighter/60 px-3 py-1.5 text-xs text-foreground/60 hover:bg-navy-lighter/30"
+                      className="rounded-xl border border-card-border px-3 py-1.5 text-xs text-ink-light hover:bg-white"
                     >
                       Avbryt
                     </button>
                     <button
                       onClick={save}
                       disabled={!name.trim()}
-                      className="rounded-xl border border-gold/60 bg-gold/20 px-3 py-1.5 text-xs font-semibold text-gold hover:bg-gold/30 disabled:opacity-40"
+                      className="rounded-xl border border-gold-deep/60 bg-gold/20 px-3 py-1.5 text-xs font-semibold text-gold-deep hover:bg-gold/30 disabled:opacity-40"
                     >
                       Lagre
                     </button>

@@ -23,25 +23,25 @@ function PlayerCard({
   onClick: () => void;
 }) {
   return (
-    <button onClick={onClick} className="w-full rounded-2xl border border-navy-lighter/40 bg-navy-lighter/20 p-3 text-left hover:border-navy-lighter">
+    <button onClick={onClick} className="w-full rounded-2xl border border-card-border bg-white p-3 text-left hover:border-gold-deep/40">
       <div className="flex items-center justify-between gap-2">
-        <span className="font-semibold text-foreground/90 hover:underline">{player.name}</span>
+        <span className="font-semibold text-ink hover:underline">{player.name}</span>
         {player.hcp !== null && (
-          <span className="shrink-0 rounded-full border border-navy-lighter/50 px-2 py-0.5 text-[11px] text-foreground/60">
+          <span className="shrink-0 rounded-full border border-card-border px-2 py-0.5 text-[11px] text-ink-light">
             HCP {fmt(player.hcp)}
           </span>
         )}
       </div>
 
-      <div className="mt-2 flex items-center gap-3 text-xs text-foreground/60">
+      <div className="mt-2 flex items-center gap-3 text-xs text-ink-light">
         <span>
           {stat.wins}V {stat.halved}D {stat.losses}T
         </span>
-        <span className="font-bold text-foreground/90">{fmt(stat.pointsContributed)} p</span>
+        <span className="font-bold text-ink">{fmt(stat.pointsContributed)} p</span>
       </div>
 
       {history.length > 0 && (
-        <div className="mt-2 space-y-1 border-t border-navy-lighter/30 pt-2 text-[11px] text-foreground/50">
+        <div className="mt-2 space-y-1 border-t border-card-border pt-2 text-[11px] text-ink-light/70">
           {history.map((h) => (
             <div key={h.year} className="flex items-center justify-between gap-2">
               <span>{h.year}</span>

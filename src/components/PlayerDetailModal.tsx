@@ -82,9 +82,9 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
         </div>
 
         <section>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-foreground/50">Kamper</h3>
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-ink-light">Kamper</h3>
           {playedMatches.length === 0 ? (
-            <p className="text-sm italic text-foreground/40">Ingen kamper satt opp ennå.</p>
+            <p className="text-sm italic text-ink-light/60">Ingen kamper satt opp ennå.</p>
           ) : (
             <div className="space-y-2">
               {playedMatches.map((m) => {
@@ -103,23 +103,23 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
                     : m.result === "halved"
                       ? "border-l-gold"
                       : m.result === "not_played"
-                        ? "border-l-navy-lighter"
+                        ? "border-l-card-border"
                         : "border-l-transparent";
 
                 return (
                   <div
                     key={m.id}
-                    className={`flex items-center justify-between gap-3 rounded-2xl border-l-4 bg-navy-light/50 px-3 py-2.5 text-xs ${accent}`}
+                    className={`flex items-center justify-between gap-3 rounded-2xl border-l-4 bg-white px-3 py-2.5 text-xs ${accent}`}
                   >
                     <div className="min-w-0">
-                      <div className="truncate font-semibold text-foreground/80">
+                      <div className="truncate font-semibold text-ink">
                         {day?.label} &middot; {session?.name}
                       </div>
-                      <div className="truncate text-foreground/40">vs {opponents || "?"}</div>
+                      <div className="truncate text-ink-light/60">vs {opponents || "?"}</div>
                     </div>
                     <div className="shrink-0 text-right">
-                      <div className="font-semibold text-foreground/80">{RESULT_LABELS[m.result]}</div>
-                      {m.result !== "not_played" && <div className="text-gold">{fmt(myPoints)} p</div>}
+                      <div className="font-semibold text-ink">{RESULT_LABELS[m.result]}</div>
+                      {m.result !== "not_played" && <div className="text-gold-deep">{fmt(myPoints)} p</div>}
                     </div>
                   </div>
                 );
@@ -130,16 +130,16 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
 
         {history.length > 0 && (
           <section>
-            <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-foreground/50">
+            <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-ink-light">
               Historikk
             </h3>
             <div className="space-y-1">
               {history.map((h) => (
                 <div
                   key={h.year}
-                  className="flex items-center justify-between gap-2 rounded-2xl bg-navy-light/30 px-3 py-1.5 text-xs text-foreground/60"
+                  className="flex items-center justify-between gap-2 rounded-2xl bg-card-deep px-3 py-1.5 text-xs text-ink-light"
                 >
-                  <span className="font-semibold text-foreground/80">{h.year}</span>
+                  <span className="font-semibold text-ink">{h.year}</span>
                   {h.record && <span>{h.record}</span>}
                   <span>
                     {h.individual_points !== null && `${fmt(h.individual_points)} ind.`}

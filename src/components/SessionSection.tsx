@@ -35,7 +35,19 @@ export function SessionSection({
       : leader === "aqua"
         ? "border-aqua-team bg-aqua-team-bg/30 border-l-4"
         : "border-gold bg-gold/10 border-l-4"
-    : "border-navy-lighter/40 bg-navy-light/70";
+    : "border-card-border bg-card";
+
+  // The active-aqua state keeps a dark navy fill (team-color exception), everything else is a light surface now.
+  const isDarkBg = isActive && leader === "aqua";
+  const textClass = isDarkBg ? "text-foreground/40" : "text-ink-light/60";
+  const titleClass = isDarkBg ? "text-foreground/90" : "text-ink";
+  const badgeClass = isDarkBg
+    ? "border-gold/50 bg-gold/10 text-gold"
+    : "border-gold-deep/50 bg-gold/10 text-gold-deep";
+  const grayScoreText = isDarkBg ? "text-gray-team-light" : "text-ink";
+  const aquaScoreText = isDarkBg ? "text-aqua-team-light" : "text-aqua-team-deep";
+  const dashText = isDarkBg ? "text-foreground/30" : "text-ink-light/40";
+  const borderTClass = isDarkBg ? "border-navy-lighter/50" : "border-card-border";
 
   return (
     <div className={`overflow-hidden rounded-3xl border transition-colors ${cardClass}`}>
@@ -44,31 +56,31 @@ export function SessionSection({
         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
       >
         <div className="flex items-center gap-3">
-          <span className={`text-foreground/40 transition-transform ${open ? "rotate-90" : ""}`}>▶</span>
+          <span className={`transition-transform ${textClass} ${open ? "rotate-90" : ""}`}>▶</span>
           <div>
-            <div className="flex items-center gap-2 font-semibold text-foreground/90">
+            <div className={`flex items-center gap-2 font-semibold ${titleClass}`}>
               {session.name}
               {isActive && (
-                <span className="rounded-full border border-gold/50 bg-gold/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gold">
+                <span className={`rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${badgeClass}`}>
                   Aktiv runde
                 </span>
               )}
             </div>
-            <div className="text-[11px] uppercase tracking-wide text-foreground/40">
+            <div className={`text-[11px] uppercase tracking-wide ${textClass}`}>
               {FORMAT_LABELS[session.format]} &middot; {fmt(session.points_per_match)}p/kamp &middot;{" "}
               {played}/{matches.length} spilt
             </div>
           </div>
         </div>
         <div className="shrink-0 text-sm font-bold">
-          <span className="text-gray-team-light">{fmt(gray)}</span>
-          <span className="text-foreground/30"> – </span>
-          <span className="text-aqua-team-light">{fmt(aqua)}</span>
+          <span className={grayScoreText}>{fmt(gray)}</span>
+          <span className={dashText}> – </span>
+          <span className={aquaScoreText}>{fmt(aqua)}</span>
         </div>
       </button>
 
       {open && (
-        <div className="space-y-2 border-t border-navy-lighter/50 px-3 pb-3 pt-3">
+        <div className={`space-y-2 border-t px-3 pb-3 pt-3 ${borderTClass}`}>
           {matches.map((m) => (
             <MatchRow key={m.id} match={m} session={session} players={players} />
           ))}

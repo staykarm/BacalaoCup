@@ -23,19 +23,19 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
   return (
     <ModalShell title="Admin" onClose={onClose}>
       <div className="space-y-4">
-        <p className="text-xs text-foreground/50">
+        <p className="text-xs text-ink-light">
           Midlertidig admin-panel, åpent for alle mens vi tester appen.
         </p>
 
-        <div className="rounded-2xl border border-navy-lighter/50 bg-navy-lighter/30 p-4">
-          <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-foreground/80">Aktiv runde</h3>
-          <p className="mb-3 text-xs text-foreground/60">
+        <div className="rounded-2xl border border-card-border bg-white p-4">
+          <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Aktiv runde</h3>
+          <p className="mb-3 text-xs text-ink-light">
             Kun den valgte runden kan redigeres — resten låses for alle andre spillere.
           </p>
           <select
             value={activeSessionId ?? ""}
             onChange={(e) => setActiveSession(e.target.value || null)}
-            className="w-full rounded-xl border border-navy-lighter/60 bg-navy px-3 py-2 text-sm focus:border-gold/60 focus:outline-none"
+            className="w-full rounded-xl border border-card-border bg-card-deep px-3 py-2 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
           >
             <option value="">Ingen — alle runder åpne</option>
             {sortedDays.map((day) => (
@@ -53,28 +53,28 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
           </select>
         </div>
 
-        <div className="rounded-2xl border border-red-500/40 bg-red-950/20 p-4">
-          <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-red-300">Nullstill resultater</h3>
-          <p className="mb-3 text-xs text-foreground/60">
+        <div className="rounded-2xl border border-red-300 bg-red-50 p-4">
+          <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-red-700">Nullstill resultater</h3>
+          <p className="mb-3 text-xs text-ink-light">
             Setter alle kamper tilbake til «Ikke spilt» og nullstiller live-stilling, hull og poeng. Kan ikke
             angres.
           </p>
 
           {done ? (
-            <p className="text-sm font-semibold text-foreground/70">Alle resultater er nullstilt.</p>
+            <p className="text-sm font-semibold text-ink-light">Alle resultater er nullstilt.</p>
           ) : confirming ? (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-semibold text-red-300">Er du sikker?</span>
+              <span className="text-sm font-semibold text-red-700">Er du sikker?</span>
               <button
                 onClick={confirmReset}
                 disabled={resetting}
-                className="rounded-xl border border-red-500/60 bg-red-500/20 px-3 py-1.5 text-xs font-bold text-red-200 hover:bg-red-500/30 disabled:opacity-40"
+                className="rounded-xl border border-red-400 bg-red-100 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-200 disabled:opacity-40"
               >
                 {resetting ? "Nullstiller..." : "Ja, nullstill alt"}
               </button>
               <button
                 onClick={() => setConfirming(false)}
-                className="rounded-xl border border-navy-lighter/60 px-3 py-1.5 text-xs text-foreground/60 hover:bg-navy-lighter/30"
+                className="rounded-xl border border-card-border px-3 py-1.5 text-xs text-ink-light hover:bg-card-deep"
               >
                 Avbryt
               </button>
@@ -82,7 +82,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
           ) : (
             <button
               onClick={() => setConfirming(true)}
-              className="rounded-xl border border-red-500/60 bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-300 hover:bg-red-500/20"
+              className="rounded-xl border border-red-400 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-100"
             >
               Nullstill alle resultater
             </button>

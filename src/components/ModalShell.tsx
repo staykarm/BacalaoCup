@@ -23,13 +23,13 @@ export function ModalShell({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[2rem] border border-navy-lighter/40 bg-navy-light shadow-2xl sm:rounded-[2rem]">
-        <div className="flex items-center justify-between border-b border-navy-lighter/40 px-5 py-4">
-          <h2 className="font-display text-lg font-bold uppercase tracking-wide text-gold sm:text-xl">{title}</h2>
+      <div className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[2rem] border border-card-border bg-card shadow-2xl sm:rounded-[2rem]">
+        <div className="flex items-center justify-between border-b border-card-border px-5 py-4">
+          <h2 className="font-display text-lg font-bold uppercase tracking-wide text-gold-deep sm:text-xl">{title}</h2>
           <button
             onClick={onClose}
             aria-label="Lukk"
-            className="rounded-full border border-navy-lighter/50 px-3 py-1 text-sm text-foreground/70 hover:bg-navy-lighter/50"
+            className="rounded-full border border-card-border px-3 py-1 text-sm text-ink-light hover:bg-card-deep"
           >
             Lukk ✕
           </button>

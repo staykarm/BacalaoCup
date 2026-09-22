@@ -62,7 +62,7 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
                   <span className="text-xs text-ink-light">
-                    {s.wins}V {s.halved}D {s.losses}T
+                    {s.wins}-{s.halved}-{s.losses}
                   </span>
                   <span className={`font-bold ${listAccentText}`}>{fmt(s.pointsContributed)} p</span>
                 </div>

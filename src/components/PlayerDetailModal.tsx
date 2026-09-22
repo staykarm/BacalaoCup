@@ -76,7 +76,7 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
               )}
             </div>
             <div className={`mt-0.5 text-sm font-bold ${side === "gray" ? "text-ink" : "text-white"}`}>
-              {wins}V {halved}D {losses}T &middot; {fmt(pointsContributed)} p denne turneringen
+              {wins}-{halved}-{losses} &middot; {fmt(pointsContributed)} p denne turneringen
             </div>
           </div>
         </div>

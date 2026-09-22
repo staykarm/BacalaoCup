@@ -116,8 +116,8 @@ export function MatchRow({ match, players }: { match: Match; players: Player[] }
   }
 
   function sideText(team: TeamId) {
-    // Gray's fill is a light gray, so it needs dark ink text; Aqua's fill stays dark, so it keeps light text.
-    const base = team === "gray" ? "text-ink" : "text-aqua-team-light";
+    // Gray's fill is a light gray, so it needs dark ink text; Aqua's fill stays dark, so white gives the strongest contrast.
+    const base = team === "gray" ? "text-ink" : "text-white";
     return leadingSide === null || leadingSide === team ? base : "text-ink-light/30";
   }
 

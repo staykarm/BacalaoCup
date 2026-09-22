@@ -35,7 +35,7 @@ function PlayerCard({
 
       <div className="mt-2 flex items-center gap-3 text-xs text-ink-light">
         <span>
-          {stat.wins}V {stat.halved}D {stat.losses}T
+          {stat.wins}-{stat.halved}-{stat.losses}
         </span>
         <span className="font-bold text-ink">{fmt(stat.pointsContributed)} p</span>
       </div>

@@ -47,10 +47,9 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
 
   const history = playerYearStats.filter((h) => h.player_id === playerId).sort((a, b) => b.year - a.year);
 
-  // A match that's genuinely untouched (not played, no live progress) is self-evident and
-  // adds no signal — only show it once it's finalized or actually under way.
   const isLive = (m: Match) => m.result === "not_played" && (m.live_up !== 0 || m.live_thru !== null);
   const relevantMatches = playedMatches.filter((m) => m.result !== "not_played" || isLive(m));
+  const upcomingMatches = playedMatches.filter((m) => m.result === "not_played" && !isLive(m));
 
   // If a live match holds its current lead, this is what the player's side would score.
   function liveProjectedPoints(m: Match): number {
@@ -163,6 +162,39 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
             </div>
           )}
         </section>
+
+        {upcomingMatches.length > 0 && (
+          <section>
+            <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-ink-light">
+              Kommende kamper
+            </h3>
+            <div className="space-y-2">
+              {upcomingMatches.map((m) => {
+                const session = sessionOf(m.session_id);
+                const day = dayOf(m.session_id);
+                const opponents = (side === "gray" ? [m.aqua_player1, m.aqua_player2] : [m.gray_player1, m.gray_player2])
+                  .map(nameOf)
+                  .filter((n): n is string => !!n)
+                  .join(" / ");
+
+                return (
+                  <div
+                    key={m.id}
+                    className="flex items-center justify-between gap-3 rounded-2xl border-l-4 border-l-transparent bg-white px-3 py-2.5 text-xs"
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate font-semibold text-ink">
+                        {day?.label} &middot; {session?.name}
+                      </div>
+                      <div className="truncate text-ink-light/60">vs {opponents || "?"}</div>
+                    </div>
+                    <div className="shrink-0 text-right text-ink-light">{m.start_time ?? "--:--"}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {history.length > 0 && (
           <section>

@@ -58,7 +58,10 @@ function PlayerRow({
       <span className="shrink-0 text-[11px] text-ink-light">
         {stat.wins}-{stat.halved}-{stat.losses}
       </span>
-      <span className="w-9 shrink-0 text-right text-sm font-bold text-ink">{fmt(stat.pointsContributed)}p</span>
+      <span className="w-11 shrink-0 text-right text-sm font-bold text-ink">
+        {stat.projectedExtra > 0 && "≈"}
+        {fmt(stat.pointsContributed + stat.projectedExtra)}p
+      </span>
     </button>
   );
 }
@@ -70,7 +73,10 @@ export function MvpModal({ onClose }: { onClose: () => void }) {
 
   const rows = players
     .map((p) => ({ player: p, stat: playerStats.find((s) => s.player.id === p.id)! }))
-    .sort((a, b) => b.stat.pointsContributed - a.stat.pointsContributed);
+    .sort(
+      (a, b) =>
+        b.stat.pointsContributed + b.stat.projectedExtra - (a.stat.pointsContributed + a.stat.projectedExtra)
+    );
 
   return (
     <ModalShell title="MVP" onClose={onClose}>

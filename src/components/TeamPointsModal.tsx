@@ -19,7 +19,7 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
 
   const stats = computePlayerStats(matches, players)
     .filter((s) => s.player.team_id === team)
-    .sort((a, b) => b.pointsContributed - a.pointsContributed);
+    .sort((a, b) => b.pointsContributed + b.projectedExtra - (a.pointsContributed + a.projectedExtra));
 
   const bannerClass = team === "gray" ? "bg-gray-team-deep" : "bg-aqua-team-deep";
   // The gray fill is light, so its banner needs dark ink text; the list rows sit on
@@ -61,7 +61,10 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
                   <span className="text-xs text-ink-light">
                     {s.wins}-{s.halved}-{s.losses}
                   </span>
-                  <span className={`font-bold ${listAccentText}`}>{fmt(s.pointsContributed)} p</span>
+                  <span className={`font-bold ${listAccentText}`}>
+                    {s.projectedExtra > 0 && "≈"}
+                    {fmt(s.pointsContributed + s.projectedExtra)} p
+                  </span>
                 </div>
               </div>
             ))}

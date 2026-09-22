@@ -1,3 +1,4 @@
+import { liveLeader } from "./scoring";
 import { Day, Match, Player, Session, TeamId } from "./types";
 
 export interface PlayerStat {
@@ -6,7 +7,10 @@ export interface PlayerStat {
   wins: number;
   losses: number;
   halved: number;
+  /** Points from finalized matches only. */
   pointsContributed: number;
+  /** Extra points projected from a live in-progress match, if its current lead holds. */
+  projectedExtra: number;
 }
 
 export interface PairStat {
@@ -47,14 +51,30 @@ export function computePlayerStats(matches: Match[], players: Player[]): PlayerS
   const stats = new Map<string, PlayerStat>();
 
   for (const p of players) {
-    stats.set(p.id, { player: p, played: 0, wins: 0, losses: 0, halved: 0, pointsContributed: 0 });
+    stats.set(p.id, { player: p, played: 0, wins: 0, losses: 0, halved: 0, pointsContributed: 0, projectedExtra: 0 });
   }
 
   for (const match of matches) {
-    if (match.result === "not_played") continue;
-
     const grayIds = [match.gray_player1, match.gray_player2].filter((id): id is string => !!id);
     const aquaIds = [match.aqua_player1, match.aqua_player2].filter((id): id is string => !!id);
+
+    if (match.result === "not_played") {
+      // Not finalized — only worth anything once it's actually under way, and then only
+      // as a projection (win/halve/loss records stay settled-only, same as `played`).
+      if (match.live_up === 0 && match.live_thru === null) continue;
+      const leader = liveLeader(match.live_up);
+      const grayPoints = leader === "gray" ? match.points : leader === null ? match.points / 2 : 0;
+      const aquaPoints = leader === "aqua" ? match.points : leader === null ? match.points / 2 : 0;
+      for (const id of grayIds) {
+        const s = stats.get(id);
+        if (s && byId.has(id)) s.projectedExtra += grayPoints;
+      }
+      for (const id of aquaIds) {
+        const s = stats.get(id);
+        if (s && byId.has(id)) s.projectedExtra += aquaPoints;
+      }
+      continue;
+    }
 
     for (const id of grayIds) {
       const s = stats.get(id);
@@ -77,7 +97,9 @@ export function computePlayerStats(matches: Match[], players: Player[]): PlayerS
     }
   }
 
-  return Array.from(stats.values()).sort((a, b) => b.pointsContributed - a.pointsContributed);
+  return Array.from(stats.values()).sort(
+    (a, b) => b.pointsContributed + b.projectedExtra - (a.pointsContributed + a.projectedExtra)
+  );
 }
 
 export function computePairStats(matches: Match[], players: Player[]): PairStat[] {

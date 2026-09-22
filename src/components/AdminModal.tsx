@@ -5,7 +5,7 @@ import { useTournament } from "@/context/TournamentContext";
 import { ModalShell } from "./ModalShell";
 
 export function AdminModal({ onClose }: { onClose: () => void }) {
-  const { resetAllMatches } = useTournament();
+  const { days, sessions, activeSessionId, setActiveSession, resetAllMatches } = useTournament();
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [done, setDone] = useState(false);
@@ -18,12 +18,40 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
     setDone(true);
   }
 
+  const sortedDays = [...days].sort((a, b) => a.sort_order - b.sort_order);
+
   return (
     <ModalShell title="Admin" onClose={onClose}>
       <div className="space-y-4">
         <p className="text-xs text-foreground/50">
           Midlertidig admin-panel, åpent for alle mens vi tester appen.
         </p>
+
+        <div className="rounded-xl border border-navy-lighter/50 bg-navy-light/40 p-4">
+          <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-foreground/80">Aktiv runde</h3>
+          <p className="mb-3 text-xs text-foreground/60">
+            Kun den valgte runden kan redigeres — resten låses for alle andre spillere.
+          </p>
+          <select
+            value={activeSessionId ?? ""}
+            onChange={(e) => setActiveSession(e.target.value || null)}
+            className="w-full rounded-lg border border-navy-lighter/60 bg-navy px-3 py-2 text-sm focus:border-gold/60 focus:outline-none"
+          >
+            <option value="">Ingen — alle runder åpne</option>
+            {sortedDays.map((day) => (
+              <optgroup key={day.id} label={day.label}>
+                {sessions
+                  .filter((s) => s.day_id === day.id)
+                  .sort((a, b) => a.sort_order - b.sort_order)
+                  .map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
 
         <div className="rounded-xl border border-red-500/40 bg-red-950/20 p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-red-300">Nullstill resultater</h3>

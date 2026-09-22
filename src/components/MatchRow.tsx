@@ -7,6 +7,7 @@ import { Match, MatchResult, Player, RESULT_LABELS, Session, TeamId } from "@/li
 import { liveLeader, liveUpLabel } from "@/lib/scoring";
 import { PlayerSelect } from "./PlayerSelect";
 import { PlayerDetailModal } from "./PlayerDetailModal";
+import { ModalShell } from "./ModalShell";
 
 function sidePlayers(match: Match, team: TeamId, players: Player[]) {
   const ids = team === "gray"
@@ -26,6 +27,7 @@ const RESULT_OPTIONS: MatchResult[] = ["gray_won", "halved", "aqua_won", "not_pl
 export function MatchRow({ match, session, players }: { match: Match; session: Session; players: Player[] }) {
   const { updateMatch, setMatchResult, activeSessionId } = useTournament();
   const [editing, setEditing] = useState(false);
+  const [scoring, setScoring] = useState(false);
   const [draft, setDraft] = useState(match);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
@@ -70,6 +72,12 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
     const leader = liveLeader(match.live_up);
     const result: MatchResult = leader === "gray" ? "gray_won" : leader === "aqua" ? "aqua_won" : "halved";
     setMatchResult(match.id, result);
+    setScoring(false);
+  }
+
+  function setResultAndClose(result: MatchResult) {
+    setMatchResult(match.id, result);
+    setScoring(false);
   }
 
   const liveLeaderTeam = liveLeader(match.live_up);
@@ -202,7 +210,12 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
           </div>
         </div>
 
-        <div className="flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 bg-navy-deep px-1 py-3 text-center sm:w-24 sm:py-4">
+        <button
+          onClick={() => setScoring(true)}
+          disabled={locked}
+          aria-label="Oppdater stilling"
+          className="flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 bg-navy-deep px-1 py-3 text-center transition enabled:hover:bg-navy-lighter disabled:cursor-default sm:w-24 sm:py-4"
+        >
           {match.result !== "not_played" ? (
             <>
               <span className="text-sm font-extrabold text-foreground/70 sm:text-base">F</span>
@@ -226,7 +239,7 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
           ) : (
             <span className="text-xs font-bold text-foreground sm:text-sm">{match.start_time ?? "--:--"}</span>
           )}
-        </div>
+        </button>
 
         <div
           className={`flex min-w-0 flex-1 items-center justify-end gap-2 px-3 py-3 text-right sm:px-4 sm:py-4 ${sideBg("aqua")}`}
@@ -270,84 +283,8 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
             {(match.result === "gray_won" || match.result === "aqua_won" || match.result === "halved") &&
               ` · Gray ${fmtPts(match.points_gray)} – ${fmtPts(match.points_aqua)} Aqua`}
           </span>
-
-          {locked ? (
-            <span className="ml-auto text-[11px] italic text-ink-light/60">🔒 Runden er låst</span>
-          ) : (
-            <div className="ml-auto flex flex-wrap gap-1.5">
-              {RESULT_OPTIONS.map((r) => (
-                <button
-                  key={r}
-                  onClick={() => setMatchResult(match.id, r)}
-                  className={`rounded-lg border px-2 py-1 text-[11px] font-medium transition ${
-                    match.result === r
-                      ? "border-gold-deep bg-gold/20 text-gold-deep"
-                      : "border-card-border text-ink-light hover:border-gold-deep/40 hover:text-ink"
-                  }`}
-                >
-                  {RESULT_LABELS[r]}
-                </button>
-              ))}
-            </div>
-          )}
+          {locked && <span className="ml-auto text-[11px] italic text-ink-light/60">🔒 Runden er låst</span>}
         </div>
-
-        {!locked && match.result === "not_played" && (
-          <div className="mt-2 flex flex-wrap items-center gap-3 rounded-xl border border-card-border bg-card-deep px-3 py-2">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => bumpLiveUp(1)}
-                aria-label="Gray ett hull opp"
-                className="shrink-0 rounded-lg border border-gray-team-deep/60 bg-gray-team-bg/70 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-ink hover:bg-gray-team-bg"
-              >
-                Gray
-              </button>
-              <span className={`w-20 shrink-0 text-center text-sm font-bold ${liveColorOnLight}`}>
-                {liveLeaderTeam === "gray" && "GRAY "}
-                {liveLeaderTeam === "aqua" && "AQUA "}
-                {liveUpLabel(match.live_up)}
-              </span>
-              <button
-                onClick={() => bumpLiveUp(-1)}
-                aria-label="Aqua ett hull opp"
-                className="shrink-0 rounded-lg border border-aqua-team-deep/60 bg-aqua-team-bg/70 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-aqua-team-light hover:bg-aqua-team-bg"
-              >
-                Aqua
-              </button>
-              {match.live_up !== 0 && (
-                <button
-                  onClick={resetLiveUp}
-                  className="rounded-lg border border-card-border px-2 py-1 text-[11px] text-ink-light hover:bg-white"
-                >
-                  A/S
-                </button>
-              )}
-            </div>
-
-            <label className="flex items-center gap-1.5 text-xs text-ink-light">
-              Hull
-              <select
-                value={match.live_thru ?? ""}
-                onChange={(e) => setLiveThru(e.target.value ? Number(e.target.value) : null)}
-                className="rounded-xl border border-card-border bg-white px-2 py-1 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
-              >
-                <option value="">–</option>
-                {Array.from({ length: 18 }, (_, i) => i + 1).map((hole) => (
-                  <option key={hole} value={hole}>
-                    {hole}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <button
-              onClick={finalizeFromLive}
-              className="ml-auto rounded-lg border border-gold-deep/50 bg-gold/10 px-2.5 py-1.5 text-[11px] font-semibold text-gold-deep hover:bg-gold/20"
-            >
-              Sett som endelig stilling
-            </button>
-          </div>
-        )}
 
         {match.note && <p className="mt-2 text-[11px] italic text-ink-light/60">⚠ {match.note}</p>}
 
@@ -447,6 +384,100 @@ export function MatchRow({ match, session, players }: { match: Match; session: S
           </div>
         )}
       </div>
+
+      {scoring && (
+        <ModalShell title="Oppdater stilling" onClose={() => setScoring(false)}>
+          <div className="space-y-5">
+            <div className="text-center">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-light">
+                {(grayPlayers.map((p) => p.name).join(" / ") || "Gray")} vs{" "}
+                {(aquaPlayers.map((p) => p.name).join(" / ") || "Aqua")}
+              </p>
+              <p className={`mt-1 font-display text-2xl font-bold ${match.result === "not_played" ? liveColorOnLight : "text-ink"}`}>
+                {match.result !== "not_played"
+                  ? RESULT_LABELS[match.result]
+                  : isLiveInProgress
+                    ? `${liveLeaderTeam === "gray" ? "GRAY " : liveLeaderTeam === "aqua" ? "AQUA " : ""}${liveUpLabel(match.live_up)}`
+                    : "Ikke startet"}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={() => bumpLiveUp(1)}
+                aria-label="Gray ett hull opp"
+                className="shrink-0 rounded-lg border border-gray-team-deep/60 bg-gray-team-bg/70 px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink hover:bg-gray-team-bg"
+              >
+                Gray
+              </button>
+              <span className={`w-24 shrink-0 text-center text-sm font-bold ${liveColorOnLight}`}>
+                {liveLeaderTeam === "gray" && "GRAY "}
+                {liveLeaderTeam === "aqua" && "AQUA "}
+                {liveUpLabel(match.live_up)}
+              </span>
+              <button
+                onClick={() => bumpLiveUp(-1)}
+                aria-label="Aqua ett hull opp"
+                className="shrink-0 rounded-lg border border-aqua-team-deep/60 bg-aqua-team-bg/70 px-3 py-2 text-xs font-bold uppercase tracking-wide text-aqua-team-light hover:bg-aqua-team-bg"
+              >
+                Aqua
+              </button>
+              {match.live_up !== 0 && (
+                <button
+                  onClick={resetLiveUp}
+                  className="rounded-lg border border-card-border px-2 py-1.5 text-xs text-ink-light hover:bg-card-deep"
+                >
+                  A/S
+                </button>
+              )}
+            </div>
+
+            <label className="flex items-center justify-center gap-2 text-sm text-ink-light">
+              Hull
+              <select
+                value={match.live_thru ?? ""}
+                onChange={(e) => setLiveThru(e.target.value ? Number(e.target.value) : null)}
+                className="rounded-xl border border-card-border bg-white px-3 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
+              >
+                <option value="">–</option>
+                {Array.from({ length: 18 }, (_, i) => i + 1).map((hole) => (
+                  <option key={hole} value={hole}>
+                    {hole}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <button
+              onClick={finalizeFromLive}
+              className="w-full rounded-xl border border-gold-deep/50 bg-gold/10 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20"
+            >
+              Sett som endelig stilling
+            </button>
+
+            <div>
+              <h3 className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-ink-light">
+                Eller sett resultat direkte
+              </h3>
+              <div className="flex flex-wrap justify-center gap-1.5">
+                {RESULT_OPTIONS.map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setResultAndClose(r)}
+                    className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                      match.result === r
+                        ? "border-gold-deep bg-gold/20 text-gold-deep"
+                        : "border-card-border text-ink-light hover:border-gold-deep/40 hover:text-ink"
+                    }`}
+                  >
+                    {RESULT_LABELS[r]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </ModalShell>
+      )}
 
       {selectedPlayerId && (
         <PlayerDetailModal playerId={selectedPlayerId} onClose={() => setSelectedPlayerId(null)} />

@@ -2,13 +2,17 @@
 
 import { useState } from "react";
 import { useTournament } from "@/context/TournamentContext";
+import { TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
 
 export function AdminModal({ onClose }: { onClose: () => void }) {
-  const { days, sessions, activeSessionId, setActiveSession, resetAllMatches } = useTournament();
+  const { days, sessions, activeSessionId, setActiveSession, resetAllMatches, updateSessionHandicap } =
+    useTournament();
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [done, setDone] = useState(false);
+
+  const scrambleSessions = sessions.filter((s) => s.format === "scramble").sort((a, b) => a.sort_order - b.sort_order);
 
   async function confirmReset() {
     setResetting(true);
@@ -52,6 +56,48 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
             ))}
           </select>
         </div>
+
+        {scrambleSessions.length > 0 && (
+          <div className="rounded-2xl border border-card-border bg-white p-4">
+            <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Scramble-handicap</h3>
+            <p className="mb-3 text-xs text-ink-light">
+              Trekkes fra lagets sammenlagte score-vs-par før poengene avgjøres.
+            </p>
+            <div className="space-y-3">
+              {scrambleSessions.map((s) => (
+                <div key={s.id} className="flex items-center gap-2">
+                  <span className="w-24 shrink-0 truncate text-xs text-ink-light">{s.name}</span>
+                  <select
+                    value={s.handicap_team ?? ""}
+                    onChange={(e) =>
+                      updateSessionHandicap(
+                        s.id,
+                        e.target.value ? (e.target.value as TeamId) : null,
+                        s.handicap_strokes
+                      )
+                    }
+                    className="rounded-xl border border-card-border bg-card-deep px-2 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
+                  >
+                    <option value="">Ingen</option>
+                    <option value="gray">Gray</option>
+                    <option value="aqua">Aqua</option>
+                  </select>
+                  <input
+                    type="number"
+                    step="1"
+                    disabled={!s.handicap_team}
+                    value={s.handicap_strokes ?? ""}
+                    onChange={(e) =>
+                      updateSessionHandicap(s.id, s.handicap_team, e.target.value ? Number(e.target.value) : null)
+                    }
+                    placeholder="Slag"
+                    className="w-20 rounded-xl border border-card-border bg-card-deep px-2 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none disabled:opacity-40"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="rounded-2xl border border-red-300 bg-red-50 p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-red-700">Nullstill resultater</h3>

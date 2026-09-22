@@ -41,6 +41,9 @@ export interface Session {
   format: SessionFormat;
   points_per_match: number;
   sort_order: number;
+  /** Scramble only: a team-wide stroke allowance, subtracted from that team's combined flight score. */
+  handicap_team: TeamId | null;
+  handicap_strokes: number | null;
 }
 
 export type MatchResult = "not_played" | "gray_won" | "aqua_won" | "halved";
@@ -63,6 +66,10 @@ export interface Match {
   live_up: number;
   /** Which hole the match has reached, 1–18. Null if not started. */
   live_thru: number | null;
+  /** Scramble only: which team this flight belongs to (a scramble row has no named players). */
+  flight_team: TeamId | null;
+  /** Scramble only: this flight's score relative to par, e.g. -3, 0, 2. Null until entered. */
+  score_vs_par: number | null;
 }
 
 export interface Message {

@@ -12,8 +12,8 @@ function fmt(n: number) {
 }
 
 export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () => void }) {
-  const { matches, players } = useTournament();
-  const { gray, aqua } = totalPoints(matches);
+  const { matches, players, sessions } = useTournament();
+  const { gray, aqua } = totalPoints(matches, sessions);
   const teamTotal = team === "gray" ? gray : aqua;
   const teamName = team === "gray" ? "Gray (Joys)" : "Aquarellos";
 

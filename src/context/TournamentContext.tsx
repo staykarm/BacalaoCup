@@ -24,6 +24,7 @@ import {
   PlayerYearStat,
   Session,
   Team,
+  TeamId,
 } from "@/lib/types";
 
 interface TournamentContextValue {
@@ -53,6 +54,8 @@ interface TournamentContextValue {
   /** Admin: which round is marked "- pågår" in the UI. Purely informational — doesn't restrict editing. */
   activeSessionId: string | null;
   setActiveSession: (sessionId: string | null) => Promise<void>;
+  /** Admin: scramble-only team stroke handicap for a session. Pass team=null to clear it. */
+  updateSessionHandicap: (sessionId: string, team: TeamId | null, strokes: number | null) => Promise<void>;
 }
 
 const TournamentContext = createContext<TournamentContextValue | null>(null);
@@ -346,6 +349,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       points_aqua: 0,
       live_up: 0,
       live_thru: null,
+      score_vs_par: null,
     };
     setMatches((current) => current.map((m) => ({ ...m, ...reset })));
 
@@ -354,6 +358,19 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       setSyncError(updateError.message);
     }
   }, []);
+
+  const updateSessionHandicap = useCallback(
+    async (sessionId: string, team: TeamId | null, strokes: number | null) => {
+      const patch = { handicap_team: team, handicap_strokes: team ? strokes : null };
+      setSessions((current) => current.map((s) => (s.id === sessionId ? { ...s, ...patch } : s)));
+
+      const { error: updateError } = await supabase.from("sessions").update(patch).eq("id", sessionId);
+      if (updateError) {
+        setSyncError(updateError.message);
+      }
+    },
+    []
+  );
 
   const value = useMemo(
     () => ({
@@ -380,6 +397,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       resetAllMatches,
       activeSessionId,
       setActiveSession,
+      updateSessionHandicap,
     }),
     [
       teams,
@@ -405,6 +423,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       resetAllMatches,
       activeSessionId,
       setActiveSession,
+      updateSessionHandicap,
     ]
   );
 

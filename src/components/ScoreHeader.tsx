@@ -17,9 +17,9 @@ export function ScoreHeader({
   onOpenAdmin: () => void;
   onOpenTeam: (team: TeamId) => void;
 }) {
-  const { matches } = useTournament();
-  const { gray, aqua, possible } = projectedPoints(matches);
-  const settled = totalPoints(matches);
+  const { matches, sessions } = useTournament();
+  const { gray, aqua, possible } = projectedPoints(matches, sessions);
+  const settled = totalPoints(matches, sessions);
   const grayLive = Math.max(0, gray - settled.gray);
   const aquaLive = Math.max(0, aqua - settled.aqua);
   const isLive = hasLiveMatches(matches);

@@ -353,7 +353,10 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     };
     setMatches((current) => current.map((m) => ({ ...m, ...reset })));
 
-    const { error: updateError } = await supabase.from("matches").update(reset).neq("id", "");
+    // matches.id is a uuid column, so a `!= ''` filter fails to cast and the update never
+    // runs server-side (it looked like it worked locally, but nothing was actually reset).
+    // `id IS NOT NULL` is always true for real rows without attempting any uuid cast.
+    const { error: updateError } = await supabase.from("matches").update(reset).not("id", "is", null);
     if (updateError) {
       setSyncError(updateError.message);
     }

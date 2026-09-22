@@ -6,7 +6,9 @@ export interface AgendaEvent {
 
 /** Extra agenda entries (dinners, social events) keyed by `day.id`, alongside golf and transport. */
 export const AGENDA_EXTRAS: Record<string, AgendaEvent[]> = {
+  wed: [{ time: "13:00", label: "Lunsj", icon: "🥪" }],
   thu: [
+    { time: "14:00", label: "Lunsj", icon: "🥪" },
     { time: "15:00", label: "Bassengfest", icon: "🏊" },
     { time: "19:30", label: "BBQ-middag", icon: "🍖" },
   ],

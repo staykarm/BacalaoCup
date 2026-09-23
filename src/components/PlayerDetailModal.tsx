@@ -68,7 +68,7 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
   const teamRank = rankedPlayers.filter((s) => s.player.team_id === side).findIndex((s) => s.player.id === playerId) + 1;
 
   return (
-    <ModalShell title={player.name} onClose={onClose}>
+    <ModalShell title={player.is_captain ? `${player.name} (C)` : player.name} onClose={onClose}>
       <div className="space-y-5">
         <div
           className={`flex items-center gap-3 rounded-2xl p-4 ${

@@ -11,6 +11,7 @@ export interface Player {
   name: string;
   team_id: TeamId;
   hcp: number | null;
+  is_captain: boolean;
 }
 
 /** A past season's record for a player, e.g. from 2024 or 2023. */

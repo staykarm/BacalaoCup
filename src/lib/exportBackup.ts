@@ -54,6 +54,7 @@ export async function exportBackupToExcel(data: BackupData) {
     { header: "Dag", cell: (m) => dayLabel(m.session_id) },
     { header: "Økt", cell: (m) => sessionName(m.session_id) },
     { header: "Lag", cell: (m) => s(m.flight_team) },
+    { header: "Spillere", cell: (m) => m.flight_players.map(playerName).join(" / ") },
     { header: "Start", cell: (m) => s(m.start_time) },
     { header: "Score vs par", cell: (m) => s(m.score_vs_par) },
     { header: "Hull spilt", cell: (m) => s(m.live_thru) },

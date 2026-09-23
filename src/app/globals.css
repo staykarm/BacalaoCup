@@ -31,8 +31,8 @@
   --color-aqua-team-light: #8ec1ff;
   --color-aqua-team-deep: #123a8f;
   --color-aqua-team-bg: #1a56d6;
-  /** Match-card "not yet decided" fill for Aqua — a touch lighter than aqua-team-bg above. */
-  --color-aqua-team-flat: #3d72e6;
+  /** Match-card "not yet decided" fill for Aqua — same as aqua-team-bg (reverted). */
+  --color-aqua-team-flat: #1a56d6;
   /** Match-card "leading/won" fill for Aqua — deeper than aqua-team-deep above. */
   --color-aqua-team-won: #081d5c;
 }

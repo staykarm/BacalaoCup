@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
+import { shortCourseLabel } from "@/lib/courseHoles";
 import { liveLeader } from "@/lib/scoring";
 import { computePlayerStats } from "@/lib/stats";
 import { Match, RESULT_LABELS, TeamId } from "@/lib/types";
@@ -67,6 +68,12 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
   const overallRank = rankedPlayers.findIndex((s) => s.player.id === playerId) + 1;
   const teamRank = rankedPlayers.filter((s) => s.player.team_id === side).findIndex((s) => s.player.id === playerId) + 1;
 
+  const courses = [...days]
+    .filter((d) => d.course)
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((d) => d.course as string)
+    .filter((c, i, arr) => arr.indexOf(c) === i);
+
   return (
     <ModalShell title={player.is_captain ? `${player.name} (C)` : player.name} onClose={onClose}>
       <div className="space-y-5">
@@ -112,6 +119,26 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
             </div>
           </div>
         </div>
+
+        {courses.length > 0 && (
+          <section>
+            <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-ink-light">
+              Mottatte slag
+            </h3>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {courses.map((c) => (
+                <div key={c} className="rounded-xl bg-card-deep px-3 py-2 text-center">
+                  <div className="text-[10px] uppercase tracking-wide text-ink-light/60">
+                    {shortCourseLabel(c)}
+                  </div>
+                  <div className="font-display text-lg font-bold text-ink">
+                    {player.course_strokes[c] ?? "–"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section>
           <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-ink-light">Kamper</h3>

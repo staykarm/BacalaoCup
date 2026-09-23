@@ -159,9 +159,9 @@ export function ScrambleFlights({
         ))}
       </div>
 
-      <div className="rounded-xl border border-card-border bg-card-deep px-3 py-2 text-center text-xs text-ink-light">
-        {result.decided ? (
-          result.winner ? (
+      {result.decided && (
+        <div className="rounded-xl border border-card-border bg-card-deep px-3 py-2 text-center text-xs text-ink-light">
+          {result.winner ? (
             <span className="font-semibold text-ink">
               Sammenlagt {fmtVsPar(result.grayTotal)} – {fmtVsPar(result.aquaTotal)} &middot;{" "}
               {result.winner === "gray" ? "Gray" : "Aqua"} tar {session.points_per_match}p
@@ -171,11 +171,9 @@ export function ScrambleFlights({
               Sammenlagt {fmtVsPar(result.grayTotal)} – {fmtVsPar(result.aquaTotal)} &middot; Delt,{" "}
               {session.points_per_match / 2}p hver
             </span>
-          )
-        ) : (
-          <span>Venter på alle fire scorene før poengene fordeles</span>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {editingFlight && (
         <ModalShell title="Scramble-score" onClose={() => setEditingFlightId(null)}>

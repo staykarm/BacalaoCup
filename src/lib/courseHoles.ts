@@ -113,3 +113,10 @@ export function getHoleInfo(course: string | null, holeNumber: number): HoleInfo
   const holes = course ? COURSE_HOLES[course] : undefined;
   return holes?.[holeNumber - 1] ?? { number: holeNumber, par: null, meters: null, index: null };
 }
+
+/** A shorter name for tight columns/badges — some full course names are too long to fit. */
+export function shortCourseLabel(course: string): string {
+  if (course === "Marbella Club Resort") return "Marbella";
+  if (course === "Mijas Los Lagos") return "Los Lagos";
+  return course;
+}

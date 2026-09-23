@@ -11,6 +11,9 @@ export interface Player {
   name: string;
   team_id: TeamId;
   hcp: number | null;
+  is_captain: boolean;
+  /** Strokes received per course (handicap allowance), keyed by the exact `days.course` string. */
+  course_strokes: Record<string, number>;
 }
 
 /** A past season's record for a player, e.g. from 2024 or 2023. */

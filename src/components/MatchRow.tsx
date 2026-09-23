@@ -29,7 +29,10 @@ function sidePlayers(match: Match, team: TeamId, players: Player[]) {
     : [match.aqua_player1, match.aqua_player2];
   return ids
     .filter((id): id is string => !!id)
-    .map((id) => ({ id, name: players.find((p) => p.id === id)?.name ?? id }));
+    .map((id) => {
+      const player = players.find((p) => p.id === id);
+      return { id, name: player?.name ?? id, course_strokes: player?.course_strokes ?? {} };
+    });
 }
 
 function fmtPts(n: number) {
@@ -156,6 +159,7 @@ export function MatchRow({
                   className={`w-full text-left text-xs font-bold uppercase leading-tight tracking-wide hover:underline sm:text-sm ${sideText("gray")}`}
                 >
                   {p.name}
+                  {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}
                 </button>
               ))
             ) : (
@@ -206,6 +210,7 @@ export function MatchRow({
                   className={`w-full text-right text-xs font-bold uppercase leading-tight tracking-wide hover:underline sm:text-sm ${sideText("aqua")}`}
                 >
                   {p.name}
+                  {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}
                 </button>
               ))
             ) : (

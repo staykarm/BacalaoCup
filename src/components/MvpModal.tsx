@@ -49,7 +49,10 @@ function PlayerRow({
         className="h-4 w-4 shrink-0 rounded-full object-cover"
       />
       <span className="min-w-0 flex-1 truncate">
-        <span className="font-semibold text-ink">{player.name}</span>
+        <span className="font-semibold text-ink">
+          {player.name}
+          {player.is_captain && <span className="text-gold-deep"> (C)</span>}
+        </span>
         {player.hcp !== null && <span className="ml-1.5 text-[10px] text-ink-light/40">hcp {fmt(player.hcp)}</span>}
         {historyText && (
           <span className="ml-1.5 truncate text-[10px] text-ink-light/40">&middot; {historyText}</span>

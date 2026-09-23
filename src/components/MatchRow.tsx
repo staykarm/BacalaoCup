@@ -156,7 +156,7 @@ export function MatchRow({
                 <button
                   key={p.id}
                   onClick={() => setSelectedPlayerId(p.id)}
-                  className={`w-full text-left text-xs font-bold uppercase leading-tight tracking-wide hover:underline sm:text-sm ${sideText("gray")}`}
+                  className={`w-full text-left text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("gray")}`}
                 >
                   {p.name}
                   {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}
@@ -207,7 +207,7 @@ export function MatchRow({
                 <button
                   key={p.id}
                   onClick={() => setSelectedPlayerId(p.id)}
-                  className={`w-full text-right text-xs font-bold uppercase leading-tight tracking-wide hover:underline sm:text-sm ${sideText("aqua")}`}
+                  className={`w-full text-right text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("aqua")}`}
                 >
                   {p.name}
                   {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}

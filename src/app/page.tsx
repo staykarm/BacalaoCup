@@ -68,23 +68,18 @@ export default function Home() {
       )}
 
       <div className="space-y-3">
-        {daySessions.map((session, i) => {
-          // Open the active round by default; if it's not on this day (or none is set), fall back to the first.
-          const dayHasActiveSession = daySessions.some((s) => s.id === activeSessionId);
-          const defaultOpen = dayHasActiveSession ? session.id === activeSessionId : i === 0;
-          return (
-            <SessionSection
-              key={session.id}
-              session={session}
-              matches={matches
-                .filter((m) => m.session_id === session.id)
-                .sort((a, b) => a.sort_order - b.sort_order)}
-              players={players}
-              defaultOpen={defaultOpen}
-              hideNames={currentDay?.hide_names ?? false}
-            />
-          );
-        })}
+        {daySessions.map((session) => (
+          <SessionSection
+            key={session.id}
+            session={session}
+            matches={matches
+              .filter((m) => m.session_id === session.id)
+              .sort((a, b) => a.sort_order - b.sort_order)}
+            players={players}
+            defaultOpen
+            hideNames={currentDay?.hide_names ?? false}
+          />
+        ))}
       </div>
     </div>
   );

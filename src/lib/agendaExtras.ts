@@ -29,6 +29,7 @@ export const AGENDA_EXTRAS: Record<string, AgendaEvent[]> = {
     { time: "21:30", label: `Middag: ${friDinner?.name}`, icon: "🍽️", address: friDinner?.address },
   ],
   sat: [
+    { time: "10:30", label: "Rydding av huset", icon: "🧹", address: houseAddress },
     { time: "12:00", label: `Frokost/lunsj: ${satLunch?.name}`, icon: "🥪", address: satLunch?.address },
     { time: "21:30", label: `Middag: ${satDinner?.name}`, icon: "🍽️", address: satDinner?.address },
   ],

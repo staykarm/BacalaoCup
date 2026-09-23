@@ -84,6 +84,9 @@ export function MatchRow({
         : "text-gold-deep";
 
   const isLiveInProgress = match.result === "not_played" && (match.live_up !== 0 || match.live_thru !== null);
+  // A finished or live match can still be opened (read-only) after its round is no longer
+  // active, so the hole-by-hole recap doesn't just disappear once play moves on.
+  const canOpenScoring = isActiveSession || match.result !== "not_played" || isLiveInProgress;
 
   const leadingSide: TeamId | null =
     match.result === "gray_won"
@@ -171,12 +174,12 @@ export function MatchRow({
         </div>
 
         <button
-          onClick={() => isActiveSession && setScoring(true)}
-          disabled={!isActiveSession}
+          onClick={() => canOpenScoring && setScoring(true)}
+          disabled={!canOpenScoring}
           aria-label="Oppdater stilling"
           className={`flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 px-1 py-3 text-center transition sm:w-24 sm:py-4 ${
             match.result !== "not_played" ? "bg-black" : "bg-navy-deep"
-          } ${isActiveSession ? "hover:bg-navy-lighter" : "cursor-default opacity-60"}`}
+          } ${canOpenScoring ? "hover:bg-navy-lighter" : "cursor-default opacity-60"}`}
         >
           {match.result !== "not_played" ? (
             <span className="text-sm font-extrabold text-white sm:text-base">F</span>
@@ -241,7 +244,7 @@ export function MatchRow({
       )}
 
       {scoring && (
-        <ModalShell title="Oppdater stilling" onClose={() => setScoring(false)}>
+        <ModalShell title={isActiveSession ? "Oppdater stilling" : "Stilling"} onClose={() => setScoring(false)}>
           <div className="space-y-5">
             <div className="text-center">
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-light">
@@ -337,11 +340,12 @@ export function MatchRow({
                               return (
                                 <button
                                   key={opt.key}
+                                  disabled={!isActiveSession}
                                   onClick={() => setMatchHole(match, relHole, { result: active ? null : opt.key })}
                                   aria-label={`Hull ${courseHoleNumber(relHole, frontNine)} ${opt.label}`}
                                   className={`h-5 w-8 rounded border text-[8px] font-bold uppercase leading-none transition ${
                                     active ? activeClass : inactiveClass
-                                  }`}
+                                  } ${isActiveSession ? "" : "cursor-default"}`}
                                 >
                                   {opt.label[0]}
                                 </button>
@@ -357,11 +361,13 @@ export function MatchRow({
             </div>
 
             <p className="text-center text-xs text-ink-light/60">
-              Velg Grå, Delt eller Blå for hvert hull. Stillingen regnes ut automatisk.
+              {isActiveSession
+                ? "Velg Grå, Delt eller Blå for hvert hull. Stillingen regnes ut automatisk."
+                : "Kun visning – denne runden er ikke aktiv."}
               {headStart !== 0 && (
                 <>
                   {" "}
-                  Hull 0 er hodestarten {headStart > 0 ? "Gray" : "Aqua"} får for å spille én spiller kort.
+                  Hull 0 er forspranget {headStart > 0 ? "Gray" : "Aqua"} får for å spille én spiller kort.
                 </>
               )}
             </p>

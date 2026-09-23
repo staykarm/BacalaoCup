@@ -2,9 +2,34 @@
 
 import { useState } from "react";
 import { useTournament } from "@/context/TournamentContext";
+import { COMPETITIONS } from "@/lib/competitions";
 import { exportBackupToExcel } from "@/lib/exportBackup";
-import { Match, Player, TeamId } from "@/lib/types";
+import { Day, Match, Player, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
+
+function CompetitionWinnerInput({
+  day,
+  hole,
+  onSave,
+}: {
+  day: Day;
+  hole: number;
+  onSave: (winner: string) => void;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-xs text-ink">
+      <span className="w-14 shrink-0 text-ink-light">Hull {hole}</span>
+      <input
+        type="text"
+        key={day.competition_winners[hole] ?? ""}
+        defaultValue={day.competition_winners[hole] ?? ""}
+        onBlur={(e) => onSave(e.target.value)}
+        placeholder="Vinner"
+        className="min-w-0 flex-1 rounded-lg border border-card-border bg-card-deep px-2 py-1 text-xs text-ink focus:border-gold-deep/60 focus:outline-none"
+      />
+    </label>
+  );
+}
 
 function FlightRosterEditor({
   match,
@@ -60,6 +85,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
     resetAllMatches,
     updateSessionHandicap,
     updateDayHideNames,
+    updateCompetitionWinner,
     updateMatch,
     adminPin,
     updateAdminPin,
@@ -281,6 +307,37 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
             ))}
           </div>
         </div>
+
+        {playableDays.some((d) => d.course && COMPETITIONS[d.course]) && (
+          <div className="rounded-2xl border border-card-border bg-white p-4">
+            <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Konkurranse-vinnere</h3>
+            <p className="mb-3 text-xs text-ink-light">
+              Hvem vant Longest Drive og Closest to Pin hver dag. Vises i Konkurranser-oversikten.
+            </p>
+            <div className="space-y-4">
+              {playableDays
+                .filter((day) => day.course && COMPETITIONS[day.course])
+                .map((day) => {
+                  const comp = COMPETITIONS[day.course as string];
+                  return (
+                    <div key={day.id}>
+                      <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-light">{day.label}</p>
+                      <div className="space-y-1.5">
+                        {[...comp.longestDrive, ...comp.closestToPin].map((hole) => (
+                          <CompetitionWinnerInput
+                            key={hole}
+                            day={day}
+                            hole={hole}
+                            onSave={(winner) => updateCompetitionWinner(day.id, hole, winner)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
 
         <div className="rounded-2xl border border-red-300 bg-red-50 p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-red-700">Nullstill resultater</h3>

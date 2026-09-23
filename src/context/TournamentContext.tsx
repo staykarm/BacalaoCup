@@ -50,6 +50,8 @@ interface TournamentContextValue {
   updateSessionHandicap: (sessionId: string, team: TeamId | null, strokes: number | null) => Promise<void>;
   /** Admin: hide/show player names for every match on a day. */
   updateDayHideNames: (dayId: string, hide: boolean) => Promise<void>;
+  /** Admin: set (or clear, with an empty string) who won a Longest Drive / Closest to Pin hole. */
+  updateCompetitionWinner: (dayId: string, hole: number, winner: string) => Promise<void>;
   /** The PIN required to unlock the admin panel — a soft deterrent, not real auth. */
   adminPin: string;
   updateAdminPin: (pin: string) => Promise<void>;
@@ -400,6 +402,28 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const updateCompetitionWinner = useCallback(async (dayId: string, hole: number, winner: string) => {
+    let nextWinners: Record<string, string> = {};
+    setDays((current) =>
+      current.map((d) => {
+        if (d.id !== dayId) return d;
+        const trimmed = winner.trim();
+        nextWinners = trimmed
+          ? { ...d.competition_winners, [hole]: trimmed }
+          : Object.fromEntries(Object.entries(d.competition_winners).filter(([h]) => h !== String(hole)));
+        return { ...d, competition_winners: nextWinners };
+      })
+    );
+
+    const { error: updateError } = await supabase
+      .from("days")
+      .update({ competition_winners: nextWinners })
+      .eq("id", dayId);
+    if (updateError) {
+      setSyncError(updateError.message);
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       teams,
@@ -421,6 +445,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       setActiveSession,
       updateSessionHandicap,
       updateDayHideNames,
+      updateCompetitionWinner,
       adminPin,
       updateAdminPin,
       setMatchHole,
@@ -445,6 +470,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       setActiveSession,
       updateSessionHandicap,
       updateDayHideNames,
+      updateCompetitionWinner,
       adminPin,
       updateAdminPin,
       setMatchHole,

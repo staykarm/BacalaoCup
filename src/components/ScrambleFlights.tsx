@@ -28,13 +28,13 @@ function FlightRow({
   flight,
   players,
   hideNames,
-  active,
+  canOpen,
   onClick,
 }: {
   flight: Match;
   players: Player[];
   hideNames: boolean;
-  active: boolean;
+  canOpen: boolean;
   onClick: () => void;
 }) {
   const team = flight.flight_team as TeamId;
@@ -49,10 +49,10 @@ function FlightRow({
 
   return (
     <button
-      onClick={() => active && onClick()}
-      disabled={!active}
+      onClick={() => canOpen && onClick()}
+      disabled={!canOpen}
       className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left ${bg} ${
-        active ? "hover:brightness-105" : "cursor-default opacity-70"
+        canOpen ? "hover:brightness-105" : "cursor-default opacity-70"
       }`}
     >
       <Image
@@ -92,7 +92,8 @@ export function ScrambleFlights({
   const isActiveSession = session.id === activeSessionId;
   // Re-derived from the live `matches` prop every render, not a captured snapshot, so the
   // modal's totals stay in sync as holes are entered instead of freezing at open-time.
-  const editingFlight = isActiveSession ? matches.find((m) => m.id === editingFlightId) ?? null : null;
+  // Not gated by isActiveSession — a finished or live flight can still be opened read-only.
+  const editingFlight = matches.find((m) => m.id === editingFlightId) ?? null;
 
   const flights = [...matches].sort((a, b) => a.sort_order - b.sort_order);
   const grayFlights = matches.filter((m) => m.flight_team === "gray");
@@ -153,7 +154,7 @@ export function ScrambleFlights({
             flight={f}
             players={players}
             hideNames={hideNames}
-            active={isActiveSession}
+            canOpen={isActiveSession || f.live_thru !== null || f.score_vs_par !== null}
             onClick={() => setEditingFlightId(f.id)}
           />
         ))}
@@ -227,7 +228,7 @@ export function ScrambleFlights({
                             type="text"
                             inputMode="numeric"
                             pattern="[0-9]*"
-                            disabled={par === null}
+                            disabled={par === null || !isActiveSession}
                             value={strokes ?? ""}
                             onChange={(e) => onStrokesChange(relHole, e.target.value.replace(/[^0-9]/g, ""))}
                             aria-label={`Hull ${courseHoleNumber(relHole, frontNine)} slag`}
@@ -242,7 +243,9 @@ export function ScrambleFlights({
             </div>
 
             <p className="text-center text-xs text-ink-light/60">
-              Skriv inn antall slag for hvert hull — over/under par regnes ut automatisk.
+              {isActiveSession
+                ? "Skriv inn antall slag for hvert hull — over/under par regnes ut automatisk."
+                : "Kun visning – denne runden er ikke aktiv."}
             </p>
           </div>
         </ModalShell>

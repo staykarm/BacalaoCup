@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Outfit } from "next/font/google";
 import { AppShell } from "@/components/AppShell";
 import "./globals.css";
@@ -22,6 +22,14 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "Bacalao Cup MMXXVI",
   description: "Live stillingstavle og kampoppsett for Bacalao Cup MMXXVI, Marbella",
+  appleWebApp: {
+    title: "Bacalao Cup",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0a1330",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

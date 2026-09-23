@@ -24,13 +24,17 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
     return session ? days.find((d) => d.id === session.day_id) : undefined;
   };
 
+  // A day the admin has hidden names for is hiding the pairings themselves, not just who's
+  // in them — so a hidden day's matches are left out of the player's own list entirely,
+  // same as they never appeared on the main schedule.
   const playedMatches = matches
     .filter(
       (m) =>
-        m.gray_player1 === playerId ||
-        m.gray_player2 === playerId ||
-        m.aqua_player1 === playerId ||
-        m.aqua_player2 === playerId
+        (m.gray_player1 === playerId ||
+          m.gray_player2 === playerId ||
+          m.aqua_player1 === playerId ||
+          m.aqua_player2 === playerId) &&
+        !dayOf(m.session_id)?.hide_names
     )
     .sort((a, b) => a.sort_order - b.sort_order);
 

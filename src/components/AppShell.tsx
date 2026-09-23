@@ -98,7 +98,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <TournamentProvider>
       <ScoreHeader onOpenAdmin={handleOpenAdmin} onOpenTeam={setOpenTeam} />
 
-      <main className="mx-auto max-w-5xl px-4 pb-28 pt-4 sm:px-6">{children}</main>
+      <main className="mx-auto w-full max-w-5xl px-4 pb-28 pt-4 sm:px-6">{children}</main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-navy-lighter/60 bg-navy-deep/95 backdrop-blur supports-[backdrop-filter]:bg-navy-deep/85">
         <div className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-2 py-2 sm:justify-center sm:gap-2 sm:px-6">

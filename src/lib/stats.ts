@@ -175,3 +175,28 @@ export function computeDayBreakdown(
       };
     });
 }
+
+export interface CompetitionWins {
+  /** Every player, including those with zero wins. */
+  perPlayer: { player: Player; wins: number }[];
+  perTeam: Record<TeamId, number>;
+}
+
+/** How many Longest Drive / Closest to Pin competitions each player (and team) has won, across all days. */
+export function computeCompetitionWins(days: Day[], players: Player[]): CompetitionWins {
+  const winsByPlayerId = new Map<string, number>();
+  for (const day of days) {
+    for (const winnerId of Object.values(day.competition_winners)) {
+      if (!winnerId) continue;
+      winsByPlayerId.set(winnerId, (winsByPlayerId.get(winnerId) ?? 0) + 1);
+    }
+  }
+
+  const perPlayer = players.map((player) => ({ player, wins: winsByPlayerId.get(player.id) ?? 0 }));
+  const perTeam: Record<TeamId, number> = { gray: 0, aqua: 0 };
+  for (const { player, wins } of perPlayer) {
+    perTeam[player.team_id] += wins;
+  }
+
+  return { perPlayer, perTeam };
+}

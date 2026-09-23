@@ -10,23 +10,40 @@ import { ModalShell } from "./ModalShell";
 function CompetitionWinnerInput({
   day,
   hole,
+  players,
   onSave,
 }: {
   day: Day;
   hole: number;
-  onSave: (winner: string) => void;
+  players: Player[];
+  onSave: (winnerId: string) => void;
 }) {
+  const grayPlayers = players.filter((p) => p.team_id === "gray");
+  const aquaPlayers = players.filter((p) => p.team_id === "aqua");
   return (
     <label className="flex items-center gap-2 text-xs text-ink">
       <span className="w-14 shrink-0 text-ink-light">Hull {hole}</span>
-      <input
-        type="text"
-        key={day.competition_winners[hole] ?? ""}
-        defaultValue={day.competition_winners[hole] ?? ""}
-        onBlur={(e) => onSave(e.target.value)}
-        placeholder="Vinner"
+      <select
+        value={day.competition_winners[hole] ?? ""}
+        onChange={(e) => onSave(e.target.value)}
         className="min-w-0 flex-1 rounded-lg border border-card-border bg-card-deep px-2 py-1 text-xs text-ink focus:border-gold-deep/60 focus:outline-none"
-      />
+      >
+        <option value="">Ingen valgt</option>
+        <optgroup label="Gray">
+          {grayPlayers.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </optgroup>
+        <optgroup label="Aqua">
+          {aquaPlayers.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </optgroup>
+      </select>
     </label>
   );
 }
@@ -328,7 +345,8 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
                             key={hole}
                             day={day}
                             hole={hole}
-                            onSave={(winner) => updateCompetitionWinner(day.id, hole, winner)}
+                            players={players}
+                            onSave={(winnerId) => updateCompetitionWinner(day.id, hole, winnerId)}
                           />
                         ))}
                       </div>

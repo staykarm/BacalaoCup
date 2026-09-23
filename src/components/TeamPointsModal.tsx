@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
 import { totalPoints } from "@/lib/scoring";
-import { computePlayerStats } from "@/lib/stats";
+import { computeCompetitionWins, computePlayerStats } from "@/lib/stats";
 import { TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
 
@@ -12,7 +12,7 @@ function fmt(n: number) {
 }
 
 export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () => void }) {
-  const { matches, players, sessions } = useTournament();
+  const { matches, players, sessions, days } = useTournament();
   const { gray, aqua } = totalPoints(matches, sessions);
   const teamTotal = team === "gray" ? gray : aqua;
   const teamName = team === "gray" ? "Gray (Joys)" : "Aquarellos";
@@ -20,6 +20,10 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
   const stats = computePlayerStats(matches, players)
     .filter((s) => s.player.team_id === team)
     .sort((a, b) => b.pointsContributed + b.projectedExtra - (a.pointsContributed + a.projectedExtra));
+
+  const competitionWins = computeCompetitionWins(days, players);
+  const winsById = new Map(competitionWins.perPlayer.map((p) => [p.player.id, p.wins]));
+  const teamCompetitionWins = competitionWins.perTeam[team];
 
   const bannerClass = team === "gray" ? "bg-gray-team-deep" : "bg-aqua-team-deep";
   // The gray fill is light, so its banner needs dark ink text; the list rows sit on
@@ -41,6 +45,11 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
           />
           <div className={`font-display text-4xl font-bold ${bannerText}`}>{fmt(teamTotal)}</div>
           <div className={`text-xs font-semibold uppercase tracking-wide ${bannerSubtext}`}>poeng tatt</div>
+          {teamCompetitionWins > 0 && (
+            <div className={`text-[11px] font-semibold ${bannerSubtext}`}>
+              🏆 {teamCompetitionWins} konkurranse{teamCompetitionWins === 1 ? "" : "r"} vunnet
+            </div>
+          )}
         </div>
 
         <section>
@@ -56,6 +65,9 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="w-5 shrink-0 text-xs font-bold text-ink-light/60">{i + 1}</span>
                   <span className="truncate font-semibold text-ink">{s.player.name}</span>
+                  {(winsById.get(s.player.id) ?? 0) > 0 && (
+                    <span className="shrink-0 text-xs text-gold-deep">🏆 {winsById.get(s.player.id)}</span>
+                  )}
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
                   <span className="text-xs text-ink-light">

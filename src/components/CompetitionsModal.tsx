@@ -5,15 +5,25 @@ import { COMPETITIONS } from "@/lib/competitions";
 import { getHoleInfo } from "@/lib/courseHoles";
 import { ModalShell } from "./ModalShell";
 
-function HoleBadges({ holes, course }: { holes: number[]; course: string }) {
+function HoleBadges({
+  holes,
+  course,
+  winners,
+}: {
+  holes: number[];
+  course: string;
+  winners: Record<string, string>;
+}) {
   return (
     <div className="mt-1.5 flex flex-wrap justify-center gap-1.5">
       {holes.map((h) => {
         const info = getHoleInfo(course, h);
+        const winner = winners[h];
         return (
           <span key={h} className="rounded-lg bg-white px-2 py-1 text-xs font-semibold text-ink shadow-sm">
             Hull {h}
             {info.par !== null && <span className="ml-1 font-normal text-ink-light/60">par {info.par}</span>}
+            {winner && <span className="ml-1 font-normal text-gold-deep">&middot; {winner}</span>}
           </span>
         );
       })}
@@ -49,13 +59,13 @@ export function CompetitionsModal({ onClose }: { onClose: () => void }) {
                     <div className="text-[11px] font-bold uppercase tracking-wide text-gold-deep">
                       Longest Drive
                     </div>
-                    <HoleBadges holes={comp.longestDrive} course={day.course as string} />
+                    <HoleBadges holes={comp.longestDrive} course={day.course as string} winners={day.competition_winners} />
                   </div>
                   <div className="rounded-xl bg-card-deep px-3 py-2.5 text-center">
                     <div className="text-[11px] font-bold uppercase tracking-wide text-gold-deep">
                       Closest to Pin
                     </div>
-                    <HoleBadges holes={comp.closestToPin} course={day.course as string} />
+                    <HoleBadges holes={comp.closestToPin} course={day.course as string} winners={day.competition_winners} />
                   </div>
                 </div>
               ) : (

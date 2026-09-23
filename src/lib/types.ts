@@ -35,6 +35,8 @@ export interface Day {
   sort_order: number;
   /** Admin: keep player names off this day's matches, e.g. for a surprise-pairings day. */
   hide_names: boolean;
+  /** Admin: who won each Longest Drive / Closest to Pin hole, keyed by course-relative hole number. */
+  competition_winners: Record<string, string>;
 }
 
 export type SessionFormat = "fourball" | "greensome" | "singles" | "scramble" | "mixed";

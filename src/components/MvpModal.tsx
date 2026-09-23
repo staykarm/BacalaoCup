@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { useTournament } from "@/context/TournamentContext";
-import { computePlayerStats } from "@/lib/stats";
+import { computeCompetitionWins, computePlayerStats } from "@/lib/stats";
 import { Player, PlayerYearStat, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
 import { PlayerDetailModal } from "./PlayerDetailModal";
@@ -17,12 +17,14 @@ function PlayerRow({
   player,
   stat,
   history,
+  competitionWins,
   onClick,
 }: {
   rank: number;
   player: Player;
   stat: ReturnType<typeof computePlayerStats>[number];
   history: PlayerYearStat[];
+  competitionWins: number;
   onClick: () => void;
 }) {
   const team: TeamId = player.team_id;
@@ -53,6 +55,7 @@ function PlayerRow({
           {player.name}
           {player.is_captain && <span className="text-gold-deep"> (C)</span>}
         </span>
+        {competitionWins > 0 && <span className="ml-1.5 text-[10px] text-gold-deep">🏆 {competitionWins}</span>}
         {player.hcp !== null && <span className="ml-1.5 text-[10px] text-ink-light/40">hcp {fmt(player.hcp)}</span>}
         {historyText && (
           <span className="ml-1.5 truncate text-[10px] text-ink-light/40">&middot; {historyText}</span>
@@ -70,8 +73,10 @@ function PlayerRow({
 }
 
 export function MvpModal({ onClose }: { onClose: () => void }) {
-  const { players, matches, playerYearStats } = useTournament();
+  const { players, matches, playerYearStats, days } = useTournament();
   const playerStats = computePlayerStats(matches, players);
+  const competitionWins = computeCompetitionWins(days, players);
+  const winsById = new Map(competitionWins.perPlayer.map((p) => [p.player.id, p.wins]));
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   const rows = players
@@ -93,6 +98,7 @@ export function MvpModal({ onClose }: { onClose: () => void }) {
             history={playerYearStats
               .filter((h) => h.player_id === player.id)
               .sort((a, b) => b.year - a.year)}
+            competitionWins={winsById.get(player.id) ?? 0}
             onClick={() => setSelectedPlayerId(player.id)}
           />
         ))}

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
 import { shortCourseLabel } from "@/lib/courseHoles";
 import { liveLeader } from "@/lib/scoring";
-import { computePlayerStats } from "@/lib/stats";
+import { computeCompetitionWins, computePlayerStats } from "@/lib/stats";
 import { Match, RESULT_LABELS, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
 
@@ -72,6 +72,10 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
   const overallRank = rankedPlayers.findIndex((s) => s.player.id === playerId) + 1;
   const teamRank = rankedPlayers.filter((s) => s.player.team_id === side).findIndex((s) => s.player.id === playerId) + 1;
 
+  const competitionWins = computeCompetitionWins(days, players).perPlayer.find(
+    (p) => p.player.id === playerId
+  )?.wins ?? 0;
+
   const courses = [...days]
     .filter((d) => d.course)
     .sort((a, b) => a.sort_order - b.sort_order)
@@ -111,6 +115,7 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
             </div>
             <div className={`mt-0.5 text-[11px] font-semibold ${side === "gray" ? "text-ink/60" : "text-white/60"}`}>
               #{overallRank} på MVP totalt &middot; #{teamRank} i laget
+              {competitionWins > 0 && <> &middot; 🏆 {competitionWins}</>}
             </div>
           </div>
           <div className="shrink-0 text-right">

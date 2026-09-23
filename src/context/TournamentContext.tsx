@@ -50,6 +50,9 @@ interface TournamentContextValue {
   updateSessionHandicap: (sessionId: string, team: TeamId | null, strokes: number | null) => Promise<void>;
   /** Admin: hide/show player names for every match on a day. */
   updateDayHideNames: (dayId: string, hide: boolean) => Promise<void>;
+  /** The PIN required to unlock the admin panel — a soft deterrent, not real auth. */
+  adminPin: string;
+  updateAdminPin: (pin: string) => Promise<void>;
   /**
    * Registers (or clears, when both are null) one hole's result for a match-play
    * match or score for a scramble flight, then derives and writes back that
@@ -74,6 +77,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const [locations, setLocations] = useState<MapLocation[]>([]);
   const [playerYearStats, setPlayerYearStats] = useState<PlayerYearStat[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [adminPin, setAdminPin] = useState<string>("2026");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -135,6 +139,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         setLocations(locationsRes.data ?? []);
         setPlayerYearStats(playerYearStatsRes.data ?? []);
         setActiveSessionId(appSettingsRes.data?.active_session_id ?? null);
+        setAdminPin(appSettingsRes.data?.admin_pin ?? "2026");
         setLoading(false);
       } catch (err) {
         if (cancelled) return;
@@ -240,8 +245,9 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "app_settings" },
         (payload) => {
-          const next = payload.new as { active_session_id: string | null };
+          const next = payload.new as { active_session_id: string | null; admin_pin: string };
           setActiveSessionId(next.active_session_id);
+          setAdminPin(next.admin_pin);
         }
       )
       .on(
@@ -336,6 +342,17 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const updateAdminPin = useCallback(async (pin: string) => {
+    setAdminPin(pin);
+    const { error: updateError } = await supabase
+      .from("app_settings")
+      .update({ admin_pin: pin })
+      .eq("id", "singleton");
+    if (updateError) {
+      setSyncError(updateError.message);
+    }
+  }, []);
+
   const resetAllMatches = useCallback(async () => {
     const reset = {
       result: "not_played" as MatchResult,
@@ -404,6 +421,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       setActiveSession,
       updateSessionHandicap,
       updateDayHideNames,
+      adminPin,
+      updateAdminPin,
       setMatchHole,
     }),
     [
@@ -426,6 +445,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       setActiveSession,
       updateSessionHandicap,
       updateDayHideNames,
+      adminPin,
+      updateAdminPin,
       setMatchHole,
     ]
   );

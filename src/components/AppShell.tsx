@@ -10,7 +10,10 @@ import { BaneinfoModal } from "./BaneinfoModal";
 import { RestaurantModal } from "./RestaurantModal";
 import { KartModal } from "./KartModal";
 import { AdminModal } from "./AdminModal";
+import { AdminPinModal } from "./AdminPinModal";
 import { TeamPointsModal } from "./TeamPointsModal";
+
+const ADMIN_UNLOCKED_KEY = "bacalao-admin-unlocked";
 
 function SyncErrorToast() {
   const { syncError, clearSyncError } = useTournament();
@@ -47,10 +50,40 @@ const NAV_ITEMS: { key: Exclude<ModalKey, null | "admin">; label: string; icon: 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [openModal, setOpenModal] = useState<ModalKey>(null);
   const [openTeam, setOpenTeam] = useState<TeamId | null>(null);
+  // Sticks for the rest of this browser tab's session, so re-entering the PIN
+  // every time the admin panel is reopened would just be friction, not security.
+  const [adminUnlocked, setAdminUnlocked] = useState(() => {
+    try {
+      return sessionStorage.getItem(ADMIN_UNLOCKED_KEY) === "1";
+    } catch {
+      // Private browsing / blocked storage — just fall back to asking for the PIN each time.
+      return false;
+    }
+  });
+  const [pinPromptOpen, setPinPromptOpen] = useState(false);
+
+  function handleOpenAdmin() {
+    if (adminUnlocked) {
+      setOpenModal("admin");
+    } else {
+      setPinPromptOpen(true);
+    }
+  }
+
+  function handleUnlock() {
+    setAdminUnlocked(true);
+    try {
+      sessionStorage.setItem(ADMIN_UNLOCKED_KEY, "1");
+    } catch {
+      // Ignore — unlock still holds for the rest of this component's lifetime.
+    }
+    setPinPromptOpen(false);
+    setOpenModal("admin");
+  }
 
   return (
     <TournamentProvider>
-      <ScoreHeader onOpenAdmin={() => setOpenModal("admin")} onOpenTeam={setOpenTeam} />
+      <ScoreHeader onOpenAdmin={handleOpenAdmin} onOpenTeam={setOpenTeam} />
 
       <main className="mx-auto max-w-5xl px-4 pb-28 pt-4 sm:px-6">{children}</main>
 
@@ -77,6 +110,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {openModal === "kart" && <KartModal onClose={() => setOpenModal(null)} />}
       {openModal === "restaurant" && <RestaurantModal onClose={() => setOpenModal(null)} />}
       {openModal === "admin" && <AdminModal onClose={() => setOpenModal(null)} />}
+      {pinPromptOpen && <AdminPinModal onClose={() => setPinPromptOpen(false)} onUnlock={handleUnlock} />}
       {openTeam && <TeamPointsModal team={openTeam} onClose={() => setOpenTeam(null)} />}
 
       <SyncErrorToast />

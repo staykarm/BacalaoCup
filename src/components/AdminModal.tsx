@@ -61,12 +61,24 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
     updateSessionHandicap,
     updateDayHideNames,
     updateMatch,
+    adminPin,
+    updateAdminPin,
   } = useTournament();
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [done, setDone] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
+  const [newPin, setNewPin] = useState("");
+  const [pinSaved, setPinSaved] = useState(false);
+
+  function savePin() {
+    if (newPin.length < 4) return;
+    updateAdminPin(newPin);
+    setNewPin("");
+    setPinSaved(true);
+    setTimeout(() => setPinSaved(false), 2000);
+  }
 
   const scrambleSessions = sessions.filter((s) => s.format === "scramble").sort((a, b) => a.sort_order - b.sort_order);
 
@@ -105,8 +117,34 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
     <ModalShell title="Admin" onClose={onClose}>
       <div className="space-y-4">
         <p className="text-xs text-ink-light">
-          Midlertidig admin-panel, åpent for alle mens vi tester appen.
+          Midlertidig admin-panel, låst med PIN-kode mens vi tester appen.
         </p>
+
+        <div className="rounded-2xl border border-card-border bg-white p-4">
+          <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">PIN-kode</h3>
+          <p className="mb-3 text-xs text-ink-light">
+            Kreves for å åpne dette panelet. Bytt den om du vil dele den med færre.
+          </p>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={newPin}
+              onChange={(e) => setNewPin(e.target.value.replace(/[^0-9]/g, ""))}
+              placeholder={`Nåværende: ${adminPin}`}
+              className="min-w-0 flex-1 rounded-xl border border-card-border bg-card-deep px-3 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
+            />
+            <button
+              onClick={savePin}
+              disabled={newPin.length < 4}
+              className="shrink-0 rounded-xl border border-gold-deep/60 bg-gold/10 px-3 py-1.5 text-xs font-bold text-gold-deep hover:bg-gold/20 disabled:opacity-40"
+            >
+              Lagre
+            </button>
+          </div>
+          {pinSaved && <p className="mt-2 text-xs font-semibold text-ink-light">PIN-kode oppdatert.</p>}
+        </div>
 
         <div className="rounded-2xl border border-card-border bg-white p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Backup</h3>

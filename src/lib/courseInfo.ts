@@ -25,7 +25,7 @@ export const COURSE_INFO: Record<string, CourseInfo> = {
     par: 72,
     length: "5 654 m",
     description:
-      "Banen ligger i åsene med fairways som slynger seg gjennom appelsin- og avokadolunder, med Mijas-fjellene i bakgrunnen. Det 8. hullet er et av banens lengste (over 500 meter fra gult utslag), mens det avsluttende par 4-hullet er kantet av en innsjø hele veien på høyre side. Klubbhuset har restaurant og driving range.",
+      "Banen ligger i åsene med fairways som slynger seg gjennom appelsin- og avokadolunder, med Mijas-fjellene i bakgrunnen. Det 8. hullet er et av banens lengste (over 500 meter fra gult utslag), mens det avsluttende par 4-hullet er kantet av en innsjø hele veien på høyre side. Klubbhuset har restaurant.",
     website: "https://santanagolf.com",
   },
   Naranjos: {

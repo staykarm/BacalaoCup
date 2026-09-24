@@ -55,8 +55,8 @@ const NAV_ITEMS: { key: Exclude<ModalKey, null | "admin">; label: string; icon: 
   { key: "agenda", label: "Agenda", icon: "📅" },
   { key: "baneinfo", label: "Baneinfo", icon: "⛳" },
   { key: "kart", label: "Kart", icon: "🗺️" },
-  { key: "restaurant", label: "Restaurant", icon: "🍽️" },
-  { key: "competitions", label: "Konkurranser", icon: "🎯" },
+  { key: "restaurant", label: "Restaur.", icon: "🍽️" },
+  { key: "competitions", label: "Konk.", icon: "🎯" },
   { key: "strokes", label: "HCP", icon: "🔢" },
 ];
 
@@ -101,17 +101,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main className="mx-auto w-full max-w-5xl px-4 pb-28 pt-4 sm:px-6">{children}</main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-navy-lighter/60 bg-navy-deep/95 backdrop-blur supports-[backdrop-filter]:bg-navy-deep/85">
-        <div className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-2 py-2 sm:justify-center sm:gap-2 sm:px-6">
+        <div className="mx-auto grid max-w-5xl grid-cols-7 px-1 py-1.5 sm:gap-2 sm:px-6 sm:py-2">
           {NAV_ITEMS.map((item) => (
             <button
               key={item.key}
               onClick={() => setOpenModal(item.key)}
-              className="flex shrink-0 flex-col items-center gap-0.5 rounded-2xl px-3 py-1.5 text-foreground/60 transition hover:bg-navy-lighter/40 hover:text-gold"
+              className="flex min-w-0 flex-col items-center gap-0.5 rounded-2xl px-0.5 py-1.5 text-foreground/60 transition hover:bg-navy-lighter/40 hover:text-gold"
             >
-              <span className="text-lg leading-none" aria-hidden>
+              <span className="text-base leading-none sm:text-lg" aria-hidden>
                 {item.icon}
               </span>
-              <span className="text-[10px] font-semibold uppercase tracking-wide">{item.label}</span>
+              <span className="w-full truncate text-center text-[9px] font-semibold uppercase leading-none tracking-tight sm:text-[10px] sm:tracking-wide">
+                {item.label}
+              </span>
             </button>
           ))}
         </div>

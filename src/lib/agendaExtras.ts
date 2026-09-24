@@ -10,7 +10,7 @@ export interface AgendaEvent {
 
 const wedLunch = RESTAURANTS.find((r) => r.day === "wed" && r.name === "La Cabaña");
 const thuLunch = RESTAURANTS.find((r) => r.day === "thu" && r.name === "Hacienda Los Naranjos");
-const friLunch = RESTAURANTS.find((r) => r.day === "fri" && r.time === "Lunsj");
+const friLunch = RESTAURANTS.find((r) => r.day === "fri" && r.time === "Klubbhussnack");
 const friDinner = RESTAURANTS.find((r) => r.day === "fri" && r.name === "Brasserie Astoria");
 const satLunch = RESTAURANTS.find((r) => r.day === "sat" && r.time === "Frokost/lunsj");
 const satDinner = RESTAURANTS.find((r) => r.day === "sat" && r.name === "La Sala");
@@ -25,7 +25,7 @@ export const AGENDA_EXTRAS: Record<string, AgendaEvent[]> = {
     { time: "19:30", label: "BBQ-middag", icon: "🍖", address: houseAddress },
   ],
   fri: [
-    { time: "13:00", label: `Lunsj: ${friLunch?.name}`, icon: "🥪", address: friLunch?.address },
+    { time: "15:00", label: `Klubbhussnack: ${friLunch?.name}`, icon: "🥪", address: friLunch?.address },
     { time: "21:30", label: `Middag: ${friDinner?.name}`, icon: "🍽️", address: friDinner?.address },
   ],
   sat: [

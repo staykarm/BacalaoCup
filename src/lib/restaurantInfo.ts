@@ -29,9 +29,9 @@ export const RESTAURANTS: RestaurantInfo[] = [
     day: "fri",
     name: "Klubbhusrestauranten",
     address: "Marbella Club Golf Resort, Benahavís, Málaga",
-    time: "Lunsj",
+    time: "Klubbhussnack",
     description:
-      "Klubbhuset på Marbella Club Golf Resort har egen restaurant og kafé/bar med middelhavsinspirert meny. Her spiser vi lunsj etter runden fredag.",
+      "Klubbhuset på Marbella Club Golf Resort har egen restaurant og kafé/bar med middelhavsinspirert meny. Her tar vi en klubbhussnack etter runden fredag.",
   },
   {
     day: "fri",

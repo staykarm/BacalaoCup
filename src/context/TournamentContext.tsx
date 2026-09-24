@@ -402,27 +402,28 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const updateCompetitionWinner = useCallback(async (dayId: string, hole: number, winner: string) => {
-    let nextWinners: Record<string, string> = {};
-    setDays((current) =>
-      current.map((d) => {
-        if (d.id !== dayId) return d;
-        const trimmed = winner.trim();
-        nextWinners = trimmed
-          ? { ...d.competition_winners, [hole]: trimmed }
-          : Object.fromEntries(Object.entries(d.competition_winners).filter(([h]) => h !== String(hole)));
-        return { ...d, competition_winners: nextWinners };
-      })
-    );
+  const updateCompetitionWinner = useCallback(
+    async (dayId: string, hole: number, winner: string) => {
+      const day = days.find((d) => d.id === dayId);
+      if (!day) return;
 
-    const { error: updateError } = await supabase
-      .from("days")
-      .update({ competition_winners: nextWinners })
-      .eq("id", dayId);
-    if (updateError) {
-      setSyncError(updateError.message);
-    }
-  }, []);
+      const trimmed = winner.trim();
+      const nextWinners: Record<string, string> = trimmed
+        ? { ...day.competition_winners, [hole]: trimmed }
+        : Object.fromEntries(Object.entries(day.competition_winners).filter(([h]) => h !== String(hole)));
+
+      setDays((current) => current.map((d) => (d.id === dayId ? { ...d, competition_winners: nextWinners } : d)));
+
+      const { error: updateError } = await supabase
+        .from("days")
+        .update({ competition_winners: nextWinners })
+        .eq("id", dayId);
+      if (updateError) {
+        setSyncError(updateError.message);
+      }
+    },
+    [days]
+  );
 
   const value = useMemo(
     () => ({

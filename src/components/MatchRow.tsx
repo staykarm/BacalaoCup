@@ -69,12 +69,6 @@ export function MatchRow({
   const headStart = startingUpFor(match);
 
   const liveLeaderTeam = liveLeader(match.live_up);
-  const liveColor =
-    liveLeaderTeam === "gray"
-      ? "text-gray-team-light"
-      : liveLeaderTeam === "aqua"
-        ? "text-aqua-team-light"
-        : "text-gold";
   // Same live-leader color, but for use on the near-white editing panel below the result box.
   const liveColorOnLight =
     liveLeaderTeam === "gray"
@@ -188,24 +182,11 @@ export function MatchRow({
           disabled={!canOpenScoring}
           aria-label="Oppdater stilling"
           className={`flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 px-1 py-3 text-center transition sm:w-24 sm:py-4 ${
-            match.result !== "not_played" ? "bg-black" : "bg-navy-deep"
+            match.result !== "not_played" ? "bg-black" : isLiveInProgress ? "bg-ink-light" : "bg-navy-deep"
           } ${canOpenScoring ? "hover:bg-navy-lighter" : "cursor-default opacity-60"}`}
         >
-          {match.result !== "not_played" ? (
-            <span className="text-sm font-extrabold text-white sm:text-base">F</span>
-          ) : isLiveInProgress ? (
-            <>
-              <span className={`text-xs font-extrabold sm:text-sm ${liveColor}`}>
-                {liveLeaderTeam === "gray" && "GRAY "}
-                {liveLeaderTeam === "aqua" && "AQUA "}
-                {liveUpLabel(match.live_up)}
-              </span>
-              {match.live_thru !== null && (
-                <span className="text-[9px] font-semibold text-foreground/50 sm:text-[10px]">
-                  THRU {match.live_thru}
-                </span>
-              )}
-            </>
+          {match.result !== "not_played" || isLiveInProgress ? (
+            <span className="text-sm font-extrabold text-white sm:text-base">{match.live_thru}</span>
           ) : (
             <span className="text-xs font-bold text-foreground sm:text-sm">{match.start_time ?? "--:--"}</span>
           )}

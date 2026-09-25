@@ -107,7 +107,15 @@ export function MatchRow({
     return leadingSide === team ? marginBadgeText : null;
   }
 
+  // A halved match or one that hasn't started yet has no leader to show — flat team colors
+  // there would just look like a mistake, so both sides go plain white/black instead. Only
+  // while the round is the active one, though — outside that, the flat team colors are what
+  // make a day's full match list scannable at a glance.
+  const isNeutral =
+    isActiveSession && (match.result === "halved" || (match.result === "not_played" && !isLiveInProgress));
+
   function sideBg(team: TeamId) {
+    if (isNeutral) return "bg-white";
     // Deliberately far apart from the "won" fill below, so a decided/leading match reads
     // clearly different at a glance from one that's still all square.
     const flat = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-flat";
@@ -118,6 +126,7 @@ export function MatchRow({
   }
 
   function sideText(team: TeamId) {
+    if (isNeutral) return "text-ink";
     // Aqua's fill is always fairly saturated, so white text always wins there. Gray's flat
     // fill is light (needs dark ink), but its "won" fill is now dark enough to need white too.
     if (leadingSide !== null && leadingSide !== team) return "text-ink-light/30";

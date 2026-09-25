@@ -97,8 +97,8 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
     matches,
     matchHoles,
     playerYearStats,
-    activeSessionId,
-    setActiveSession,
+    activeSessionIds,
+    toggleActiveSession,
     resetAllMatches,
     updateSessionHandicap,
     updateDayHideNames,
@@ -206,29 +206,37 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="rounded-2xl border border-card-border bg-white p-4">
-          <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Aktiv runde</h3>
+          <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Aktive runder</h3>
           <p className="mb-3 text-xs text-ink-light">
-            Den valgte runden merkes med «- pågår» i oversikten. Alle runder kan redigeres uansett.
+            Valgte runder merkes med «- pågår» i oversikten. Flere runder kan være aktive samtidig — for eksempel
+            når to flighter spiller parallelt. Alle runder kan redigeres uansett.
           </p>
-          <select
-            value={activeSessionId ?? ""}
-            onChange={(e) => setActiveSession(e.target.value || null)}
-            className="w-full rounded-xl border border-card-border bg-card-deep px-3 py-2 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
-          >
-            <option value="">Ingen</option>
-            {sortedDays.map((day) => (
-              <optgroup key={day.id} label={day.label}>
-                {sessions
-                  .filter((s) => s.day_id === day.id)
-                  .sort((a, b) => a.sort_order - b.sort_order)
-                  .map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-              </optgroup>
-            ))}
-          </select>
+          <div className="space-y-3">
+            {sortedDays.map((day) => {
+              const daySessions = sessions
+                .filter((s) => s.day_id === day.id)
+                .sort((a, b) => a.sort_order - b.sort_order);
+              if (daySessions.length === 0) return null;
+              return (
+                <div key={day.id}>
+                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-ink-light">{day.label}</p>
+                  <div className="space-y-1.5">
+                    {daySessions.map((s) => (
+                      <label key={s.id} className="flex items-center justify-between gap-2 text-sm text-ink">
+                        <span>{s.name}</span>
+                        <input
+                          type="checkbox"
+                          checked={activeSessionIds.includes(s.id)}
+                          onChange={() => toggleActiveSession(s.id)}
+                          className="h-4 w-4 accent-gold-deep"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {scrambleSessions.length > 0 && (

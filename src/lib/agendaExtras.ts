@@ -21,7 +21,7 @@ export const AGENDA_EXTRAS: Record<string, AgendaEvent[]> = {
   wed: [{ time: "13:00", label: `Lunsj: ${wedLunch?.name}`, icon: "🥪", address: wedLunch?.address }],
   thu: [
     { time: "13:30", label: `Lunsj: ${thuLunch?.name}`, icon: "🥪", address: thuLunch?.address },
-    { time: "15:00", label: "Pool Party", icon: "🏊" },
+    { time: "16:00", label: "Pool Party", icon: "🏊" },
     { time: "19:30", label: "BBQ-middag", icon: "🍖", address: houseAddress },
   ],
   fri: [

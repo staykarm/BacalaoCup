@@ -43,9 +43,9 @@ interface TournamentContextValue {
   updateLocationCoords: (id: string, lat: number, lng: number) => Promise<void>;
   /** Admin: resets every match back to not-played with no live score or result. */
   resetAllMatches: () => Promise<void>;
-  /** Admin: which round is marked "- pågår" in the UI. Purely informational — doesn't restrict editing. */
-  activeSessionId: string | null;
-  setActiveSession: (sessionId: string | null) => Promise<void>;
+  /** Admin: which rounds are marked "- pågår" in the UI. Purely informational — doesn't restrict editing. */
+  activeSessionIds: string[];
+  toggleActiveSession: (sessionId: string) => Promise<void>;
   /** Admin: scramble-only team stroke handicap for a session. Pass team=null to clear it. */
   updateSessionHandicap: (sessionId: string, team: TeamId | null, strokes: number | null) => Promise<void>;
   /** Admin: hide/show player names for every match on a day. */
@@ -78,7 +78,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const [matchHoles, setMatchHoles] = useState<MatchHole[]>([]);
   const [locations, setLocations] = useState<MapLocation[]>([]);
   const [playerYearStats, setPlayerYearStats] = useState<PlayerYearStat[]>([]);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [activeSessionIds, setActiveSessionIds] = useState<string[]>([]);
   const [adminPin, setAdminPin] = useState<string>("2026");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -140,7 +140,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         setMatchHoles(matchHolesRes.data ?? []);
         setLocations(locationsRes.data ?? []);
         setPlayerYearStats(playerYearStatsRes.data ?? []);
-        setActiveSessionId(appSettingsRes.data?.active_session_id ?? null);
+        setActiveSessionIds(appSettingsRes.data?.active_session_ids ?? []);
         setAdminPin(appSettingsRes.data?.admin_pin ?? "2026");
         setLoading(false);
       } catch (err) {
@@ -247,8 +247,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "app_settings" },
         (payload) => {
-          const next = payload.new as { active_session_id: string | null; admin_pin: string };
-          setActiveSessionId(next.active_session_id);
+          const next = payload.new as { active_session_ids: string[]; admin_pin: string };
+          setActiveSessionIds(next.active_session_ids ?? []);
           setAdminPin(next.admin_pin);
         }
       )
@@ -315,14 +315,14 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
             holesForMatch,
             match.points,
             // A match's starting head start only ever takes effect once its session is
-            // the active one — otherwise a stray/early hole entry would prematurely
-            // shift the season's projected score before the round has really begun.
-            match.session_id === activeSessionId ? startingUpFor(match) : 0
+            // active — otherwise a stray/early hole entry would prematurely shift the
+            // season's projected score before the round has really begun.
+            activeSessionIds.includes(match.session_id) ? startingUpFor(match) : 0
           )
         : deriveScrambleFromHoles(holesForMatch);
       await updateMatch(match.id, derived);
     },
-    [matchHoles, updateMatch, activeSessionId]
+    [matchHoles, updateMatch, activeSessionIds]
   );
 
   const updateLocationCoords = useCallback(async (id: string, lat: number, lng: number) => {
@@ -333,16 +333,23 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const setActiveSession = useCallback(async (sessionId: string | null) => {
-    setActiveSessionId(sessionId);
-    const { error: updateError } = await supabase
-      .from("app_settings")
-      .update({ active_session_id: sessionId })
-      .eq("id", "singleton");
-    if (updateError) {
-      setSyncError(updateError.message);
-    }
-  }, []);
+  const toggleActiveSession = useCallback(
+    async (sessionId: string) => {
+      const nextIds = activeSessionIds.includes(sessionId)
+        ? activeSessionIds.filter((id) => id !== sessionId)
+        : [...activeSessionIds, sessionId];
+      setActiveSessionIds(nextIds);
+
+      const { error: updateError } = await supabase
+        .from("app_settings")
+        .update({ active_session_ids: nextIds })
+        .eq("id", "singleton");
+      if (updateError) {
+        setSyncError(updateError.message);
+      }
+    },
+    [activeSessionIds]
+  );
 
   const updateAdminPin = useCallback(async (pin: string) => {
     setAdminPin(pin);
@@ -442,8 +449,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       updateMatch,
       updateLocationCoords,
       resetAllMatches,
-      activeSessionId,
-      setActiveSession,
+      activeSessionIds,
+      toggleActiveSession,
       updateSessionHandicap,
       updateDayHideNames,
       updateCompetitionWinner,
@@ -467,8 +474,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       updateMatch,
       updateLocationCoords,
       resetAllMatches,
-      activeSessionId,
-      setActiveSession,
+      activeSessionIds,
+      toggleActiveSession,
       updateSessionHandicap,
       updateDayHideNames,
       updateCompetitionWinner,

@@ -24,7 +24,7 @@ export function SessionSection({
   defaultOpen?: boolean;
   hideNames?: boolean;
 }) {
-  const { activeSessionId } = useTournament();
+  const { activeSessionIds } = useTournament();
   const [open, setOpen] = useState(defaultOpen);
 
   const { gray, aqua } = projectedPoints(matches, [session]);
@@ -32,7 +32,7 @@ export function SessionSection({
   const played = isScramble
     ? matches.filter((m) => m.score_vs_par !== null).length
     : matches.filter((m) => m.result !== "not_played").length;
-  const isActive = activeSessionId === session.id;
+  const isActive = activeSessionIds.includes(session.id);
   const leader: "gray" | "aqua" | null = gray === aqua ? null : gray > aqua ? "gray" : "aqua";
 
   // A merged (mixed-format) session can hold matches worth different points, so derive the

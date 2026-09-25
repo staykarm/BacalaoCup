@@ -108,8 +108,11 @@ export function MatchRow({
   }
 
   // A halved match or one that hasn't started yet has no leader to show — flat team colors
-  // there would just look like a mistake, so both sides go plain white/black instead.
-  const isNeutral = match.result === "halved" || (match.result === "not_played" && !isLiveInProgress);
+  // there would just look like a mistake, so both sides go plain white/black instead. Only
+  // while the round is the active one, though — outside that, the flat team colors are what
+  // make a day's full match list scannable at a glance.
+  const isNeutral =
+    isActiveSession && (match.result === "halved" || (match.result === "not_played" && !isLiveInProgress));
 
   function sideBg(team: TeamId) {
     if (isNeutral) return "bg-white";

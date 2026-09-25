@@ -121,8 +121,9 @@ export function MatchRow({
     const flat = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-flat";
     const bold = team === "gray" ? "bg-gray-team-won" : "bg-aqua-team-won";
     if (leadingSide === null) return flat;
-    // The trailing/losing side fades to near-white so it blends into the card instead of competing for attention.
-    return leadingSide === team ? bold : "bg-card";
+    // The trailing/losing side goes plain white — only the leading/winning team should show
+    // any color at all, so the card doesn't compete for attention with a faint team tint.
+    return leadingSide === team ? bold : "bg-white";
   }
 
   function sideText(team: TeamId) {

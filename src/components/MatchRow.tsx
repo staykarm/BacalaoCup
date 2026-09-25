@@ -182,7 +182,7 @@ export function MatchRow({
           disabled={!canOpenScoring}
           aria-label="Oppdater stilling"
           className={`flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 px-1 py-3 text-center transition sm:w-24 sm:py-4 ${
-            match.result !== "not_played" ? "bg-black" : isLiveInProgress ? "bg-ink-light" : "bg-navy-deep"
+            match.result !== "not_played" || isLiveInProgress ? "bg-black" : "bg-navy-deep"
           } ${canOpenScoring ? "hover:bg-navy-lighter" : "cursor-default opacity-60"}`}
         >
           {match.result !== "not_played" || isLiveInProgress ? (

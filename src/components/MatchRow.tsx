@@ -50,10 +50,10 @@ export function MatchRow({
   session: Session;
   hideNames?: boolean;
 }) {
-  const { matchHoles, sessions, days, activeSessionId, setMatchHole } = useTournament();
+  const { matchHoles, sessions, days, activeSessionIds, setMatchHole } = useTournament();
   const [scoring, setScoring] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-  const isActiveSession = session.id === activeSessionId;
+  const isActiveSession = activeSessionIds.includes(session.id);
 
   // Genuinely blank (not just anonymized) so this falls back to the same generic
   // team-name display already used when a match has no named players at all.

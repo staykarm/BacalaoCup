@@ -87,9 +87,9 @@ export function ScrambleFlights({
   players: Player[];
   hideNames?: boolean;
 }) {
-  const { matchHoles, sessions, days, activeSessionId, setMatchHole } = useTournament();
+  const { matchHoles, sessions, days, activeSessionIds, setMatchHole } = useTournament();
   const [editingFlightId, setEditingFlightId] = useState<string | null>(null);
-  const isActiveSession = session.id === activeSessionId;
+  const isActiveSession = activeSessionIds.includes(session.id);
   // Re-derived from the live `matches` prop every render, not a captured snapshot, so the
   // modal's totals stay in sync as holes are entered instead of freezing at open-time.
   // Not gated by isActiveSession — a finished or live flight can still be opened read-only.

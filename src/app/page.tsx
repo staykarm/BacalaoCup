@@ -5,7 +5,7 @@ import { useTournament } from "@/context/TournamentContext";
 import { SessionSection } from "@/components/SessionSection";
 
 export default function Home() {
-  const { days, sessions, matches, players, loading, error, activeSessionId } = useTournament();
+  const { days, sessions, matches, players, loading, error, activeSessionIds } = useTournament();
   const [activeDay, setActiveDay] = useState<string | null>(null);
 
   // Only days with golf on them belong on the main page — a travel-only day (e.g. Sunday) has nothing to show here.
@@ -16,7 +16,7 @@ export default function Home() {
         .sort((a, b) => a.sort_order - b.sort_order),
     [days, sessions]
   );
-  const activeRoundDayId = sessions.find((s) => s.id === activeSessionId)?.day_id ?? null;
+  const activeRoundDayId = sessions.find((s) => activeSessionIds.includes(s.id))?.day_id ?? null;
   // Default to whichever day holds the active round, so opening the app lands on it directly.
   const currentDayId = activeDay ?? activeRoundDayId ?? sortedDays[0]?.id ?? null;
 

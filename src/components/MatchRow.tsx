@@ -107,22 +107,23 @@ export function MatchRow({
     return leadingSide === team ? marginBadgeText : null;
   }
 
-  // A halved match or one that hasn't started yet has no leader to show — flat team colors
-  // there would just look like a mistake, so both sides go plain white/black instead. Only
+  // No leader to show — halved, not started, or currently tied mid-play — means flat team
+  // colors would just look like a mistake, so both sides go plain white/black instead. Only
   // while the round is the active one, though — outside that, the flat team colors are what
   // make a day's full match list scannable at a glance.
-  const isNeutral =
-    isActiveSession && (match.result === "halved" || (match.result === "not_played" && !isLiveInProgress));
+  const isNeutral = isActiveSession && leadingSide === null;
 
   function sideBg(team: TeamId) {
     if (isNeutral) return "bg-white";
     // Deliberately far apart from the "won" fill below, so a decided/leading match reads
-    // clearly different at a glance from one that's still all square.
+    // clearly different at a glance from one that's still all square. Only reached outside
+    // the active session now (see isNeutral above), for a day's other, non-active rounds.
     const flat = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-flat";
     const bold = team === "gray" ? "bg-gray-team-won" : "bg-aqua-team-won";
     if (leadingSide === null) return flat;
-    // The trailing/losing side fades to near-white so it blends into the card instead of competing for attention.
-    return leadingSide === team ? bold : "bg-card";
+    // The trailing/losing side goes plain white — only the leading/winning team should show
+    // any color at all, so the card doesn't compete for attention with a faint team tint.
+    return leadingSide === team ? bold : "bg-white";
   }
 
   function sideText(team: TeamId) {

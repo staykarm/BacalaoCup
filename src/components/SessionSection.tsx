@@ -6,6 +6,7 @@ import { projectedPoints } from "@/lib/scoring";
 import { useTournament } from "@/context/TournamentContext";
 import { MatchRow } from "./MatchRow";
 import { ScrambleFlights } from "./ScrambleFlights";
+import { FormatInfoModal } from "./FormatInfoModal";
 
 function fmt(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
@@ -26,6 +27,7 @@ export function SessionSection({
 }) {
   const { activeSessionIds } = useTournament();
   const [open, setOpen] = useState(defaultOpen);
+  const [formatInfoOpen, setFormatInfoOpen] = useState(false);
 
   const { gray, aqua } = projectedPoints(matches, [session]);
   const isScramble = session.format === "scramble";
@@ -62,9 +64,17 @@ export function SessionSection({
 
   return (
     <div className={`overflow-hidden rounded-3xl border transition-colors ${cardClass}`}>
-      <button
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((o) => !o);
+          }
+        }}
+        className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left"
       >
         <div className="flex items-center gap-3">
           <span className={`transition-transform ${textClass} ${open ? "rotate-90" : ""}`}>▶</span>
@@ -74,8 +84,17 @@ export function SessionSection({
               {isActive && <span className="text-gold-deep"> - pågår</span>}
             </div>
             <div className={`text-[11px] uppercase tracking-wide ${textClass}`}>
-              {FORMAT_LABELS[session.format]} &middot; {pointsLabel} &middot;{" "}
-              {played}/{matches.length} {isScramble ? "score registrert" : "spilt"}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFormatInfoOpen(true);
+                }}
+                className="underline decoration-dotted underline-offset-2 hover:text-ink"
+              >
+                {FORMAT_LABELS[session.format]}
+              </button>{" "}
+              &middot; {pointsLabel} &middot; {played}/{matches.length}{" "}
+              {isScramble ? "score registrert" : "spilt"}
             </div>
           </div>
         </div>
@@ -84,7 +103,7 @@ export function SessionSection({
           <span className={dashText}> – </span>
           <span className={aquaScoreText}>{fmt(aqua)}</span>
         </div>
-      </button>
+      </div>
 
       {open && (
         <div className={`space-y-2 border-t px-3 pb-3 pt-3 ${borderTClass}`}>
@@ -96,6 +115,10 @@ export function SessionSection({
             ))
           )}
         </div>
+      )}
+
+      {formatInfoOpen && (
+        <FormatInfoModal format={session.format} onClose={() => setFormatInfoOpen(false)} />
       )}
     </div>
   );

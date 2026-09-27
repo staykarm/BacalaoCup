@@ -118,7 +118,7 @@ export const LOCATION_TYPE_LABELS: Record<LocationType, string> = {
 
 export const FORMAT_LABELS: Record<SessionFormat, string> = {
   fourball: "Fourball",
-  greensome: "Greensome",
+  greensome: "Irish Greensome",
   singles: "Singles",
   scramble: "Scramble",
   mixed: "Fourball + Singles",

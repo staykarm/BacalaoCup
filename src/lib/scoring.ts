@@ -214,6 +214,17 @@ export function startingUpFor(match: Match): number {
 }
 
 /**
+ * A Greensome pair's combined playing handicap: 60% of the lower handicap plus
+ * 40% of the higher, per standard Greensome handicap allowance. Not rounded —
+ * round the result (or a difference between two of these) to get actual strokes.
+ */
+export function greensomeTeamHandicap(hcpA: number, hcpB: number): number {
+  const low = Math.min(hcpA, hcpB);
+  const high = Math.max(hcpA, hcpB);
+  return 0.6 * low + 0.4 * high;
+}
+
+/**
  * Derives a match-play match's live_up/live_thru/result/points from its per-hole
  * results, plus any starting head start (see startingUpFor). Order-independent —
  * a hole can be entered or corrected out of sequence and the totals stay correct,

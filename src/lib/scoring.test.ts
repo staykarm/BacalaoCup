@@ -4,6 +4,7 @@ import {
   courseHoleNumber,
   deriveMatchPlayFromHoles,
   deriveScrambleFromHoles,
+  greensomeTeamHandicap,
   hasLiveMatches,
   isFrontNine,
   isMatchDecided,
@@ -134,6 +135,17 @@ describe("startingUpFor", () => {
   it("gives no head start when both sides field the same number of players", () => {
     expect(startingUpFor(makeMatch())).toBe(0);
     expect(startingUpFor(makeMatch({ gray_player2: null, aqua_player2: null }))).toBe(0);
+  });
+});
+
+describe("greensomeTeamHandicap", () => {
+  it("weights 60% of the lower handicap and 40% of the higher, regardless of argument order", () => {
+    expect(greensomeTeamHandicap(3.8, 40.2)).toBeCloseTo(0.6 * 3.8 + 0.4 * 40.2, 5);
+    expect(greensomeTeamHandicap(40.2, 3.8)).toBeCloseTo(0.6 * 3.8 + 0.4 * 40.2, 5);
+  });
+
+  it("returns the shared value when both players have the same handicap", () => {
+    expect(greensomeTeamHandicap(12, 12)).toBe(12);
   });
 });
 

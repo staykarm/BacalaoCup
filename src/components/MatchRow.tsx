@@ -6,6 +6,7 @@ import { useTournament } from "@/context/TournamentContext";
 import { HoleResult, Match, Player, RESULT_LABELS, Session, TeamId } from "@/lib/types";
 import {
   courseHoleNumber,
+  greensomeTeamHandicap,
   HOLES_PER_MATCH,
   isFrontNine,
   liveLeader,
@@ -39,6 +40,15 @@ function fmtPts(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
 
+/** A pair's combined Greensome playing handicap, or null if either slot is empty or missing an hcp. */
+function pairHandicap(id1: string | null, id2: string | null, players: Player[]): number | null {
+  if (!id1 || !id2) return null;
+  const hcp1 = players.find((p) => p.id === id1)?.hcp;
+  const hcp2 = players.find((p) => p.id === id2)?.hcp;
+  if (hcp1 == null || hcp2 == null) return null;
+  return greensomeTeamHandicap(hcp1, hcp2);
+}
+
 export function MatchRow({
   match,
   players,
@@ -67,6 +77,16 @@ export function MatchRow({
   );
   // An uneven side (2 players vs 1) gets a 1-hole head start — shown as a fixed "Hull 0".
   const headStart = startingUpFor(match);
+
+  // Greensome strokes received: only meaningful with a full pair on both sides, and only
+  // ever shown alongside real names (see grayPlayers/aquaPlayers above) — so this stays
+  // invisible on a hide_names day exactly like the pairings it would otherwise reveal.
+  const grayPairHcp = session.format === "greensome" ? pairHandicap(match.gray_player1, match.gray_player2, players) : null;
+  const aquaPairHcp = session.format === "greensome" ? pairHandicap(match.aqua_player1, match.aqua_player2, players) : null;
+  const pairStrokeDiff =
+    grayPairHcp !== null && aquaPairHcp !== null ? Math.round(grayPairHcp) - Math.round(aquaPairHcp) : null;
+  const grayStrokesReceived = pairStrokeDiff !== null && pairStrokeDiff > 0 ? pairStrokeDiff : null;
+  const aquaStrokesReceived = pairStrokeDiff !== null && pairStrokeDiff < 0 ? -pairStrokeDiff : null;
 
   const liveLeaderTeam = liveLeader(match.live_up);
   // Same live-leader color, but for use on the near-white editing panel below the result box.
@@ -159,16 +179,21 @@ export function MatchRow({
           />
           <div className="flex min-w-0 flex-col gap-0.5">
             {grayPlayers.length > 0 ? (
-              grayPlayers.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setSelectedPlayerId(p.id)}
-                  className={`w-full text-left text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("gray")}`}
-                >
-                  {p.name}
-                  {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}
-                </button>
-              ))
+              <>
+                {grayPlayers.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setSelectedPlayerId(p.id)}
+                    className={`w-full text-left text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("gray")}`}
+                  >
+                    {p.name}
+                    {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}
+                  </button>
+                ))}
+                {grayStrokesReceived !== null && (
+                  <span className="text-[10px] font-semibold text-gold-deep">Mottar {grayStrokesReceived} slag</span>
+                )}
+              </>
             ) : (
               <span className={`text-xs font-bold uppercase tracking-wide sm:text-sm ${sideText("gray")}`}>
                 Gray (Joys)
@@ -197,16 +222,21 @@ export function MatchRow({
         >
           <div className="flex min-w-0 flex-col items-end gap-0.5">
             {aquaPlayers.length > 0 ? (
-              aquaPlayers.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setSelectedPlayerId(p.id)}
-                  className={`w-full text-right text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("aqua")}`}
-                >
-                  {p.name}
-                  {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}
-                </button>
-              ))
+              <>
+                {aquaPlayers.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setSelectedPlayerId(p.id)}
+                    className={`w-full text-right text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("aqua")}`}
+                  >
+                    {p.name}
+                    {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}
+                  </button>
+                ))}
+                {aquaStrokesReceived !== null && (
+                  <span className="text-[10px] font-semibold text-gold-deep">Mottar {aquaStrokesReceived} slag</span>
+                )}
+              </>
             ) : (
               <span className={`text-xs font-bold uppercase tracking-wide sm:text-sm ${sideText("aqua")}`}>
                 Aquarellos

@@ -5,6 +5,7 @@ import { useTournament } from "@/context/TournamentContext";
 import { shortCourseLabel } from "@/lib/courseHoles";
 import { Player, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
+import { PlayerAvatar } from "./PlayerAvatar";
 
 function fmt(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
@@ -45,8 +46,11 @@ function TeamTable({ team, players, courses }: { team: TeamId; players: Player[]
             {sorted.map((p) => (
               <tr key={p.id} className="bg-card-deep">
                 <td className="whitespace-nowrap rounded-l-lg py-1.5 pl-2 font-semibold text-ink">
-                  {p.name}
-                  {p.is_captain && <span className="text-gold-deep"> (C)</span>}
+                  <span className="flex items-center gap-1.5">
+                    <PlayerAvatar playerId={p.id} size={18} className="h-[18px] w-[18px]" />
+                    {p.name}
+                    {p.is_captain && <span className="text-gold-deep"> (C)</span>}
+                  </span>
                 </td>
                 <td className="px-2 py-1.5 text-right text-ink-light">{p.hcp !== null ? fmt(p.hcp) : "–"}</td>
                 {courses.map((c, i) => (

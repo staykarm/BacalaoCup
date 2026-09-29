@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { useTournament } from "@/context/TournamentContext";
 import { computeCompetitionWins, computePlayerStats } from "@/lib/stats";
 import { Player, PlayerYearStat, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
+import { PlayerAvatar } from "./PlayerAvatar";
 import { PlayerDetailModal } from "./PlayerDetailModal";
 
 function fmt(n: number) {
@@ -43,13 +43,7 @@ function PlayerRow({
       className={`flex w-full items-center gap-1.5 border-b border-l-4 border-card-border bg-white px-2 py-1.5 text-left hover:bg-card-deep/50 ${borderClass}`}
     >
       <span className="w-4 shrink-0 text-[10px] font-bold text-ink-light/50">{rank}</span>
-      <Image
-        src={team === "gray" ? "/logos/gray.png" : "/logos/aquarellos.png"}
-        alt=""
-        width={16}
-        height={16}
-        className="h-4 w-4 shrink-0 rounded-full object-cover"
-      />
+      <PlayerAvatar playerId={player.id} fallbackTeamId={team} size={16} className="h-4 w-4" />
       <span className="min-w-0 flex-1 truncate">
         <span className="font-semibold text-ink">
           {player.name}

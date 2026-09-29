@@ -55,6 +55,9 @@ interface TournamentContextValue {
   /** The PIN required to unlock the admin panel — a soft deterrent, not real auth. */
   adminPin: string;
   updateAdminPin: (pin: string) => Promise<void>;
+  /** Admin: show player portrait photos (MVP, scoring, HCP, main page, player detail) instead of team logos. */
+  showPlayerPhotos: boolean;
+  setShowPlayerPhotos: (show: boolean) => Promise<void>;
   /**
    * Registers (or clears, when both are null) one hole's result for a match-play
    * match or score for a scramble flight, then derives and writes back that
@@ -80,6 +83,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const [playerYearStats, setPlayerYearStats] = useState<PlayerYearStat[]>([]);
   const [activeSessionIds, setActiveSessionIds] = useState<string[]>([]);
   const [adminPin, setAdminPin] = useState<string>("2026");
+  const [showPlayerPhotos, setShowPlayerPhotosState] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -142,6 +146,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         setPlayerYearStats(playerYearStatsRes.data ?? []);
         setActiveSessionIds(appSettingsRes.data?.active_session_ids ?? []);
         setAdminPin(appSettingsRes.data?.admin_pin ?? "2026");
+        setShowPlayerPhotosState(appSettingsRes.data?.show_player_photos ?? false);
         setLoading(false);
       } catch (err) {
         if (cancelled) return;
@@ -247,9 +252,10 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "app_settings" },
         (payload) => {
-          const next = payload.new as { active_session_ids: string[]; admin_pin: string };
+          const next = payload.new as { active_session_ids: string[]; admin_pin: string; show_player_photos: boolean };
           setActiveSessionIds(next.active_session_ids ?? []);
           setAdminPin(next.admin_pin);
+          setShowPlayerPhotosState(next.show_player_photos ?? false);
         }
       )
       .on(
@@ -362,6 +368,17 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const setShowPlayerPhotos = useCallback(async (show: boolean) => {
+    setShowPlayerPhotosState(show);
+    const { error: updateError } = await supabase
+      .from("app_settings")
+      .update({ show_player_photos: show })
+      .eq("id", "singleton");
+    if (updateError) {
+      setSyncError(updateError.message);
+    }
+  }, []);
+
   const resetAllMatches = useCallback(async () => {
     const reset = {
       result: "not_played" as MatchResult,
@@ -456,6 +473,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       updateCompetitionWinner,
       adminPin,
       updateAdminPin,
+      showPlayerPhotos,
+      setShowPlayerPhotos,
       setMatchHole,
     }),
     [
@@ -481,6 +500,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       updateCompetitionWinner,
       adminPin,
       updateAdminPin,
+      showPlayerPhotos,
+      setShowPlayerPhotos,
       setMatchHole,
     ]
   );

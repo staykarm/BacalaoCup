@@ -106,6 +106,8 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
     updateMatch,
     adminPin,
     updateAdminPin,
+    showPlayerPhotos,
+    setShowPlayerPhotos,
   } = useTournament();
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -312,6 +314,23 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
         )}
+
+        <div className="rounded-2xl border border-card-border bg-white p-4">
+          <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Spillerbilder</h3>
+          <p className="mb-3 text-xs text-ink-light">
+            Viser portrettbilde av hver spiller (i stedet for lag-logo) i MVP, kampdetaljer, HCP-oversikten,
+            forsiden og når man trykker på en spiller.
+          </p>
+          <label className="flex items-center justify-between gap-2 text-sm text-ink">
+            <span>Vis spillerbilder</span>
+            <input
+              type="checkbox"
+              checked={showPlayerPhotos}
+              onChange={(e) => setShowPlayerPhotos(e.target.checked)}
+              className="h-4 w-4 accent-gold-deep"
+            />
+          </label>
+        </div>
 
         <div className="rounded-2xl border border-card-border bg-white p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Skjul spillernavn</h3>

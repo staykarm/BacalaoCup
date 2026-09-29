@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
 import { shortCourseLabel } from "@/lib/courseHoles";
 import { liveLeader } from "@/lib/scoring";
 import { computeCompetitionWins, computePlayerStats } from "@/lib/stats";
 import { Match, RESULT_LABELS, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
+import { PlayerAvatar } from "./PlayerAvatar";
 
 function fmt(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
@@ -90,13 +90,7 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
             side === "gray" ? "bg-gray-team-deep" : "bg-aqua-team-deep"
           }`}
         >
-          <Image
-            src={side === "gray" ? "/logos/gray.png" : "/logos/aquarellos.png"}
-            alt=""
-            width={44}
-            height={44}
-            className="h-11 w-11 shrink-0 rounded-full object-cover"
-          />
+          <PlayerAvatar playerId={player.id} fallbackTeamId={side} size={44} className="h-11 w-11" />
           <div className="min-w-0 flex-1">
             <div
               className={`text-[11px] font-bold uppercase tracking-wide ${

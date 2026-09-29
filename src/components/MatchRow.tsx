@@ -15,6 +15,7 @@ import {
   startingUpFor,
 } from "@/lib/scoring";
 import { getHoleInfo } from "@/lib/courseHoles";
+import { PlayerAvatar } from "./PlayerAvatar";
 import { PlayerDetailModal } from "./PlayerDetailModal";
 import { ModalShell } from "./ModalShell";
 
@@ -60,7 +61,7 @@ export function MatchRow({
   session: Session;
   hideNames?: boolean;
 }) {
-  const { matchHoles, sessions, days, activeSessionIds, setMatchHole } = useTournament();
+  const { matchHoles, sessions, days, activeSessionIds, showPlayerPhotos, setMatchHole } = useTournament();
   const [scoring, setScoring] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const isActiveSession = activeSessionIds.includes(session.id);
@@ -184,10 +185,13 @@ export function MatchRow({
                   <button
                     key={p.id}
                     onClick={() => setSelectedPlayerId(p.id)}
-                    className={`w-full text-left text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("gray")}`}
+                    className={`flex w-full items-center gap-1 text-left text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("gray")}`}
                   >
-                    {p.name}
-                    {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}
+                    <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />
+                    <span className="min-w-0 truncate">
+                      {p.name}
+                      {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}
+                    </span>
                   </button>
                 ))}
                 {grayStrokesReceived !== null && (
@@ -227,10 +231,13 @@ export function MatchRow({
                   <button
                     key={p.id}
                     onClick={() => setSelectedPlayerId(p.id)}
-                    className={`w-full text-right text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("aqua")}`}
+                    className={`flex w-full items-center justify-end gap-1 text-right text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("aqua")}`}
                   >
-                    {p.name}
-                    {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}
+                    <span className="min-w-0 truncate">
+                      {p.name}
+                      {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}
+                    </span>
+                    <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />
                   </button>
                 ))}
                 {aquaStrokesReceived !== null && (
@@ -268,6 +275,19 @@ export function MatchRow({
         <ModalShell title={isActiveSession ? "Oppdater stilling" : "Stilling"} onClose={() => setScoring(false)}>
           <div className="space-y-5">
             <div className="text-center">
+              {showPlayerPhotos && (grayPlayers.length > 0 || aquaPlayers.length > 0) && (
+                <div className="mb-2 flex items-center justify-center gap-1.5">
+                  {grayPlayers.map((p) => (
+                    <PlayerAvatar key={p.id} playerId={p.id} size={28} className="h-7 w-7" />
+                  ))}
+                  {grayPlayers.length > 0 && aquaPlayers.length > 0 && (
+                    <span className="px-1 text-[9px] font-bold text-ink-light/40">VS</span>
+                  )}
+                  {aquaPlayers.map((p) => (
+                    <PlayerAvatar key={p.id} playerId={p.id} size={28} className="h-7 w-7" />
+                  ))}
+                </div>
+              )}
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-light">
                 {(grayPlayers.map((p) => p.name).join(" / ") || "Gray")} vs{" "}
                 {(aquaPlayers.map((p) => p.name).join(" / ") || "Aqua")}

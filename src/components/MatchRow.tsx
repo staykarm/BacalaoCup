@@ -276,15 +276,15 @@ export function MatchRow({
           <div className="space-y-5">
             <div className="text-center">
               {showPlayerPhotos && (grayPlayers.length > 0 || aquaPlayers.length > 0) && (
-                <div className="mb-2 flex items-center justify-center gap-1.5">
+                <div className="mb-3 flex items-center justify-center gap-2">
                   {grayPlayers.map((p) => (
-                    <PlayerAvatar key={p.id} playerId={p.id} size={28} className="h-7 w-7" />
+                    <PlayerAvatar key={p.id} playerId={p.id} size={56} className="h-14 w-14" />
                   ))}
                   {grayPlayers.length > 0 && aquaPlayers.length > 0 && (
-                    <span className="px-1 text-[9px] font-bold text-ink-light/40">VS</span>
+                    <span className="px-1 text-[10px] font-bold text-ink-light/40">VS</span>
                   )}
                   {aquaPlayers.map((p) => (
-                    <PlayerAvatar key={p.id} playerId={p.id} size={28} className="h-7 w-7" />
+                    <PlayerAvatar key={p.id} playerId={p.id} size={56} className="h-14 w-14" />
                   ))}
                 </div>
               )}

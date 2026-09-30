@@ -90,7 +90,7 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
             side === "gray" ? "bg-gray-team-deep" : "bg-aqua-team-deep"
           }`}
         >
-          <PlayerAvatar playerId={player.id} fallbackTeamId={side} size={44} className="h-11 w-11" />
+          <PlayerAvatar playerId={player.id} fallbackTeamId={side} size={64} className="h-16 w-16" />
           <div className="min-w-0 flex-1">
             <div
               className={`text-[11px] font-bold uppercase tracking-wide ${

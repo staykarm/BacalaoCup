@@ -318,8 +318,9 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
         <div className="rounded-2xl border border-card-border bg-white p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Spillerbilder</h3>
           <p className="mb-3 text-xs text-ink-light">
-            Viser portrettbilde av hver spiller (i stedet for lag-logo) i MVP, kampdetaljer, HCP-oversikten,
-            forsiden og når man trykker på en spiller.
+            Viser portrettbilde av hver spiller (i stedet for lag-logo) på forsiden, ved siden av navnet i
+            kamplisten. Bilder vises alltid i MVP, kampdetaljer, HCP-oversikten og spillerprofilen, uansett
+            denne innstillingen.
           </p>
           <label className="flex items-center justify-between gap-2 text-sm text-ink">
             <span>Vis spillerbilder</span>

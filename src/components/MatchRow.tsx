@@ -299,6 +299,11 @@ export function MatchRow({
                         <span className="max-w-[68px] truncate text-[10px] font-bold uppercase text-ink">
                           {p.name}
                         </span>
+                        {course && p.course_strokes[course] !== undefined && (
+                          <span className="text-[9px] font-semibold text-gold-deep">
+                            +{p.course_strokes[course]}
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -312,6 +317,11 @@ export function MatchRow({
                         <span className="max-w-[68px] truncate text-[10px] font-bold uppercase text-ink">
                           {p.name}
                         </span>
+                        {course && p.course_strokes[course] !== undefined && (
+                          <span className="text-[9px] font-semibold text-gold-deep">
+                            +{p.course_strokes[course]}
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>

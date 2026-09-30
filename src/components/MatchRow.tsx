@@ -290,23 +290,37 @@ export function MatchRow({
         <ModalShell title={isActiveSession ? "Oppdater stilling" : "Stilling"} onClose={() => setScoring(false)}>
           <div className="space-y-5">
             <div className="text-center">
-              {(grayPlayers.length > 0 || aquaPlayers.length > 0) && (
-                <div className="mb-3 flex items-center justify-center gap-2">
-                  {grayPlayers.map((p) => (
-                    <PlayerAvatar key={p.id} playerId={p.id} size={56} className="h-14 w-14" alwaysOn />
-                  ))}
+              {grayPlayers.length > 0 || aquaPlayers.length > 0 ? (
+                <div className="mb-3 flex items-start justify-center gap-3">
+                  <div className="flex gap-2">
+                    {grayPlayers.map((p) => (
+                      <div key={p.id} className="flex flex-col items-center gap-1">
+                        <PlayerAvatar playerId={p.id} size={64} className="h-16 w-16" alwaysOn />
+                        <span className="max-w-[68px] truncate text-[10px] font-bold uppercase text-ink">
+                          {p.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                   {grayPlayers.length > 0 && aquaPlayers.length > 0 && (
-                    <span className="px-1 text-[10px] font-bold text-ink-light/40">VS</span>
+                    <span className="mt-6 shrink-0 text-[10px] font-bold text-ink-light/40">VS</span>
                   )}
-                  {aquaPlayers.map((p) => (
-                    <PlayerAvatar key={p.id} playerId={p.id} size={56} className="h-14 w-14" alwaysOn />
-                  ))}
+                  <div className="flex gap-2">
+                    {aquaPlayers.map((p) => (
+                      <div key={p.id} className="flex flex-col items-center gap-1">
+                        <PlayerAvatar playerId={p.id} size={64} className="h-16 w-16" alwaysOn />
+                        <span className="max-w-[68px] truncate text-[10px] font-bold uppercase text-ink">
+                          {p.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+              ) : (
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-light">
+                  Gray vs Aqua
+                </p>
               )}
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-light">
-                {(grayPlayers.map((p) => p.name).join(" / ") || "Gray")} vs{" "}
-                {(aquaPlayers.map((p) => p.name).join(" / ") || "Aqua")}
-              </p>
               <p className={`mt-1 font-display text-2xl font-bold ${match.result === "not_played" ? liveColorOnLight : "text-ink"}`}>
                 {match.result !== "not_played"
                   ? RESULT_LABELS[match.result]

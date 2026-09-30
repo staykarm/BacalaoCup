@@ -45,18 +45,20 @@ export default function Home() {
 
   return (
     <div>
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+      <div className="mb-4 flex gap-1.5 sm:gap-2">
         {sortedDays.map((day) => (
           <button
             key={day.id}
             onClick={() => setActiveDay(day.id)}
-            className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+            className={`min-w-0 flex-1 truncate rounded-full border px-1 py-2 text-center text-xs font-semibold transition sm:flex-initial sm:px-4 sm:text-sm ${
               day.id === currentDayId
                 ? "border-gold bg-gold/15 text-gold-deep"
                 : "border-card-border bg-card text-ink-light hover:border-gold-deep/30 hover:text-ink"
             }`}
           >
-            {day.label}
+            {/* Just the weekday — the date suffix ("Onsdag 07.10") is dropped here so all
+                days fit on one line without scrolling on a narrow phone screen. */}
+            {day.label.split(" ")[0]}
           </button>
         ))}
       </div>

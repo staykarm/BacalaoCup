@@ -109,6 +109,10 @@ export function MatchRow({
 
   const isLiveInProgress = match.result === "not_played" && (match.live_up !== 0 || match.live_thru !== null);
 
+  // A not-yet-started match in a round that isn't active has no hole results to show and no
+  // way to enter any — the hole-by-hole grid would just be a wall of dashes, so skip it.
+  const showHoleGrid = isActiveSession || match.result !== "not_played" || isLiveInProgress;
+
   const leadingSide: TeamId | null =
     match.result === "gray_won"
       ? "gray"
@@ -301,7 +305,7 @@ export function MatchRow({
                         </span>
                         {course && p.course_strokes[course] !== undefined && (
                           <span className="text-[9px] font-semibold text-gold-deep">
-                            +{p.course_strokes[course]}
+                            HCP: {p.course_strokes[course]}
                           </span>
                         )}
                       </div>
@@ -319,7 +323,7 @@ export function MatchRow({
                         </span>
                         {course && p.course_strokes[course] !== undefined && (
                           <span className="text-[9px] font-semibold text-gold-deep">
-                            +{p.course_strokes[course]}
+                            HCP: {p.course_strokes[course]}
                           </span>
                         )}
                       </div>
@@ -340,7 +344,9 @@ export function MatchRow({
               </p>
             </div>
 
-            <div className="overflow-x-auto">
+            {showHoleGrid && (
+              <>
+                <div className="overflow-x-auto">
               <table className="w-full border-separate border-spacing-x-0.5 border-spacing-y-1 text-center">
                 <tbody>
                   <tr>
@@ -438,19 +444,21 @@ export function MatchRow({
                   </tr>
                 </tbody>
               </table>
-            </div>
+                </div>
 
-            <p className="text-center text-xs text-ink-light/60">
-              {isActiveSession
-                ? "Velg Grå, Delt eller Blå for hvert hull. Stillingen regnes ut automatisk."
-                : "Kun visning – denne runden er ikke aktiv."}
-              {headStart !== 0 && (
-                <>
-                  {" "}
-                  Hull 0 er forspranget {headStart > 0 ? "Gray" : "Aqua"} får for å spille én spiller kort.
-                </>
-              )}
-            </p>
+                <p className="text-center text-xs text-ink-light/60">
+                  {isActiveSession
+                    ? "Velg Grå, Delt eller Blå for hvert hull. Stillingen regnes ut automatisk."
+                    : "Kun visning – denne runden er ikke aktiv."}
+                  {headStart !== 0 && (
+                    <>
+                      {" "}
+                      Hull 0 er forspranget {headStart > 0 ? "Gray" : "Aqua"} får for å spille én spiller kort.
+                    </>
+                  )}
+                </p>
+              </>
+            )}
           </div>
         </ModalShell>
       )}

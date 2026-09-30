@@ -43,7 +43,7 @@ function PlayerRow({
       className={`flex w-full items-center gap-1.5 border-b border-l-4 border-card-border bg-white px-2 py-1.5 text-left hover:bg-card-deep/50 ${borderClass}`}
     >
       <span className="w-4 shrink-0 text-[10px] font-bold text-ink-light/50">{rank}</span>
-      <PlayerAvatar playerId={player.id} fallbackTeamId={team} size={16} className="h-4 w-4" />
+      <PlayerAvatar playerId={player.id} fallbackTeamId={team} size={16} className="h-4 w-4" alwaysOn />
       <span className="min-w-0 flex-1 truncate">
         <span className="font-semibold text-ink">
           {player.name}

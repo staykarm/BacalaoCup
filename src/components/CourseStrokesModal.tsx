@@ -47,7 +47,7 @@ function TeamTable({ team, players, courses }: { team: TeamId; players: Player[]
               <tr key={p.id} className="bg-card-deep">
                 <td className="whitespace-nowrap rounded-l-lg py-1.5 pl-2 font-semibold text-ink">
                   <span className="flex items-center gap-1.5">
-                    <PlayerAvatar playerId={p.id} size={18} className="h-[18px] w-[18px]" />
+                    <PlayerAvatar playerId={p.id} size={18} className="h-[18px] w-[18px]" alwaysOn />
                     {p.name}
                     {p.is_captain && <span className="text-gold-deep"> (C)</span>}
                   </span>

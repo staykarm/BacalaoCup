@@ -28,13 +28,11 @@ function FlightRow({
   flight,
   players,
   hideNames,
-  canOpen,
   onClick,
 }: {
   flight: Match;
   players: Player[];
   hideNames: boolean;
-  canOpen: boolean;
   onClick: () => void;
 }) {
   const team = flight.flight_team as TeamId;
@@ -48,13 +46,7 @@ function FlightRow({
     : flight.flight_players.map((id) => players.find((p) => p.id === id)?.name ?? id);
 
   return (
-    <button
-      onClick={() => canOpen && onClick()}
-      disabled={!canOpen}
-      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left ${bg} ${
-        canOpen ? "hover:brightness-105" : "cursor-default opacity-70"
-      }`}
-    >
+    <button onClick={onClick} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:brightness-105 ${bg}`}>
       <Image
         src={team === "gray" ? "/logos/gray.png" : "/logos/aquarellos.png"}
         alt=""
@@ -154,7 +146,6 @@ export function ScrambleFlights({
             flight={f}
             players={players}
             hideNames={hideNames}
-            canOpen={isActiveSession || f.live_thru !== null || f.score_vs_par !== null}
             onClick={() => setEditingFlightId(f.id)}
           />
         ))}

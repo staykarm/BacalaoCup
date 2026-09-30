@@ -24,6 +24,21 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
     return session ? days.find((d) => d.id === session.day_id) : undefined;
   };
 
+  // Match.sort_order only orders matches within their own session (it restarts at 1 for
+  // each one), so chronological order across the whole tournament needs the day's and
+  // session's own sort_order ahead of it.
+  function chronoKey(m: Match): [number, number, number] {
+    const session = sessionOf(m.session_id);
+    const day = dayOf(m.session_id);
+    return [day?.sort_order ?? 0, session?.sort_order ?? 0, m.sort_order];
+  }
+
+  function compareChrono(a: Match, b: Match): number {
+    const [ad, as_, am] = chronoKey(a);
+    const [bd, bs, bm] = chronoKey(b);
+    return ad - bd || as_ - bs || am - bm;
+  }
+
   // A day the admin has hidden names for is hiding the pairings themselves, not just who's
   // in them — so a hidden day's matches are left out of the player's own list entirely,
   // same as they never appeared on the main schedule.
@@ -36,7 +51,7 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
           m.aqua_player2 === playerId) &&
         !dayOf(m.session_id)?.hide_names
     )
-    .sort((a, b) => a.sort_order - b.sort_order);
+    .sort(compareChrono);
 
   const side: TeamId = player.team_id;
   const myResult = side === "gray" ? "gray_won" : "aqua_won";

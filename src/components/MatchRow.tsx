@@ -15,6 +15,7 @@ import {
   startingUpFor,
 } from "@/lib/scoring";
 import { getHoleInfo } from "@/lib/courseHoles";
+import { computePlayerStats } from "@/lib/stats";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { PlayerDetailModal } from "./PlayerDetailModal";
 import { ModalShell } from "./ModalShell";
@@ -61,10 +62,18 @@ export function MatchRow({
   session: Session;
   hideNames?: boolean;
 }) {
-  const { matchHoles, sessions, days, activeSessionIds, setMatchHole } = useTournament();
+  const { matchHoles, sessions, days, matches, activeSessionIds, setMatchHole } = useTournament();
   const [scoring, setScoring] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const isActiveSession = activeSessionIds.includes(session.id);
+
+  // Each player's win-halved-loss record across the whole tournament so far, shown
+  // next to their name/photo — recomputed here from all matches, not just this one.
+  const playerStats = computePlayerStats(matches, players);
+  function recordFor(playerId: string) {
+    const s = playerStats.find((s) => s.player.id === playerId);
+    return s && s.played > 0 ? `${s.wins}-${s.halved}-${s.losses}` : null;
+  }
 
   // Genuinely blank (not just anonymized) so this falls back to the same generic
   // team-name display already used when a match has no named players at all.
@@ -99,9 +108,6 @@ export function MatchRow({
         : "text-gold-deep";
 
   const isLiveInProgress = match.result === "not_played" && (match.live_up !== 0 || match.live_thru !== null);
-  // A finished or live match can still be opened (read-only) after its round is no longer
-  // active, so the hole-by-hole recap doesn't just disappear once play moves on.
-  const canOpenScoring = isActiveSession || match.result !== "not_played" || isLiveInProgress;
 
   const leadingSide: TeamId | null =
     match.result === "gray_won"
@@ -192,6 +198,11 @@ export function MatchRow({
                       {p.name}
                       {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}
                     </span>
+                    {recordFor(p.id) && (
+                      <span className="shrink-0 text-[9px] font-semibold normal-case tracking-normal opacity-60">
+                        {recordFor(p.id)}
+                      </span>
+                    )}
                   </button>
                 ))}
                 {grayStrokesReceived !== null && (
@@ -207,12 +218,11 @@ export function MatchRow({
         </div>
 
         <button
-          onClick={() => canOpenScoring && setScoring(true)}
-          disabled={!canOpenScoring}
+          onClick={() => setScoring(true)}
           aria-label="Oppdater stilling"
-          className={`flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 px-1 py-3 text-center transition sm:w-24 sm:py-4 ${
+          className={`flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 px-1 py-3 text-center transition hover:bg-navy-lighter sm:w-24 sm:py-4 ${
             match.result !== "not_played" || isLiveInProgress ? "bg-black" : "bg-navy-deep"
-          } ${canOpenScoring ? "hover:bg-navy-lighter" : "cursor-default opacity-60"}`}
+          }`}
         >
           {match.result !== "not_played" || isLiveInProgress ? (
             <span className="text-sm font-extrabold text-white sm:text-base">{match.live_thru}</span>
@@ -233,6 +243,11 @@ export function MatchRow({
                     onClick={() => setSelectedPlayerId(p.id)}
                     className={`flex w-full items-center justify-end gap-1 text-right text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("aqua")}`}
                   >
+                    {recordFor(p.id) && (
+                      <span className="shrink-0 text-[9px] font-semibold normal-case tracking-normal opacity-60">
+                        {recordFor(p.id)}
+                      </span>
+                    )}
                     <span className="min-w-0 truncate">
                       {p.name}
                       {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}

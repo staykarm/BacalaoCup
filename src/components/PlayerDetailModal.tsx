@@ -221,6 +221,13 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
                   .map(nameOf)
                   .filter((n): n is string => !!n)
                   .join(" / ");
+                // The player's own partner on a 2-per-side format (fourball/greensome) — empty
+                // for singles, where there's no one else on the player's own side.
+                const partner = (side === "gray" ? [m.gray_player1, m.gray_player2] : [m.aqua_player1, m.aqua_player2])
+                  .filter((id) => id && id !== playerId)
+                  .map(nameOf)
+                  .filter((n): n is string => !!n)
+                  .join(" / ");
 
                 return (
                   <div
@@ -231,7 +238,10 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
                       <div className="truncate font-semibold text-ink">
                         {day?.label} &middot; {session?.name}
                       </div>
-                      <div className="truncate text-ink-light/60">vs {opponents || "?"}</div>
+                      <div className="truncate text-ink-light/60">
+                        {partner && <>Med {partner} &middot; </>}
+                        vs {opponents || "?"}
+                      </div>
                     </div>
                     <div className="shrink-0 text-right text-ink-light">{m.start_time ?? "--:--"}</div>
                   </div>

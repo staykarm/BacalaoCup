@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Outfit } from "next/font/google";
-import { AppShell } from "@/components/AppShell";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,9 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="no"
       className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <AppShell>{children}</AppShell>
-      </body>
+      <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
 }

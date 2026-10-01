@@ -18,7 +18,7 @@ const houseAddress = "C. los Lirios, Nueva Andalucía, 29660 Marbella, Málaga";
 
 /** Extra agenda entries (dinners, social events) keyed by `day.id`, alongside golf and transport. */
 export const AGENDA_EXTRAS: Record<string, AgendaEvent[]> = {
-  wed: [{ time: "13:00", label: `Lunsj: ${wedLunch?.name}`, icon: "🥪", address: wedLunch?.address }],
+  wed: [{ time: "12:00", label: `Lunsj: ${wedLunch?.name}`, icon: "🥪", address: wedLunch?.address }],
   thu: [
     { time: "13:30", label: `Lunsj: ${thuLunch?.name}`, icon: "🥪", address: thuLunch?.address },
     { time: "16:00", label: "Pool Party", icon: "🏊" },

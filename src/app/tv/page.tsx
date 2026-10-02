@@ -148,6 +148,9 @@ export default function TvScoreboardPage() {
   const isLive = hasLiveMatches(matches);
   const clinch = pointsToClinch(settled.gray, settled.aqua, settled.possible);
   const winner: TeamId | null = clinch.gray === 0 ? "gray" : clinch.aqua === 0 ? "aqua" : null;
+  // How much each team would still need if every live lead held — shown alongside the
+  // secure figure above, never in place of it (a live lead can still flip).
+  const clinchProjected = pointsToClinch(gray, aqua, possible);
 
   const playerStats = computePlayerStats(matches, players);
   const rankedPlayers = players
@@ -185,7 +188,12 @@ export default function TvScoreboardPage() {
               <div className="text-sm font-semibold uppercase tracking-wider text-gray-team-light">
                 Gray (Joys)
               </div>
-              <div className="font-display text-5xl font-bold text-gray-team-light drop-shadow">{fmt(gray)}</div>
+              <div className="font-display text-5xl font-bold text-gray-team-light drop-shadow">
+                {fmt(settled.gray)}
+              </div>
+              {grayLive > 0 && (
+                <div className="text-xs font-semibold italic text-gray-team-light/60">≈{fmt(gray)} projisert</div>
+              )}
             </div>
             <Image
               src="/logos/gray.png"
@@ -208,7 +216,12 @@ export default function TvScoreboardPage() {
               <div className="text-sm font-semibold uppercase tracking-wider text-aqua-team-light">
                 Aquarellos
               </div>
-              <div className="font-display text-5xl font-bold text-aqua-team-light drop-shadow">{fmt(aqua)}</div>
+              <div className="font-display text-5xl font-bold text-aqua-team-light drop-shadow">
+                {fmt(settled.aqua)}
+              </div>
+              {aquaLive > 0 && (
+                <div className="text-xs font-semibold italic text-aqua-team-light/60">≈{fmt(aqua)} projisert</div>
+              )}
             </div>
           </div>
         </div>
@@ -220,6 +233,8 @@ export default function TvScoreboardPage() {
           possible={possible}
           clinchGray={winner ? null : clinch.gray}
           clinchAqua={winner ? null : clinch.aqua}
+          clinchGrayProjected={winner ? null : clinchProjected.gray}
+          clinchAquaProjected={winner ? null : clinchProjected.aqua}
           className="mt-2 w-full"
         />
       </header>

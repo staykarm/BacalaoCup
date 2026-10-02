@@ -27,6 +27,9 @@ export function ScoreHeader({
   // "Won" is based on officially finalized points only — a live lead can still flip.
   const clinch = pointsToClinch(settled.gray, settled.aqua, settled.possible);
   const winner: TeamId | null = clinch.gray === 0 ? "gray" : clinch.aqua === 0 ? "aqua" : null;
+  // How much each team would still need if every live lead held — shown alongside the
+  // secure figure above, never in place of it (a live lead can still flip).
+  const clinchProjected = pointsToClinch(gray, aqua, possible);
 
   return (
     <header className="sticky top-0 z-40 border-b border-navy-lighter/60 bg-navy-deep/90 backdrop-blur supports-[backdrop-filter]:bg-navy-deep/75">
@@ -66,8 +69,13 @@ export function ScoreHeader({
                 Gray (Joys)
               </div>
               <div className="font-display text-3xl font-bold text-gray-team-light drop-shadow sm:text-5xl">
-                {fmt(gray)}
+                {fmt(settled.gray)}
               </div>
+              {grayLive > 0 && (
+                <div className="text-[10px] font-semibold italic text-gray-team-light/60 sm:text-xs">
+                  ≈{fmt(gray)} projisert
+                </div>
+              )}
             </div>
             <Image
               src="/logos/gray.png"
@@ -96,8 +104,13 @@ export function ScoreHeader({
                 Aquarellos
               </div>
               <div className="font-display text-3xl font-bold text-aqua-team-light drop-shadow sm:text-5xl">
-                {fmt(aqua)}
+                {fmt(settled.aqua)}
               </div>
+              {aquaLive > 0 && (
+                <div className="text-[10px] font-semibold italic text-aqua-team-light/60 sm:text-xs">
+                  ≈{fmt(aqua)} projisert
+                </div>
+              )}
             </div>
           </button>
         </div>
@@ -110,6 +123,8 @@ export function ScoreHeader({
           possible={possible}
           clinchGray={winner ? null : clinch.gray}
           clinchAqua={winner ? null : clinch.aqua}
+          clinchGrayProjected={winner ? null : clinchProjected.gray}
+          clinchAquaProjected={winner ? null : clinchProjected.aqua}
           className="mt-3 w-full"
         />
       </div>

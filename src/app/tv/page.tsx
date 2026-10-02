@@ -325,9 +325,13 @@ export default function TvScoreboardPage() {
                 {player.name}
                 {player.is_captain && <span className="text-gold-deep"> (C)</span>}
               </span>
-              <span className={`shrink-0 text-base font-bold ${stat.projectedExtra > 0 ? "italic text-red-400" : "text-gold"}`}>
+              <span
+                className={`w-12 shrink-0 text-right text-base font-bold tabular-nums ${
+                  stat.projectedExtra > 0 ? "italic text-foreground/60" : "text-gold"
+                }`}
+              >
                 {stat.projectedExtra > 0 && "≈"}
-                {fmt(stat.pointsContributed + stat.projectedExtra)}
+                {(stat.pointsContributed + stat.projectedExtra).toFixed(1)}
               </span>
             </div>
           ))}

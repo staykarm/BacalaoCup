@@ -200,9 +200,11 @@ export default function TvScoreboardPage() {
               <div className="rounded-2xl bg-gray-team-light px-5 py-1 font-display text-6xl font-bold text-ink">
                 {fmt(settled.gray)}
               </div>
-              {grayLive > 0 && (
-                <div className="mt-1 text-xs font-semibold italic text-gray-team-light/80">(≈{fmt(gray)})</div>
-              )}
+              {/* Always rendered (just hidden when there's nothing to show) so the chip
+                  above sits at the same height whether or not this line is in use. */}
+              <div className={`mt-1 text-xs font-semibold italic text-gray-team-light ${grayLive > 0 ? "" : "invisible"}`}>
+                ({fmt(gray)})
+              </div>
             </div>
           </div>
           <div className="text-center text-2xl font-bold text-foreground/30">–</div>
@@ -211,9 +213,9 @@ export default function TvScoreboardPage() {
               <div className="rounded-2xl bg-aqua-team px-5 py-1 font-display text-6xl font-bold text-white">
                 {fmt(settled.aqua)}
               </div>
-              {aquaLive > 0 && (
-                <div className="mt-1 text-xs font-semibold italic text-aqua-team-light/80">(≈{fmt(aqua)})</div>
-              )}
+              <div className={`mt-1 text-xs font-semibold italic text-aqua-team-light ${aquaLive > 0 ? "" : "invisible"}`}>
+                ({fmt(aqua)})
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold uppercase tracking-wider text-aqua-team-light">

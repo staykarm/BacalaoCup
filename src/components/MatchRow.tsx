@@ -132,11 +132,14 @@ export function MatchRow({
     return leadingSide === team ? marginBadgeText : null;
   }
 
-  // No leader to show — halved, not started, or currently tied mid-play — means flat team
-  // colors would just look like a mistake, so both sides go plain white/black instead. Only
-  // while the round is the active one, though — outside that, the flat team colors are what
-  // make a day's full match list scannable at a glance.
-  const isNeutral = isActiveSession && leadingSide === null;
+  // A match that hasn't started yet (no hole played) always shows its flat team colors —
+  // the same as a not-played match in a non-active round — so a day's match list reads the
+  // same regardless of which round happens to be active. Only a genuinely live-but-tied
+  // match, or a halved one, goes neutral white/black instead: there, flat colors would
+  // wrongly suggest a leader exists. Outside the active session, flat colors always win —
+  // that's what keeps a day's full match list scannable at a glance.
+  const isNotStarted = match.result === "not_played" && !isLiveInProgress;
+  const isNeutral = isActiveSession && leadingSide === null && !isNotStarted;
 
   function sideBg(team: TeamId) {
     if (isNeutral) return "bg-white";

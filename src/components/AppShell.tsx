@@ -6,9 +6,6 @@ import { TeamId } from "@/lib/types";
 import { ScoreHeader } from "./ScoreHeader";
 import { MvpModal } from "./MvpModal";
 import { AgendaModal } from "./AgendaModal";
-import { BaneinfoModal } from "./BaneinfoModal";
-import { RestaurantModal } from "./RestaurantModal";
-import { KartModal } from "./KartModal";
 import { CompetitionsModal } from "./CompetitionsModal";
 import { CourseStrokesModal } from "./CourseStrokesModal";
 import { AdminModal } from "./AdminModal";
@@ -40,17 +37,7 @@ function SyncErrorToast() {
   );
 }
 
-type ModalKey =
-  | "mvp"
-  | "agenda"
-  | "baneinfo"
-  | "kart"
-  | "restaurant"
-  | "competitions"
-  | "strokes"
-  | "feed"
-  | "admin"
-  | null;
+type ModalKey = "mvp" | "agenda" | "competitions" | "strokes" | "feed" | "admin" | null;
 
 const NAV_ITEMS: { key: Exclude<ModalKey, null | "admin">; label: string; icon: string }[] = [
   { key: "mvp", label: "MVP", icon: "🏆" },
@@ -58,9 +45,6 @@ const NAV_ITEMS: { key: Exclude<ModalKey, null | "admin">; label: string; icon: 
   { key: "feed", label: "Feed", icon: "📰" },
   { key: "competitions", label: "Konk.", icon: "🎯" },
   { key: "strokes", label: "HCP", icon: "🔢" },
-  { key: "baneinfo", label: "Baneinfo", icon: "⛳" },
-  { key: "restaurant", label: "Restaur.", icon: "🍽️" },
-  { key: "kart", label: "Kart", icon: "🗺️" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -104,7 +88,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main className="mx-auto w-full max-w-5xl px-4 pb-28 pt-4 sm:px-6">{children}</main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-navy-lighter/60 bg-navy-deep/95 backdrop-blur supports-[backdrop-filter]:bg-navy-deep/85">
-        <div className="mx-auto grid max-w-5xl grid-cols-8 px-1 py-1.5 sm:gap-2 sm:px-6 sm:py-2">
+        <div className="mx-auto grid max-w-5xl grid-cols-5 px-1 py-1.5 sm:gap-2 sm:px-6 sm:py-2">
           {NAV_ITEMS.map((item) => (
             <button
               key={item.key}
@@ -125,9 +109,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {openModal === "mvp" && <MvpModal onClose={() => setOpenModal(null)} />}
       {openModal === "agenda" && <AgendaModal onClose={() => setOpenModal(null)} />}
       {openModal === "feed" && <FeedModal onClose={() => setOpenModal(null)} />}
-      {openModal === "baneinfo" && <BaneinfoModal onClose={() => setOpenModal(null)} />}
-      {openModal === "kart" && <KartModal onClose={() => setOpenModal(null)} />}
-      {openModal === "restaurant" && <RestaurantModal onClose={() => setOpenModal(null)} />}
       {openModal === "competitions" && <CompetitionsModal onClose={() => setOpenModal(null)} />}
       {openModal === "strokes" && <CourseStrokesModal onClose={() => setOpenModal(null)} />}
       {openModal === "admin" && <AdminModal onClose={() => setOpenModal(null)} />}

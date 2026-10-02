@@ -7,7 +7,7 @@ import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { ScoreBar } from "@/components/ScoreBar";
 import { SessionSection } from "@/components/SessionSection";
 import { hasLiveMatches, pointsToClinch, projectedPoints, totalPoints } from "@/lib/scoring";
-import { computePlayerStats } from "@/lib/stats";
+import { computePlayerStats, rankByValue } from "@/lib/stats";
 import { Day, Match, Player, Session, TeamId } from "@/lib/types";
 
 function fmt(n: number) {
@@ -156,6 +156,7 @@ export default function TvScoreboardPage() {
       (a, b) =>
         b.stat.pointsContributed + b.stat.projectedExtra - (a.stat.pointsContributed + a.stat.projectedExtra)
     );
+  const mvpRanks = rankByValue(rankedPlayers, (r) => r.stat.pointsContributed + r.stat.projectedExtra);
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-background text-ink">
@@ -255,7 +256,7 @@ export default function TvScoreboardPage() {
                   key={player.id}
                   className={`flex items-center gap-2.5 rounded-lg border-l-4 px-2.5 py-2 ${borderClass} ${tintClass}`}
                 >
-                  <span className="w-6 shrink-0 text-sm font-bold text-ink-light/50">{i + 1}</span>
+                  <span className="w-6 shrink-0 text-sm font-bold text-ink-light/50">{mvpRanks[i]}</span>
                   <PlayerAvatar playerId={player.id} fallbackTeamId={player.team_id} size={32} className="h-8 w-8" alwaysOn />
                   <span className="min-w-0 flex-1 truncate text-base font-semibold text-ink">
                     {player.name}

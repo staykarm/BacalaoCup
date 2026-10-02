@@ -102,6 +102,27 @@ export function computePlayerStats(matches: Match[], players: Player[]): PlayerS
   );
 }
 
+/**
+ * Standard competition ranking ("1224"): equal values share a rank, and the next
+ * distinct value's rank is its 1-based position in the list — so a tie for 1st is
+ * followed by rank 3, not 2. `items` must already be sorted by `getValue` descending.
+ * Values are rounded to one decimal before comparing, matching how points are displayed.
+ */
+export function rankByValue<T>(items: T[], getValue: (item: T) => number): number[] {
+  const ranks: number[] = [];
+  let lastValue: number | null = null;
+  let lastRank = 0;
+  items.forEach((item, i) => {
+    const value = Math.round(getValue(item) * 10) / 10;
+    if (lastValue === null || value !== lastValue) {
+      lastRank = i + 1;
+      lastValue = value;
+    }
+    ranks.push(lastRank);
+  });
+  return ranks;
+}
+
 export function computePairStats(matches: Match[], players: Player[]): PairStat[] {
   const nameOf = (id: string) => players.find((p) => p.id === id)?.name ?? id;
   const pairs = new Map<string, PairStat>();

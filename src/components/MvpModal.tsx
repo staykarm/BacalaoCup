@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTournament } from "@/context/TournamentContext";
-import { computeCompetitionWins, computePlayerStats } from "@/lib/stats";
+import { computeCompetitionWins, computePlayerStats, rankByValue } from "@/lib/stats";
 import { Player, PlayerYearStat, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
 import { PlayerAvatar } from "./PlayerAvatar";
@@ -88,6 +88,7 @@ export function MvpModal({ onClose }: { onClose: () => void }) {
       (a, b) =>
         b.stat.pointsContributed + b.stat.projectedExtra - (a.stat.pointsContributed + a.stat.projectedExtra)
     );
+  const ranks = rankByValue(rows, (r) => r.stat.pointsContributed + r.stat.projectedExtra);
 
   return (
     <ModalShell title="MVP" onClose={onClose}>
@@ -95,7 +96,7 @@ export function MvpModal({ onClose }: { onClose: () => void }) {
         {rows.map(({ player, stat }, i) => (
           <PlayerRow
             key={player.id}
-            rank={i + 1}
+            rank={ranks[i]}
             player={player}
             stat={stat}
             history={playerYearStats

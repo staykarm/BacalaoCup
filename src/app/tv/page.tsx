@@ -229,7 +229,7 @@ export default function TvScoreboardPage() {
             {rankedPlayers.map(({ player, stat }, i) => {
               const isGray = player.team_id === "gray";
               const borderClass = isGray ? "border-l-gray-team-deep" : "border-l-aqua-team";
-              const tintClass = isGray ? "bg-gray-team-bg/25" : "bg-aqua-team-bg/10";
+              const tintClass = isGray ? "bg-gray-team-bg/25" : "bg-aqua-team-bg/35";
               return (
                 <div
                   key={player.id}

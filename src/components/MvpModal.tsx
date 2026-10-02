@@ -32,7 +32,7 @@ function PlayerRow({
   // fallback (the usual, more obvious team cue) — a tinted row background makes the
   // team unmistakable either way.
   const borderClass = team === "gray" ? "border-l-gray-team-deep" : "border-l-aqua-team";
-  const tintClass = team === "gray" ? "bg-gray-team-bg/25" : "bg-aqua-team-bg/10";
+  const tintClass = team === "gray" ? "bg-gray-team-bg/25" : "bg-aqua-team-bg/35";
 
   const historyText = history
     .map((h) => {

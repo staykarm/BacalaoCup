@@ -32,7 +32,7 @@ export function ScoreHeader({
   const clinchProjected = pointsToClinch(gray, aqua, possible);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-navy-lighter/60 bg-navy-deep/90 backdrop-blur supports-[backdrop-filter]:bg-navy-deep/75">
+    <header className="sticky top-0 z-40 border-b border-navy-lighter/60 bg-navy-light/90 backdrop-blur supports-[backdrop-filter]:bg-navy-light/75">
       <div className="relative mx-auto max-w-5xl px-4 py-3 sm:px-6">
         <button
           onClick={onOpenAdmin}
@@ -77,11 +77,12 @@ export function ScoreHeader({
               </span>
             </div>
             <div className="text-right">
-              <div className="font-display text-4xl font-bold text-gray-team-light drop-shadow sm:text-6xl">
+              {/* Black-on-gray, matching the team's own flat color swatch used everywhere else. */}
+              <div className="rounded-2xl bg-gray-team-light px-4 py-0.5 font-display text-4xl font-bold text-ink sm:px-5 sm:py-1 sm:text-6xl">
                 {fmt(settled.gray)}
               </div>
               {grayLive > 0 && (
-                <div className="whitespace-nowrap text-[10px] font-semibold italic text-gray-team-light/60 sm:text-xs">
+                <div className="mt-1 whitespace-nowrap text-[10px] font-semibold italic text-gray-team-light/80 sm:text-xs">
                   ≈{fmt(gray)} projisert
                 </div>
               )}
@@ -95,11 +96,12 @@ export function ScoreHeader({
             className="flex min-w-0 items-center justify-start gap-2 rounded-2xl px-2 py-1 transition hover:bg-white/5 sm:gap-4"
           >
             <div className="text-left">
-              <div className="font-display text-4xl font-bold text-aqua-team-light drop-shadow sm:text-6xl">
+              {/* White-on-blue, matching the team's own flat color swatch used everywhere else. */}
+              <div className="rounded-2xl bg-aqua-team px-4 py-0.5 font-display text-4xl font-bold text-white sm:px-5 sm:py-1 sm:text-6xl">
                 {fmt(settled.aqua)}
               </div>
               {aquaLive > 0 && (
-                <div className="whitespace-nowrap text-[10px] font-semibold italic text-aqua-team-light/60 sm:text-xs">
+                <div className="mt-1 whitespace-nowrap text-[10px] font-semibold italic text-aqua-team-light/80 sm:text-xs">
                   ≈{fmt(aqua)} projisert
                 </div>
               )}

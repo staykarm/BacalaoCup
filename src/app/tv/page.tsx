@@ -165,7 +165,7 @@ export default function TvScoreboardPage() {
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-background text-ink">
       {/* Same dark header treatment as the main app's sticky ScoreHeader, so the TV
           scoreboard reads as the same product — light content below a navy top bar. */}
-      <header className="shrink-0 border-b border-navy-lighter/60 bg-navy-deep px-6 py-3 text-center text-foreground">
+      <header className="shrink-0 border-b border-navy-lighter/60 bg-navy-light px-6 py-3 text-center text-foreground">
         <div className="flex items-center justify-center gap-2">
           <span className={`h-2 w-2 rounded-full ${isLive ? "animate-pulse bg-red-500" : "bg-gold"}`} />
           <p className="text-sm font-semibold uppercase tracking-[0.35em] text-gold">
@@ -197,22 +197,22 @@ export default function TvScoreboardPage() {
               </span>
             </div>
             <div className="text-right">
-              <div className="font-display text-6xl font-bold text-gray-team-light drop-shadow">
+              <div className="rounded-2xl bg-gray-team-light px-5 py-1 font-display text-6xl font-bold text-ink">
                 {fmt(settled.gray)}
               </div>
               {grayLive > 0 && (
-                <div className="text-xs font-semibold italic text-gray-team-light/60">≈{fmt(gray)} projisert</div>
+                <div className="mt-1 text-xs font-semibold italic text-gray-team-light/80">≈{fmt(gray)} projisert</div>
               )}
             </div>
           </div>
           <div className="text-center text-2xl font-bold text-foreground/30">–</div>
           <div className="flex items-center gap-4">
             <div className="text-left">
-              <div className="font-display text-6xl font-bold text-aqua-team-light drop-shadow">
+              <div className="rounded-2xl bg-aqua-team px-5 py-1 font-display text-6xl font-bold text-white">
                 {fmt(settled.aqua)}
               </div>
               {aquaLive > 0 && (
-                <div className="text-xs font-semibold italic text-aqua-team-light/60">≈{fmt(aqua)} projisert</div>
+                <div className="mt-1 text-xs font-semibold italic text-aqua-team-light/80">≈{fmt(aqua)} projisert</div>
               )}
             </div>
             <div className="flex items-center gap-2">

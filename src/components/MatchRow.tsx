@@ -198,10 +198,7 @@ export function MatchRow({
                     className={`flex w-full items-center gap-1 text-left text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("gray")}`}
                   >
                     <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />
-                    <span className="min-w-0 truncate">
-                      {p.name}
-                      {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}
-                    </span>
+                    <span className="min-w-0 truncate">{p.name}</span>
                     {recordFor(p.id) && (
                       <span className="shrink-0 text-[9px] font-semibold normal-case tracking-normal opacity-60">
                         {recordFor(p.id)}
@@ -252,10 +249,7 @@ export function MatchRow({
                         {recordFor(p.id)}
                       </span>
                     )}
-                    <span className="min-w-0 truncate">
-                      {p.name}
-                      {course && p.course_strokes[course] !== undefined && ` (${p.course_strokes[course]})`}
-                    </span>
+                    <span className="min-w-0 truncate">{p.name}</span>
                     <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />
                   </button>
                 ))}
@@ -291,7 +285,10 @@ export function MatchRow({
       )}
 
       {scoring && (
-        <ModalShell title={isActiveSession ? "Oppdater stilling" : "Stilling"} onClose={() => setScoring(false)}>
+        <ModalShell
+          title={isActiveSession && match.result === "not_played" ? "Oppdater stilling" : "Stilling"}
+          onClose={() => setScoring(false)}
+        >
           <div className="space-y-5">
             <div className="text-center">
               {grayPlayers.length > 0 || aquaPlayers.length > 0 ? (

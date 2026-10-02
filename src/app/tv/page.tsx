@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -160,8 +161,25 @@ function DayColumn({
   );
 }
 
+// How often the unattended TV screen reloads itself, so a frozen tab or a dropped
+// connection doesn't sit stale for the rest of the day with nobody there to refresh it.
+const AUTO_RELOAD_MS = 2 * 60 * 60 * 1000;
+
 export default function TvScoreboardPage() {
-  const { players, days, sessions, matches, loading, error } = useTournament();
+  const { players, days, sessions, matches, loading, error, tvOverrideDayId } = useTournament();
+
+  // Ticks every second purely so a frozen screen is visible at a glance — if the clock
+  // stops moving, the page has stopped updating.
+  const [clock, setClock] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setClock(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const id = setTimeout(() => window.location.reload(), AUTO_RELOAD_MS);
+    return () => clearTimeout(id);
+  }, []);
 
   if (loading) {
     return (
@@ -179,11 +197,25 @@ export default function TvScoreboardPage() {
     );
   }
 
-  const now = new Date();
-  const tomorrowDate = new Date(now);
-  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-  const todayDay = days.find((d) => d.date === toDateKey(now));
-  const tomorrowDay = days.find((d) => d.date === toDateKey(tomorrowDate));
+  // Admin override pins the scoreboard to a specific day (e.g. to test the layout before
+  // play starts, or to hold a day on screen past midnight) — otherwise it follows whatever
+  // date the screen itself thinks it is.
+  let todayDay: Day | undefined;
+  let tomorrowDay: Day | undefined;
+  if (tvOverrideDayId) {
+    const playableDaysSorted = [...days]
+      .filter((d) => sessions.some((s) => s.day_id === d.id))
+      .sort((a, b) => a.sort_order - b.sort_order);
+    const idx = playableDaysSorted.findIndex((d) => d.id === tvOverrideDayId);
+    todayDay = idx >= 0 ? playableDaysSorted[idx] : undefined;
+    tomorrowDay = idx >= 0 ? playableDaysSorted[idx + 1] : undefined;
+  } else {
+    const now = new Date();
+    const tomorrowDate = new Date(now);
+    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+    todayDay = days.find((d) => d.date === toDateKey(now));
+    tomorrowDay = days.find((d) => d.date === toDateKey(tomorrowDate));
+  }
 
   const { gray, aqua, possible } = projectedPoints(matches, sessions);
   const settled = totalPoints(matches, sessions);
@@ -277,29 +309,36 @@ export default function TvScoreboardPage() {
         </div>
       </div>
 
-      <aside className="flex w-80 shrink-0 flex-col border-l border-navy-lighter/60 bg-navy-light/60 p-4">
-        <h2 className="mb-3 shrink-0 text-center text-sm font-bold uppercase tracking-[0.3em] text-gold">MVP</h2>
-        <div className="min-h-0 flex-1 space-y-1 overflow-y-auto">
+      <aside className="flex w-80 shrink-0 flex-col border-l border-navy-lighter/60 bg-navy-light/60 p-3">
+        <h2 className="mb-2 shrink-0 text-center text-sm font-bold uppercase tracking-[0.3em] text-gold">MVP</h2>
+        <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
           {rankedPlayers.map(({ player, stat }, i) => (
             <div
               key={player.id}
-              className={`flex items-center gap-2 rounded-xl border-l-4 bg-navy-deep/60 px-2 py-1.5 ${
+              className={`flex items-center gap-2 rounded-lg border-l-4 bg-navy-deep/60 px-2 py-0.5 ${
                 player.team_id === "gray" ? "border-l-gray-team" : "border-l-aqua-team"
               }`}
             >
               <span className="w-5 shrink-0 text-xs font-bold text-foreground/40">{i + 1}</span>
-              <PlayerAvatar playerId={player.id} fallbackTeamId={player.team_id} size={28} className="h-7 w-7" alwaysOn />
+              <PlayerAvatar playerId={player.id} fallbackTeamId={player.team_id} size={24} className="h-6 w-6" alwaysOn />
               <span className="min-w-0 flex-1 truncate text-sm font-semibold">
                 {player.name}
                 {player.is_captain && <span className="text-gold-deep"> (C)</span>}
               </span>
-              <span className="shrink-0 text-base font-bold text-gold">
+              <span
+                className={`w-12 shrink-0 text-right text-base font-bold tabular-nums ${
+                  stat.projectedExtra > 0 ? "italic text-foreground/60" : "text-gold"
+                }`}
+              >
                 {stat.projectedExtra > 0 && "≈"}
-                {fmt(stat.pointsContributed + stat.projectedExtra)}
+                {(stat.pointsContributed + stat.projectedExtra).toFixed(1)}
               </span>
             </div>
           ))}
         </div>
+        <p className="mt-2 shrink-0 text-center text-[11px] text-foreground/30">
+          Oppdatert {clock.toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+        </p>
       </aside>
     </div>
   );

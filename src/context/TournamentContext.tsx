@@ -12,6 +12,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { deriveMatchPlayFromHoles, deriveScrambleFromHoles, startingUpFor } from "@/lib/scoring";
 import {
+  ActivityLogEntry,
   Day,
   HoleResult,
   MapLocation,
@@ -34,6 +35,8 @@ interface TournamentContextValue {
   matchHoles: MatchHole[];
   locations: MapLocation[];
   playerYearStats: PlayerYearStat[];
+  /** Append-only feed of match events (started/hole/finished), newest first. */
+  activityLog: ActivityLogEntry[];
   loading: boolean;
   error: string | null;
   /** A background save (not the initial load) failed, e.g. a dropped connection while live-scoring. */
@@ -91,6 +94,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const [matchHoles, setMatchHoles] = useState<MatchHole[]>([]);
   const [locations, setLocations] = useState<MapLocation[]>([]);
   const [playerYearStats, setPlayerYearStats] = useState<PlayerYearStat[]>([]);
+  const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([]);
   const [activeSessionIds, setActiveSessionIds] = useState<string[]>([]);
   const [adminPin, setAdminPin] = useState<string>("2026");
   const [showPlayerPhotos, setShowPlayerPhotosState] = useState(false);
@@ -169,7 +173,21 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // Loaded separately from the critical data above: activity_log is a newer table that may
+    // not exist yet on a database that hasn't run the latest migration, and the feed is a
+    // nice-to-have — it shouldn't block the whole app behind a missing-table error.
+    async function loadActivityLog() {
+      const { data, error: activityError } = await supabase
+        .from("activity_log")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(300);
+      if (cancelled || activityError) return;
+      setActivityLog(data ?? []);
+    }
+
     load();
+    loadActivityLog();
     return () => {
       cancelled = true;
     };
@@ -228,6 +246,25 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
             }
             return [...current, next];
           });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Insert-only: activity_log entries are never updated or deleted once written.
+    const channel = supabase
+      .channel("activity-log-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "activity_log" },
+        (payload) => {
+          const next = payload.new as ActivityLogEntry;
+          setActivityLog((current) => (current.some((a) => a.id === next.id) ? current : [next, ...current]));
         }
       )
       .subscribe();
@@ -312,6 +349,9 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     ) => {
       const isMatchPlay = "result" in patch;
       const cleared = isMatchPlay ? patch.result == null : patch.score_vs_par == null;
+      // Checked against state from before this edit, for the activity feed below.
+      const wasStarted = matchHoles.some((h) => h.match_id === match.id);
+      const wasFinished = match.result !== "not_played";
 
       const filtered = matchHoles.filter((h) => !(h.match_id === match.id && h.hole_number === holeNumber));
       const row: MatchHole = {
@@ -349,6 +389,53 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
           )
         : deriveScrambleFromHoles(holesForMatch);
       await updateMatch(match.id, derived);
+
+      if (!cleared) {
+        const finishedResult: MatchResult | null =
+          isMatchPlay && !wasFinished && "result" in derived && derived.result !== "not_played"
+            ? derived.result
+            : null;
+        const logRows: Omit<ActivityLogEntry, "id" | "created_at">[] = [];
+        if (!wasStarted) {
+          logRows.push({
+            match_id: match.id,
+            session_id: match.session_id,
+            kind: "started",
+            hole_number: null,
+            hole_result: null,
+            score_vs_par: null,
+            result: null,
+          });
+        }
+        logRows.push({
+          match_id: match.id,
+          session_id: match.session_id,
+          kind: "hole",
+          hole_number: holeNumber,
+          hole_result: patch.result ?? null,
+          score_vs_par: patch.score_vs_par ?? null,
+          result: null,
+        });
+        if (finishedResult) {
+          logRows.push({
+            match_id: match.id,
+            session_id: match.session_id,
+            kind: "finished",
+            hole_number: null,
+            hole_result: null,
+            score_vs_par: null,
+            result: finishedResult,
+          });
+        }
+        // Best-effort: the feed is a nice-to-have, so a failed write here shouldn't
+        // block live scoring or alarm the user with a sync-error banner.
+        supabase
+          .from("activity_log")
+          .insert(logRows)
+          .then(({ error: logError }) => {
+            if (logError) console.error("activity_log insert failed", logError);
+          });
+      }
     },
     [matchHoles, updateMatch, activeSessionIds]
   );
@@ -503,6 +590,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       matchHoles,
       locations,
       playerYearStats,
+      activityLog,
       loading,
       error,
       syncError,
@@ -534,6 +622,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       matchHoles,
       locations,
       playerYearStats,
+      activityLog,
       loading,
       error,
       syncError,

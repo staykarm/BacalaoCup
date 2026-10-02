@@ -14,6 +14,7 @@ import { CourseStrokesModal } from "./CourseStrokesModal";
 import { AdminModal } from "./AdminModal";
 import { AdminPinModal } from "./AdminPinModal";
 import { TeamPointsModal } from "./TeamPointsModal";
+import { FeedModal } from "./FeedModal";
 
 const ADMIN_UNLOCKED_KEY = "bacalao-admin-unlocked";
 
@@ -47,12 +48,14 @@ type ModalKey =
   | "restaurant"
   | "competitions"
   | "strokes"
+  | "feed"
   | "admin"
   | null;
 
 const NAV_ITEMS: { key: Exclude<ModalKey, null | "admin">; label: string; icon: string }[] = [
   { key: "mvp", label: "MVP", icon: "🏆" },
   { key: "agenda", label: "Agenda", icon: "📅" },
+  { key: "feed", label: "Feed", icon: "📰" },
   { key: "competitions", label: "Konk.", icon: "🎯" },
   { key: "strokes", label: "HCP", icon: "🔢" },
   { key: "baneinfo", label: "Baneinfo", icon: "⛳" },
@@ -101,7 +104,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main className="mx-auto w-full max-w-5xl px-4 pb-28 pt-4 sm:px-6">{children}</main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-navy-lighter/60 bg-navy-deep/95 backdrop-blur supports-[backdrop-filter]:bg-navy-deep/85">
-        <div className="mx-auto grid max-w-5xl grid-cols-7 px-1 py-1.5 sm:gap-2 sm:px-6 sm:py-2">
+        <div className="mx-auto grid max-w-5xl grid-cols-8 px-1 py-1.5 sm:gap-2 sm:px-6 sm:py-2">
           {NAV_ITEMS.map((item) => (
             <button
               key={item.key}
@@ -121,6 +124,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {openModal === "mvp" && <MvpModal onClose={() => setOpenModal(null)} />}
       {openModal === "agenda" && <AgendaModal onClose={() => setOpenModal(null)} />}
+      {openModal === "feed" && <FeedModal onClose={() => setOpenModal(null)} />}
       {openModal === "baneinfo" && <BaneinfoModal onClose={() => setOpenModal(null)} />}
       {openModal === "kart" && <KartModal onClose={() => setOpenModal(null)} />}
       {openModal === "restaurant" && <RestaurantModal onClose={() => setOpenModal(null)} />}

@@ -97,6 +97,29 @@ export interface MatchHole {
   score_vs_par: number | null;
 }
 
+export type ActivityKind = "started" | "hole" | "finished";
+
+/**
+ * One event in the match activity feed — a match's first hole being registered, a single
+ * hole result/score being entered, or a match-play match concluding. Append-only: entries
+ * are never edited or removed, so the feed reads as a running history, oldest trustable.
+ */
+export interface ActivityLogEntry {
+  id: string;
+  created_at: string;
+  match_id: string;
+  session_id: string;
+  kind: ActivityKind;
+  /** Set for `kind: "hole"` only. */
+  hole_number: number | null;
+  /** Set for `kind: "hole"` on a match-play match only. */
+  hole_result: HoleResult | null;
+  /** Set for `kind: "hole"` on a scramble flight only. */
+  score_vs_par: number | null;
+  /** Set for `kind: "finished"` only. */
+  result: MatchResult | null;
+}
+
 export type LocationType = "course" | "house" | "restaurant";
 
 export interface MapLocation {

@@ -51,6 +51,18 @@ function pairHandicap(id1: string | null, id2: string | null, players: Player[])
   return greensomeTeamHandicap(hcp1, hcp2);
 }
 
+/**
+ * A side's playing handicap for the strokes-received comparison: a pair's combined
+ * Greensome-style handicap when both slots are filled (fourball/greensome), or the
+ * lone player's own handicap in a 1-vs-1 singles match. Null for an uneven side
+ * (2 vs 1) — that imbalance is already compensated by the head-start hole instead.
+ */
+function sideHandicap(id1: string | null, id2: string | null, players: Player[]): number | null {
+  if (id1 && id2) return pairHandicap(id1, id2, players);
+  if (id1 && !id2) return players.find((p) => p.id === id1)?.hcp ?? null;
+  return null;
+}
+
 export function MatchRow({
   match,
   players,
@@ -88,15 +100,25 @@ export function MatchRow({
   // An uneven side (2 players vs 1) gets a 1-hole head start — shown as a fixed "Hull 0".
   const headStart = startingUpFor(match);
 
-  // Greensome strokes received: only meaningful with a full pair on both sides, and only
-  // ever shown alongside real names (see grayPlayers/aquaPlayers above) — so this stays
-  // invisible on a hide_names day exactly like the pairings it would otherwise reveal.
-  const grayPairHcp = session.format === "greensome" ? pairHandicap(match.gray_player1, match.gray_player2, players) : null;
-  const aquaPairHcp = session.format === "greensome" ? pairHandicap(match.aqua_player1, match.aqua_player2, players) : null;
-  const pairStrokeDiff =
-    grayPairHcp !== null && aquaPairHcp !== null ? Math.round(grayPairHcp) - Math.round(aquaPairHcp) : null;
-  const grayStrokesReceived = pairStrokeDiff !== null && pairStrokeDiff > 0 ? pairStrokeDiff : null;
-  const aquaStrokesReceived = pairStrokeDiff !== null && pairStrokeDiff < 0 ? -pairStrokeDiff : null;
+  // Strokes received: a combined-side figure for greensome (a genuine two-man combined
+  // handicap) or singles (a 1v1 difference) — shown only alongside real names (see
+  // grayPlayers/aquaPlayers above), so it stays invisible on a hide_names day exactly
+  // like the pairings it would otherwise reveal. Fourball plays each ball individually,
+  // so it skips this pair figure entirely in favor of each player's own course handicap
+  // (see playerCourseStrokes below).
+  const isFourball = session.format === "fourball";
+  const graySideHcp = isFourball ? null : sideHandicap(match.gray_player1, match.gray_player2, players);
+  const aquaSideHcp = isFourball ? null : sideHandicap(match.aqua_player1, match.aqua_player2, players);
+  const sideStrokeDiff =
+    graySideHcp !== null && aquaSideHcp !== null ? Math.round(graySideHcp) - Math.round(aquaSideHcp) : null;
+  const grayStrokesReceived = sideStrokeDiff !== null && sideStrokeDiff > 0 ? sideStrokeDiff : null;
+  const aquaStrokesReceived = sideStrokeDiff !== null && sideStrokeDiff < 0 ? -sideStrokeDiff : null;
+
+  // Fourball only: each player's own course handicap, shown next to their own name
+  // instead of a shared pair figure — nobody plays a combined ball here.
+  function playerCourseStrokes(p: { course_strokes: Record<string, number> }): number | null {
+    return course && p.course_strokes[course] !== undefined ? p.course_strokes[course] : null;
+  }
 
   const liveLeaderTeam = liveLeader(match.live_up);
   // Same live-leader color, but for use on the near-white editing panel below the result box.
@@ -194,29 +216,32 @@ export function MatchRow({
           <div className="flex min-w-0 flex-col gap-0.5">
             {grayPlayers.length > 0 ? (
               <>
-                {grayPlayers.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setSelectedPlayerId(p.id)}
-                    className={`flex w-full items-center gap-1 text-left text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("gray")}`}
-                  >
-                    <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />
-                    <span className="min-w-0 truncate">
-                      {p.name}
-                      {/* Shown until the match is settled — not started or live, same as the
-                          scoring modal below. Once a result's in, the badge disappears. Same
-                          color as the player's own name, inherited from the button above. */}
-                      {match.result === "not_played" && grayStrokesReceived !== null && (
-                        <span className="normal-case"> ({grayStrokesReceived})</span>
-                      )}
-                    </span>
-                    {recordFor(p.id) && (
-                      <span className="shrink-0 text-[9px] font-semibold normal-case tracking-normal opacity-60">
-                        {recordFor(p.id)}
+                {grayPlayers.map((p) => {
+                  const strokeBadge = isFourball ? playerCourseStrokes(p) : grayStrokesReceived;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setSelectedPlayerId(p.id)}
+                      className={`flex w-full items-center gap-1 text-left text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("gray")}`}
+                    >
+                      <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />
+                      <span className="min-w-0 truncate">
+                        {p.name}
+                        {/* Shown until the match is settled — not started or live, same as the
+                            scoring modal below. Once a result's in, the badge disappears. Same
+                            color as the player's own name, inherited from the button above. */}
+                        {match.result === "not_played" && strokeBadge !== null && (
+                          <span className="normal-case"> ({strokeBadge})</span>
+                        )}
                       </span>
-                    )}
-                  </button>
-                ))}
+                      {recordFor(p.id) && (
+                        <span className="shrink-0 text-[9px] font-semibold normal-case tracking-normal opacity-60">
+                          {recordFor(p.id)}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </>
             ) : (
               <span className={`text-xs font-bold uppercase tracking-wide sm:text-sm ${sideText("gray")}`}>
@@ -246,26 +271,29 @@ export function MatchRow({
           <div className="flex min-w-0 flex-col items-end gap-0.5">
             {aquaPlayers.length > 0 ? (
               <>
-                {aquaPlayers.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setSelectedPlayerId(p.id)}
-                    className={`flex w-full items-center justify-end gap-1 text-right text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("aqua")}`}
-                  >
-                    {recordFor(p.id) && (
-                      <span className="shrink-0 text-[9px] font-semibold normal-case tracking-normal opacity-60">
-                        {recordFor(p.id)}
-                      </span>
-                    )}
-                    <span className="min-w-0 truncate">
-                      {p.name}
-                      {match.result === "not_played" && aquaStrokesReceived !== null && (
-                        <span className="normal-case"> ({aquaStrokesReceived})</span>
+                {aquaPlayers.map((p) => {
+                  const strokeBadge = isFourball ? playerCourseStrokes(p) : aquaStrokesReceived;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setSelectedPlayerId(p.id)}
+                      className={`flex w-full items-center justify-end gap-1 text-right text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("aqua")}`}
+                    >
+                      {recordFor(p.id) && (
+                        <span className="shrink-0 text-[9px] font-semibold normal-case tracking-normal opacity-60">
+                          {recordFor(p.id)}
+                        </span>
                       )}
-                    </span>
-                    <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />
-                  </button>
-                ))}
+                      <span className="min-w-0 truncate">
+                        {p.name}
+                        {match.result === "not_played" && strokeBadge !== null && (
+                          <span className="normal-case"> ({strokeBadge})</span>
+                        )}
+                      </span>
+                      <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />
+                    </button>
+                  );
+                })}
               </>
             ) : (
               <span className={`text-xs font-bold uppercase tracking-wide sm:text-sm ${sideText("aqua")}`}>

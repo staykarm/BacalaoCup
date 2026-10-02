@@ -78,11 +78,11 @@ function MatchLine({
     const flat = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-flat";
     const bold = team === "gray" ? "bg-gray-team-won" : "bg-aqua-team-won";
     if (leadingSide === null) return flat;
-    return leadingSide === team ? bold : "bg-navy-light";
+    return leadingSide === team ? bold : "bg-white";
   }
 
   function text(team: TeamId) {
-    if (leadingSide !== null && leadingSide !== team) return "text-foreground/30";
+    if (leadingSide !== null && leadingSide !== team) return "text-ink-light/40";
     return team === "aqua" ? "text-white" : "text-ink";
   }
 
@@ -136,21 +136,21 @@ function DayColumn({
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-navy-lighter/60 bg-navy-light/40 p-5">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-card-border bg-card p-5">
       <div className="mb-3 flex shrink-0 items-baseline justify-between gap-2">
-        <h2 className="text-base font-bold uppercase tracking-[0.2em] text-gold">
+        <h2 className="text-base font-bold uppercase tracking-[0.2em] text-gold-deep">
           {title}
-          {day && <span className="ml-2 font-normal normal-case text-foreground/50">{day.label}</span>}
+          {day && <span className="ml-2 font-normal normal-case text-ink-light">{day.label}</span>}
         </h2>
         {day?.course && (
-          <span className="text-xs uppercase tracking-wide text-foreground/40">{day.course}</span>
+          <span className="text-xs uppercase tracking-wide text-ink-light/70">{day.course}</span>
         )}
       </div>
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
         {!day ? (
-          <p className="text-foreground/40">Ingen runde.</p>
+          <p className="text-ink-light/60">Ingen runde.</p>
         ) : items.length === 0 ? (
-          <p className="text-foreground/40">Ingen kamper registrert.</p>
+          <p className="text-ink-light/60">Ingen kamper registrert.</p>
         ) : (
           items.map(({ session, match }) => (
             <MatchLine key={match.id} session={session} match={match} players={players} hideNames={day.hide_names} />
@@ -183,7 +183,7 @@ export default function TvScoreboardPage() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-navy-deep text-foreground/60">
+      <div className="fixed inset-0 flex items-center justify-center bg-background text-ink-light">
         Laster turneringsdata…
       </div>
     );
@@ -191,7 +191,7 @@ export default function TvScoreboardPage() {
 
   if (error) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-navy-deep p-10 text-center text-red-300">
+      <div className="fixed inset-0 flex items-center justify-center bg-background p-10 text-center text-red-700">
         Kunne ikke laste data fra Supabase: {error}
       </div>
     );
@@ -234,112 +234,114 @@ export default function TvScoreboardPage() {
     );
 
   return (
-    <div className="fixed inset-0 flex overflow-hidden bg-navy-deep text-foreground">
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 p-6">
-        <header className="shrink-0 text-center">
-          <div className="flex items-center justify-center gap-2">
-            <span className={`h-2 w-2 rounded-full ${isLive ? "animate-pulse bg-red-500" : "bg-gold"}`} />
-            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-gold">
-              Bacalao Cup MMXXVI &middot; Marbella
-              {isLive && <span className="ml-2 text-red-400">&middot; LIVE</span>}
-            </p>
-            <span className={`h-2 w-2 rounded-full ${isLive ? "animate-pulse bg-red-500" : "bg-gold"}`} />
-          </div>
-          {winner && (
-            <p className="mt-1 text-sm font-semibold uppercase tracking-wide">
-              <span className={winner === "gray" ? "text-gray-team-light" : "text-aqua-team-light"}>
-                🏆 {winner === "gray" ? "Gray (Joys)" : "Aquarellos"} har vunnet cupen!
-              </span>
-            </p>
-          )}
-        </header>
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-background text-ink">
+      {/* Same dark header treatment as the main app's sticky ScoreHeader, so the TV
+          scoreboard reads as the same product — light content below a navy top bar. */}
+      <header className="shrink-0 border-b border-navy-lighter/60 bg-navy-deep px-6 py-4 text-center text-foreground">
+        <div className="flex items-center justify-center gap-2">
+          <span className={`h-2 w-2 rounded-full ${isLive ? "animate-pulse bg-red-500" : "bg-gold"}`} />
+          <p className="text-sm font-semibold uppercase tracking-[0.35em] text-gold">
+            Bacalao Cup MMXXVI &middot; Marbella
+            {isLive && <span className="ml-2 text-red-400">&middot; LIVE</span>}
+          </p>
+          <span className={`h-2 w-2 rounded-full ${isLive ? "animate-pulse bg-red-500" : "bg-gold"}`} />
+        </div>
+        {winner && (
+          <p className="mt-1 text-sm font-semibold uppercase tracking-wide">
+            <span className={winner === "gray" ? "text-gray-team-light" : "text-aqua-team-light"}>
+              🏆 {winner === "gray" ? "Gray (Joys)" : "Aquarellos"} har vunnet cupen!
+            </span>
+          </p>
+        )}
 
-        <section className="shrink-0 rounded-3xl border border-navy-lighter/60 bg-navy-light/40 p-6">
-          <h2 className="mb-3 text-center text-xs font-bold uppercase tracking-[0.3em] text-foreground/50">
-            Stilling totalt
-          </h2>
-          <div className="grid grid-cols-3 items-center gap-4">
-            <div className="flex items-center justify-end gap-4">
-              <div className="text-right">
-                <div className="text-base font-semibold uppercase tracking-wider text-gray-team-light">
-                  Gray (Joys)
-                </div>
-                <div className="font-display text-6xl font-bold text-gray-team-light drop-shadow">{fmt(gray)}</div>
+        <div className="mt-3 grid grid-cols-3 items-center gap-4">
+          <div className="flex items-center justify-end gap-4">
+            <div className="text-right">
+              <div className="text-base font-semibold uppercase tracking-wider text-gray-team-light">
+                Gray (Joys)
               </div>
-              <Image
-                src="/logos/gray.png"
-                alt=""
-                width={64}
-                height={64}
-                className="h-14 w-14 shrink-0 rounded-full object-cover"
-              />
+              <div className="font-display text-6xl font-bold text-gray-team-light drop-shadow">{fmt(gray)}</div>
             </div>
-            <div className="text-center text-3xl font-bold text-foreground/30">–</div>
-            <div className="flex items-center gap-4">
-              <Image
-                src="/logos/aquarellos.png"
-                alt=""
-                width={64}
-                height={64}
-                className="h-14 w-14 shrink-0 rounded-full object-cover"
-              />
-              <div>
-                <div className="text-base font-semibold uppercase tracking-wider text-aqua-team-light">
-                  Aquarellos
-                </div>
-                <div className="font-display text-6xl font-bold text-aqua-team-light drop-shadow">{fmt(aqua)}</div>
+            <Image
+              src="/logos/gray.png"
+              alt=""
+              width={64}
+              height={64}
+              className="h-14 w-14 shrink-0 rounded-full object-cover"
+            />
+          </div>
+          <div className="text-center text-3xl font-bold text-foreground/30">–</div>
+          <div className="flex items-center gap-4">
+            <Image
+              src="/logos/aquarellos.png"
+              alt=""
+              width={64}
+              height={64}
+              className="h-14 w-14 shrink-0 rounded-full object-cover"
+            />
+            <div>
+              <div className="text-base font-semibold uppercase tracking-wider text-aqua-team-light">
+                Aquarellos
               </div>
+              <div className="font-display text-6xl font-bold text-aqua-team-light drop-shadow">{fmt(aqua)}</div>
             </div>
           </div>
-          <ScoreBar
-            graySettled={settled.gray}
-            grayLive={grayLive}
-            aquaSettled={settled.aqua}
-            aquaLive={aquaLive}
-            possible={possible}
-            clinchGray={winner ? null : clinch.gray}
-            clinchAqua={winner ? null : clinch.aqua}
-            className="mt-4 w-full"
-          />
-        </section>
+        </div>
+        <ScoreBar
+          graySettled={settled.gray}
+          grayLive={grayLive}
+          aquaSettled={settled.aqua}
+          aquaLive={aquaLive}
+          possible={possible}
+          clinchGray={winner ? null : clinch.gray}
+          clinchAqua={winner ? null : clinch.aqua}
+          className="mt-3 w-full"
+        />
+      </header>
 
-        <div className="flex min-h-0 flex-1 gap-4">
+      <div className="flex min-h-0 flex-1">
+        <div className="flex min-h-0 min-w-0 flex-1 gap-4 p-6">
           <DayColumn title="I dag" day={todayDay} sessions={sessions} matches={matches} players={players} />
           <DayColumn title="I morgen" day={tomorrowDay} sessions={sessions} matches={matches} players={players} />
         </div>
-      </div>
 
-      <aside className="flex w-80 shrink-0 flex-col border-l border-navy-lighter/60 bg-navy-light/60 p-3">
-        <h2 className="mb-2 shrink-0 text-center text-sm font-bold uppercase tracking-[0.3em] text-gold">MVP</h2>
-        <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
-          {rankedPlayers.map(({ player, stat }, i) => (
-            <div
-              key={player.id}
-              className={`flex items-center gap-2 rounded-lg border-l-4 bg-navy-deep/60 px-2 py-0.5 ${
-                player.team_id === "gray" ? "border-l-gray-team" : "border-l-aqua-team"
-              }`}
-            >
-              <span className="w-5 shrink-0 text-xs font-bold text-foreground/40">{i + 1}</span>
-              <PlayerAvatar playerId={player.id} fallbackTeamId={player.team_id} size={24} className="h-6 w-6" alwaysOn />
-              <span className="min-w-0 flex-1 truncate text-sm font-semibold">
-                {player.name}
-                {player.is_captain && <span className="text-gold-deep"> (C)</span>}
-              </span>
-              <span
-                className={`w-12 shrink-0 text-right text-base font-bold tabular-nums ${
-                  stat.projectedExtra > 0 ? "italic text-foreground/60" : "text-gold"
-                }`}
-              >
-                {stat.projectedExtra > 0 && "≈"}
-                {(stat.pointsContributed + stat.projectedExtra).toFixed(1)}
-              </span>
-            </div>
-          ))}
-        </div>
-        <p className="mt-2 shrink-0 text-center text-[11px] text-foreground/30">
-          Oppdatert {clock.toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-        </p>
-      </aside>
+        <aside className="flex w-80 shrink-0 flex-col border-l border-card-border bg-card p-3">
+          <h2 className="mb-2 shrink-0 text-center text-sm font-bold uppercase tracking-[0.3em] text-gold-deep">
+            MVP
+          </h2>
+          <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
+            {rankedPlayers.map(({ player, stat }, i) => {
+              const isGray = player.team_id === "gray";
+              const borderClass = isGray ? "border-l-gray-team-deep" : "border-l-aqua-team";
+              const tintClass = isGray ? "bg-gray-team-bg/25" : "bg-aqua-team-bg/10";
+              return (
+                <div
+                  key={player.id}
+                  className={`flex items-center gap-2 rounded-lg border-l-4 px-2 py-0.5 ${borderClass} ${tintClass}`}
+                >
+                  <span className="w-5 shrink-0 text-xs font-bold text-ink-light/50">{i + 1}</span>
+                  <PlayerAvatar playerId={player.id} fallbackTeamId={player.team_id} size={24} className="h-6 w-6" alwaysOn />
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
+                    {player.name}
+                    {player.is_captain && <span className="text-gold-deep"> (C)</span>}
+                  </span>
+                  <span
+                    className={`w-12 shrink-0 text-right text-base font-bold tabular-nums ${
+                      stat.projectedExtra > 0 ? "italic text-ink-light" : "text-ink"
+                    }`}
+                  >
+                    {stat.projectedExtra > 0 && "≈"}
+                    {(stat.pointsContributed + stat.projectedExtra).toFixed(1)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <p className="mt-2 shrink-0 text-center text-[11px] text-ink-light/50">
+            Oppdatert {clock.toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+          </p>
+        </aside>
+      </div>
     </div>
   );
 }

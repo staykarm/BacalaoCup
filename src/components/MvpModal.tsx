@@ -28,7 +28,11 @@ function PlayerRow({
   onClick: () => void;
 }) {
   const team: TeamId = player.team_id;
-  const borderClass = team === "gray" ? "border-l-gray-team" : "border-l-aqua-team";
+  // A thin border alone reads too faint once real player photos replace the team-logo
+  // fallback (the usual, more obvious team cue) — a tinted row background makes the
+  // team unmistakable either way.
+  const borderClass = team === "gray" ? "border-l-gray-team-deep" : "border-l-aqua-team";
+  const tintClass = team === "gray" ? "bg-gray-team-bg/25" : "bg-aqua-team-bg/10";
 
   const historyText = history
     .map((h) => {
@@ -40,7 +44,7 @@ function PlayerRow({
   return (
     <button
       onClick={onClick}
-      className={`flex w-full items-center gap-1.5 border-b border-l-4 border-card-border bg-white px-2 py-1.5 text-left hover:bg-card-deep/50 ${borderClass}`}
+      className={`flex w-full items-center gap-1.5 border-b border-l-4 border-card-border px-2 py-1.5 text-left hover:brightness-95 ${borderClass} ${tintClass}`}
     >
       <span className="w-4 shrink-0 text-[10px] font-bold text-ink-light/50">{rank}</span>
       <PlayerAvatar playerId={player.id} fallbackTeamId={team} size={16} className="h-4 w-4" alwaysOn />

@@ -197,24 +197,20 @@ export default function TvScoreboardPage() {
               </span>
             </div>
             <div className="text-right">
-              <div className="rounded-2xl bg-gray-team-light px-5 py-1 font-display text-6xl font-bold text-ink">
+              {/* Projected total sits inline, right after the secure number, so the chip's
+                  own height never depends on whether there's a live match adding to it. */}
+              <div className="whitespace-nowrap rounded-2xl bg-gray-team-light px-5 py-1 font-display text-6xl font-bold text-ink">
                 {fmt(settled.gray)}
-              </div>
-              {/* Always rendered (just hidden when there's nothing to show) so the chip
-                  above sits at the same height whether or not this line is in use. */}
-              <div className={`mt-1 text-xs font-semibold italic text-gray-team-light ${grayLive > 0 ? "" : "invisible"}`}>
-                ({fmt(gray)})
+                {grayLive > 0 && <span className="ml-1 text-3xl text-ink/60">({fmt(gray)})</span>}
               </div>
             </div>
           </div>
           <div className="text-center text-2xl font-bold text-foreground/30">–</div>
           <div className="flex items-center gap-4">
             <div className="text-left">
-              <div className="rounded-2xl bg-aqua-team px-5 py-1 font-display text-6xl font-bold text-white">
+              <div className="whitespace-nowrap rounded-2xl bg-aqua-team px-5 py-1 font-display text-6xl font-bold text-white">
                 {fmt(settled.aqua)}
-              </div>
-              <div className={`mt-1 text-xs font-semibold italic text-aqua-team-light ${aquaLive > 0 ? "" : "invisible"}`}>
-                ({fmt(aqua)})
+                {aquaLive > 0 && <span className="ml-1 text-3xl text-white/70">({fmt(aqua)})</span>}
               </div>
             </div>
             <div className="flex items-center gap-2">

@@ -81,11 +81,13 @@ export function ScoreHeader({
               <div className="rounded-2xl bg-gray-team-light px-4 py-0.5 font-display text-4xl font-bold text-ink sm:px-5 sm:py-1 sm:text-6xl">
                 {fmt(settled.gray)}
               </div>
-              {grayLive > 0 && (
-                <div className="mt-1 whitespace-nowrap text-[10px] font-semibold italic text-gray-team-light/80 sm:text-xs">
-                  ≈{fmt(gray)} projisert
-                </div>
-              )}
+              {/* Always rendered (just hidden when there's nothing to show) so the chip
+                  above sits at the same height whether or not this line is in use. */}
+              <div
+                className={`mt-1 whitespace-nowrap text-[10px] font-semibold italic text-gray-team-light sm:text-xs ${grayLive > 0 ? "" : "invisible"}`}
+              >
+                ({fmt(gray)})
+              </div>
             </div>
           </button>
 
@@ -100,11 +102,11 @@ export function ScoreHeader({
               <div className="rounded-2xl bg-aqua-team px-4 py-0.5 font-display text-4xl font-bold text-white sm:px-5 sm:py-1 sm:text-6xl">
                 {fmt(settled.aqua)}
               </div>
-              {aquaLive > 0 && (
-                <div className="mt-1 whitespace-nowrap text-[10px] font-semibold italic text-aqua-team-light/80 sm:text-xs">
-                  ≈{fmt(aqua)} projisert
-                </div>
-              )}
+              <div
+                className={`mt-1 whitespace-nowrap text-[10px] font-semibold italic text-aqua-team-light sm:text-xs ${aquaLive > 0 ? "" : "invisible"}`}
+              >
+                ({fmt(aqua)})
+              </div>
             </div>
             <div className="flex min-w-0 items-center gap-1 sm:gap-2">
               <span className="truncate text-[9px] font-semibold uppercase tracking-wider text-aqua-team-light sm:text-sm">

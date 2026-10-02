@@ -203,9 +203,9 @@ export function MatchRow({
                     <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />
                     <span className="min-w-0 truncate">
                       {p.name}
-                      {/* Only before the match starts — once it's live or done, the scoring
-                          modal below is the place to see strokes received. */}
-                      {isNotStarted && grayStrokesReceived !== null && (
+                      {/* Shown until the match is settled — not started or live, same as the
+                          scoring modal below. Once a result's in, the badge disappears. */}
+                      {match.result === "not_played" && grayStrokesReceived !== null && (
                         <span className="normal-case text-gold-deep"> (+{grayStrokesReceived})</span>
                       )}
                     </span>
@@ -258,7 +258,7 @@ export function MatchRow({
                     )}
                     <span className="min-w-0 truncate">
                       {p.name}
-                      {isNotStarted && aquaStrokesReceived !== null && (
+                      {match.result === "not_played" && aquaStrokesReceived !== null && (
                         <span className="normal-case text-gold-deep"> (+{aquaStrokesReceived})</span>
                       )}
                     </span>

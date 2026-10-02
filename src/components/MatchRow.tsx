@@ -206,7 +206,7 @@ export function MatchRow({
                       {/* Shown until the match is settled — not started or live, same as the
                           scoring modal below. Once a result's in, the badge disappears. */}
                       {match.result === "not_played" && grayStrokesReceived !== null && (
-                        <span className="normal-case text-gold-deep"> (+{grayStrokesReceived})</span>
+                        <span className="normal-case text-gold-deep"> ({grayStrokesReceived})</span>
                       )}
                     </span>
                     {recordFor(p.id) && (
@@ -259,7 +259,7 @@ export function MatchRow({
                     <span className="min-w-0 truncate">
                       {p.name}
                       {match.result === "not_played" && aquaStrokesReceived !== null && (
-                        <span className="normal-case text-gold-deep"> (+{aquaStrokesReceived})</span>
+                        <span className="normal-case text-gold-deep"> ({aquaStrokesReceived})</span>
                       )}
                     </span>
                     <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />

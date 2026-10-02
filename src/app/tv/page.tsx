@@ -148,6 +148,9 @@ export default function TvScoreboardPage() {
   const isLive = hasLiveMatches(matches);
   const clinch = pointsToClinch(settled.gray, settled.aqua, settled.possible);
   const winner: TeamId | null = clinch.gray === 0 ? "gray" : clinch.aqua === 0 ? "aqua" : null;
+  // How much each team would still need if every live lead held — shown alongside the
+  // secure figure above, never in place of it (a live lead can still flip).
+  const clinchProjected = pointsToClinch(gray, aqua, possible);
 
   const playerStats = computePlayerStats(matches, players);
   const rankedPlayers = players
@@ -162,7 +165,7 @@ export default function TvScoreboardPage() {
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-background text-ink">
       {/* Same dark header treatment as the main app's sticky ScoreHeader, so the TV
           scoreboard reads as the same product — light content below a navy top bar. */}
-      <header className="shrink-0 border-b border-navy-lighter/60 bg-navy-deep px-6 py-3 text-center text-foreground">
+      <header className="shrink-0 border-b border-navy-lighter/60 bg-navy-light px-6 py-3 text-center text-foreground">
         <div className="flex items-center justify-center gap-2">
           <span className={`h-2 w-2 rounded-full ${isLive ? "animate-pulse bg-red-500" : "bg-gold"}`} />
           <p className="text-sm font-semibold uppercase tracking-[0.35em] text-gold">
@@ -180,35 +183,49 @@ export default function TvScoreboardPage() {
         )}
 
         <div className="mt-2 grid grid-cols-3 items-center gap-4">
-          <div className="flex items-center justify-end gap-3">
-            <div className="text-right">
-              <div className="text-sm font-semibold uppercase tracking-wider text-gray-team-light">
+          <div className="flex items-center justify-end gap-4">
+            <div className="flex items-center gap-2">
+              <Image
+                src="/logos/gray.png"
+                alt=""
+                width={48}
+                height={48}
+                className="h-9 w-9 shrink-0 rounded-full object-cover"
+              />
+              <span className="text-sm font-semibold uppercase tracking-wider text-gray-team-light">
                 Gray (Joys)
-              </div>
-              <div className="font-display text-5xl font-bold text-gray-team-light drop-shadow">{fmt(gray)}</div>
+              </span>
             </div>
-            <Image
-              src="/logos/gray.png"
-              alt=""
-              width={64}
-              height={64}
-              className="h-12 w-12 shrink-0 rounded-full object-cover"
-            />
+            <div className="text-right">
+              <div className="rounded-2xl bg-gray-team-light px-5 py-1 font-display text-6xl font-bold text-ink">
+                {fmt(settled.gray)}
+              </div>
+              {grayLive > 0 && (
+                <div className="mt-1 text-xs font-semibold italic text-gray-team-light/80">≈{fmt(gray)} projisert</div>
+              )}
+            </div>
           </div>
           <div className="text-center text-2xl font-bold text-foreground/30">–</div>
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logos/aquarellos.png"
-              alt=""
-              width={64}
-              height={64}
-              className="h-12 w-12 shrink-0 rounded-full object-cover"
-            />
-            <div>
-              <div className="text-sm font-semibold uppercase tracking-wider text-aqua-team-light">
-                Aquarellos
+          <div className="flex items-center gap-4">
+            <div className="text-left">
+              <div className="rounded-2xl bg-aqua-team px-5 py-1 font-display text-6xl font-bold text-white">
+                {fmt(settled.aqua)}
               </div>
-              <div className="font-display text-5xl font-bold text-aqua-team-light drop-shadow">{fmt(aqua)}</div>
+              {aquaLive > 0 && (
+                <div className="mt-1 text-xs font-semibold italic text-aqua-team-light/80">≈{fmt(aqua)} projisert</div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold uppercase tracking-wider text-aqua-team-light">
+                Aquarellos
+              </span>
+              <Image
+                src="/logos/aquarellos.png"
+                alt=""
+                width={48}
+                height={48}
+                className="h-9 w-9 shrink-0 rounded-full object-cover"
+              />
             </div>
           </div>
         </div>
@@ -220,6 +237,8 @@ export default function TvScoreboardPage() {
           possible={possible}
           clinchGray={winner ? null : clinch.gray}
           clinchAqua={winner ? null : clinch.aqua}
+          clinchGrayProjected={winner ? null : clinchProjected.gray}
+          clinchAquaProjected={winner ? null : clinchProjected.aqua}
           className="mt-2 w-full"
         />
       </header>

@@ -6,9 +6,12 @@ interface ScoreBarProps {
   grayLive: number;
   aquaLive: number;
   possible: number;
-  /** Points each team still needs (from officially finalized totals) to clinch outright. Null once someone has. */
+  /** Points each team still needs (from officially finalized totals only) to clinch outright. Null once someone has. */
   clinchGray: number | null;
   clinchAqua: number | null;
+  /** Points each team would still need if every live lead held — differs from clinchGray/Aqua only while matches are in progress. Null once someone has secured the cup. */
+  clinchGrayProjected: number | null;
+  clinchAquaProjected: number | null;
   className?: string;
 }
 
@@ -24,6 +27,8 @@ export function ScoreBar({
   possible,
   clinchGray,
   clinchAqua,
+  clinchGrayProjected,
+  clinchAquaProjected,
   className,
 }: ScoreBarProps) {
   const total = possible > 0 ? possible : 1;
@@ -44,8 +49,13 @@ export function ScoreBar({
     <div className={className}>
       <div className="flex items-center gap-2 sm:gap-3">
         {showLines && (
-          <span className="shrink-0 whitespace-nowrap text-xs font-bold text-gray-team-light sm:text-base">
-            Gray trenger {fmt(clinchGray as number)}p
+          <span className="shrink-0 whitespace-nowrap text-right text-xs font-bold text-gray-team-light sm:text-base">
+            Trenger {fmt(clinchGray as number)}p
+            {clinchGrayProjected !== null && clinchGrayProjected !== clinchGray && (
+              <span className="block text-[9px] font-semibold italic tracking-wide text-gray-team-light/60 sm:text-[11px]">
+                ≈{fmt(clinchGrayProjected)}p hvis ledelsen holder
+              </span>
+            )}
           </span>
         )}
 
@@ -82,15 +92,26 @@ export function ScoreBar({
 
         {showLines && (
           <span className="shrink-0 whitespace-nowrap text-xs font-bold text-aqua-team-light sm:text-base">
-            Aqua trenger {fmt(clinchAqua as number)}p
+            Trenger {fmt(clinchAqua as number)}p
+            {clinchAquaProjected !== null && clinchAquaProjected !== clinchAqua && (
+              <span className="block text-[9px] font-semibold italic tracking-wide text-aqua-team-light/60 sm:text-[11px]">
+                ≈{fmt(clinchAquaProjected)}p hvis ledelsen holder
+              </span>
+            )}
           </span>
         )}
       </div>
 
       <div className="mt-1 flex justify-between text-[10px] uppercase tracking-wider text-foreground/50">
-        <span>{fmt(graySettled + grayLive)} p</span>
+        <span>
+          {fmt(graySettled)}p sikre
+          {grayLive > 0 && <span className="italic"> &middot; ≈{fmt(graySettled + grayLive)}p</span>}
+        </span>
         <span>{fmt(possible)} p totalt</span>
-        <span>{fmt(aquaSettled + aquaLive)} p</span>
+        <span>
+          {aquaLive > 0 && <span className="italic">≈{fmt(aquaSettled + aquaLive)}p &middot; </span>}
+          {fmt(aquaSettled)}p sikre
+        </span>
       </div>
     </div>
   );

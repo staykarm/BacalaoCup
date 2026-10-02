@@ -110,6 +110,8 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
     setShowPlayerPhotos,
     tvOverrideDayId,
     setTvOverrideDayId,
+    tvOverrideDayId2,
+    setTvOverrideDayId2,
   } = useTournament();
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -268,22 +270,43 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
         <div id="section-tv" className="rounded-2xl border border-card-border bg-white p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">TV-visning</h3>
           <p className="mb-3 text-xs text-ink-light">
-            Styrer hvilken dag <code>/tv</code>-skjermen viser som «I dag» (og dagen etter som «I morgen»).
-            Automatisk følger datoen på enheten som viser skjermen — overstyr for å teste layout før
-            turneringen starter, eller for å holde en annen dag oppe på skjermen.
+            Styrer hvilke to dager <code>/tv</code>-skjermen viser, venstre og høyre kolonne uavhengig av
+            hverandre — f.eks. gårsdagens resultater til venstre og dagens kamper til høyre om morgenen.
+            Automatisk følger datoen på enheten som viser skjermen. Står kun venstre på en valgt dag,
+            følger høyre automatisk dagen etter den.
           </p>
-          <select
-            value={tvOverrideDayId ?? ""}
-            onChange={(e) => setTvOverrideDayId(e.target.value || null)}
-            className="w-full rounded-xl border border-card-border bg-card-deep px-3 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
-          >
-            <option value="">Automatisk (følg dagens dato)</option>
-            {playableDays.map((day) => (
-              <option key={day.id} value={day.id}>
-                {day.label}
-              </option>
-            ))}
-          </select>
+          <div className="space-y-2">
+            <label className="block text-xs text-ink-light">
+              Venstre kolonne
+              <select
+                value={tvOverrideDayId ?? ""}
+                onChange={(e) => setTvOverrideDayId(e.target.value || null)}
+                className="mt-1 w-full rounded-xl border border-card-border bg-card-deep px-3 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
+              >
+                <option value="">Automatisk (følg dagens dato)</option>
+                {playableDays.map((day) => (
+                  <option key={day.id} value={day.id}>
+                    {day.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs text-ink-light">
+              Høyre kolonne
+              <select
+                value={tvOverrideDayId2 ?? ""}
+                onChange={(e) => setTvOverrideDayId2(e.target.value || null)}
+                className="mt-1 w-full rounded-xl border border-card-border bg-card-deep px-3 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
+              >
+                <option value="">Automatisk (dagen etter venstre kolonne)</option>
+                {playableDays.map((day) => (
+                  <option key={day.id} value={day.id}>
+                    {day.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
 
         {scrambleSessions.length > 0 && (

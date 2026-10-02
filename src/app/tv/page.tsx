@@ -201,7 +201,7 @@ export default function TvScoreboardPage() {
                 {fmt(settled.gray)}
               </div>
               {grayLive > 0 && (
-                <div className="mt-1 text-xs font-semibold italic text-gray-team-light/80">≈{fmt(gray)} projisert</div>
+                <div className="mt-1 text-xs font-semibold italic text-gray-team-light/80">(≈{fmt(gray)})</div>
               )}
             </div>
           </div>
@@ -212,7 +212,7 @@ export default function TvScoreboardPage() {
                 {fmt(settled.aqua)}
               </div>
               {aquaLive > 0 && (
-                <div className="mt-1 text-xs font-semibold italic text-aqua-team-light/80">≈{fmt(aqua)} projisert</div>
+                <div className="mt-1 text-xs font-semibold italic text-aqua-team-light/80">(≈{fmt(aqua)})</div>
               )}
             </div>
             <div className="flex items-center gap-2">

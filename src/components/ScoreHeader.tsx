@@ -83,7 +83,7 @@ export function ScoreHeader({
               </div>
               {grayLive > 0 && (
                 <div className="mt-1 whitespace-nowrap text-[10px] font-semibold italic text-gray-team-light/80 sm:text-xs">
-                  ≈{fmt(gray)} projisert
+                  (≈{fmt(gray)})
                 </div>
               )}
             </div>
@@ -102,7 +102,7 @@ export function ScoreHeader({
               </div>
               {aquaLive > 0 && (
                 <div className="mt-1 whitespace-nowrap text-[10px] font-semibold italic text-aqua-team-light/80 sm:text-xs">
-                  ≈{fmt(aqua)} projisert
+                  (≈{fmt(aqua)})
                 </div>
               )}
             </div>

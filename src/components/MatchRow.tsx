@@ -126,11 +126,9 @@ export function MatchRow({
     ? (isLiveInProgress ? liveUpLabel(match.live_up) : null)
     : matchMarginLabel(match.live_up, match.live_thru);
 
-  // A halved match gets "A/S" beside both team names, same spot a win's margin goes beside the winner.
-  function sideBadgeText(team: TeamId) {
-    if (match.result === "halved") return "A/S";
-    return leadingSide === team ? marginBadgeText : null;
-  }
+  // Shown once, centered in the time/progress box — not beside a side's names, where it used
+  // to compete with player names and avatars for width and forced long names to truncate hard.
+  const resultBadgeText = match.result === "halved" ? "A/S" : leadingSide !== null ? marginBadgeText : null;
 
   // No leader to show — halved, not started, or currently tied mid-play — means flat team
   // colors would just look like a mistake, so both sides go plain white/black instead. Only
@@ -176,11 +174,6 @@ export function MatchRow({
 
       <div className="flex items-stretch overflow-hidden rounded-t-2xl">
         <div className={`flex min-w-0 flex-1 items-center gap-2 px-3 py-3 sm:px-4 sm:py-4 ${sideBg("gray")}`}>
-          {sideBadgeText("gray") && (
-            <span className="shrink-0 rounded-full bg-navy-deep/60 px-2 py-1 text-sm font-extrabold text-white shadow-sm sm:text-base">
-              {sideBadgeText("gray")}
-            </span>
-          )}
           <Image
             src="/logos/gray.png"
             alt=""
@@ -226,7 +219,12 @@ export function MatchRow({
           }`}
         >
           {match.result !== "not_played" || isLiveInProgress ? (
-            <span className="text-sm font-extrabold text-white sm:text-base">{match.live_thru}</span>
+            <>
+              <span className="text-sm font-extrabold text-white sm:text-base">{match.live_thru}</span>
+              {resultBadgeText && (
+                <span className="text-[10px] font-bold text-gold sm:text-xs">{resultBadgeText}</span>
+              )}
+            </>
           ) : (
             <span className="text-xs font-bold text-foreground sm:text-sm">{match.start_time ?? "--:--"}</span>
           )}
@@ -270,11 +268,6 @@ export function MatchRow({
             height={24}
             className="hidden h-5 w-5 shrink-0 rounded-full object-cover opacity-80 sm:block sm:h-6 sm:w-6"
           />
-          {sideBadgeText("aqua") && (
-            <span className="shrink-0 rounded-full bg-navy-deep/60 px-2 py-1 text-sm font-extrabold text-white shadow-sm sm:text-base">
-              {sideBadgeText("aqua")}
-            </span>
-          )}
         </div>
       </div>
 

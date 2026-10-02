@@ -201,7 +201,14 @@ export function MatchRow({
                     className={`flex w-full items-center gap-1 text-left text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("gray")}`}
                   >
                     <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />
-                    <span className="min-w-0 truncate">{p.name}</span>
+                    <span className="min-w-0 truncate">
+                      {p.name}
+                      {/* Only before the match starts — once it's live or done, the scoring
+                          modal below is the place to see strokes received. */}
+                      {isNotStarted && grayStrokesReceived !== null && (
+                        <span className="normal-case text-gold-deep"> (+{grayStrokesReceived})</span>
+                      )}
+                    </span>
                     {recordFor(p.id) && (
                       <span className="shrink-0 text-[9px] font-semibold normal-case tracking-normal opacity-60">
                         {recordFor(p.id)}
@@ -209,9 +216,6 @@ export function MatchRow({
                     )}
                   </button>
                 ))}
-                {grayStrokesReceived !== null && (
-                  <span className="text-[10px] font-semibold text-gold-deep">Mottar {grayStrokesReceived} slag</span>
-                )}
               </>
             ) : (
               <span className={`text-xs font-bold uppercase tracking-wide sm:text-sm ${sideText("gray")}`}>
@@ -252,13 +256,15 @@ export function MatchRow({
                         {recordFor(p.id)}
                       </span>
                     )}
-                    <span className="min-w-0 truncate">{p.name}</span>
+                    <span className="min-w-0 truncate">
+                      {p.name}
+                      {isNotStarted && aquaStrokesReceived !== null && (
+                        <span className="normal-case text-gold-deep"> (+{aquaStrokesReceived})</span>
+                      )}
+                    </span>
                     <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />
                   </button>
                 ))}
-                {aquaStrokesReceived !== null && (
-                  <span className="text-[10px] font-semibold text-gold-deep">Mottar {aquaStrokesReceived} slag</span>
-                )}
               </>
             ) : (
               <span className={`text-xs font-bold uppercase tracking-wide sm:text-sm ${sideText("aqua")}`}>
@@ -333,6 +339,13 @@ export function MatchRow({
               ) : (
                 <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-light">
                   Gray vs Aqua
+                </p>
+              )}
+              {(grayStrokesReceived !== null || aquaStrokesReceived !== null) && (
+                <p className="mb-2 text-xs font-semibold text-gold-deep">
+                  {grayStrokesReceived !== null
+                    ? `Gray mottar ${grayStrokesReceived} slag`
+                    : `Aqua mottar ${aquaStrokesReceived} slag`}
                 </p>
               )}
               <p className={`mt-1 font-display text-2xl font-bold ${match.result === "not_played" ? liveColorOnLight : "text-ink"}`}>

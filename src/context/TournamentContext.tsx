@@ -58,9 +58,16 @@ interface TournamentContextValue {
   /** Admin: show player portrait photos (MVP, scoring, HCP, main page, player detail) instead of team logos. */
   showPlayerPhotos: boolean;
   setShowPlayerPhotos: (show: boolean) => Promise<void>;
-  /** Admin: pin the /tv scoreboard to a specific day instead of the viewer's real calendar date. Null = automatic. */
+  /**
+   * Admin: pin the /tv scoreboard's left ("I dag") column to a specific day instead of the
+   * viewer's real calendar date. Null = automatic. Independent of tvOverrideDayId2, so the
+   * two columns don't have to be adjacent days (e.g. yesterday's results + today's matches).
+   */
   tvOverrideDayId: string | null;
   setTvOverrideDayId: (dayId: string | null) => Promise<void>;
+  /** Admin: pin the /tv scoreboard's right ("I morgen") column. Null = the day after tvOverrideDayId (or automatic, if that's also null). */
+  tvOverrideDayId2: string | null;
+  setTvOverrideDayId2: (dayId: string | null) => Promise<void>;
   /**
    * Registers (or clears, when both are null) one hole's result for a match-play
    * match or score for a scramble flight, then derives and writes back that
@@ -88,6 +95,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const [adminPin, setAdminPin] = useState<string>("2026");
   const [showPlayerPhotos, setShowPlayerPhotosState] = useState(false);
   const [tvOverrideDayId, setTvOverrideDayIdState] = useState<string | null>(null);
+  const [tvOverrideDayId2, setTvOverrideDayId2State] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -152,6 +160,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         setAdminPin(appSettingsRes.data?.admin_pin ?? "2026");
         setShowPlayerPhotosState(appSettingsRes.data?.show_player_photos ?? false);
         setTvOverrideDayIdState(appSettingsRes.data?.tv_override_day_id ?? null);
+        setTvOverrideDayId2State(appSettingsRes.data?.tv_override_day_id_2 ?? null);
         setLoading(false);
       } catch (err) {
         if (cancelled) return;
@@ -262,11 +271,13 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
             admin_pin: string;
             show_player_photos: boolean;
             tv_override_day_id: string | null;
+            tv_override_day_id_2: string | null;
           };
           setActiveSessionIds(next.active_session_ids ?? []);
           setAdminPin(next.admin_pin);
           setShowPlayerPhotosState(next.show_player_photos ?? false);
           setTvOverrideDayIdState(next.tv_override_day_id ?? null);
+          setTvOverrideDayId2State(next.tv_override_day_id_2 ?? null);
         }
       )
       .on(
@@ -401,6 +412,17 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const setTvOverrideDayId2 = useCallback(async (dayId: string | null) => {
+    setTvOverrideDayId2State(dayId);
+    const { error: updateError } = await supabase
+      .from("app_settings")
+      .update({ tv_override_day_id_2: dayId })
+      .eq("id", "singleton");
+    if (updateError) {
+      setSyncError(updateError.message);
+    }
+  }, []);
+
   const resetAllMatches = useCallback(async () => {
     const reset = {
       result: "not_played" as MatchResult,
@@ -499,6 +521,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       setShowPlayerPhotos,
       tvOverrideDayId,
       setTvOverrideDayId,
+      tvOverrideDayId2,
+      setTvOverrideDayId2,
       setMatchHole,
     }),
     [
@@ -528,6 +552,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       setShowPlayerPhotos,
       tvOverrideDayId,
       setTvOverrideDayId,
+      tvOverrideDayId2,
+      setTvOverrideDayId2,
       setMatchHole,
     ]
   );

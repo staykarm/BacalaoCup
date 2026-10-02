@@ -82,7 +82,7 @@ function DayColumn({
 const AUTO_RELOAD_MS = 2 * 60 * 60 * 1000;
 
 export default function TvScoreboardPage() {
-  const { players, days, sessions, matches, loading, error, tvOverrideDayId } = useTournament();
+  const { players, days, sessions, matches, loading, error, tvOverrideDayId, tvOverrideDayId2 } = useTournament();
 
   // Ticks every second purely so a frozen screen is visible at a glance — if the clock
   // stops moving, the page has stopped updating.
@@ -113,18 +113,26 @@ export default function TvScoreboardPage() {
     );
   }
 
-  // Admin override pins the scoreboard to a specific day (e.g. to test the layout before
-  // play starts, or to hold a day on screen past midnight) — otherwise it follows whatever
-  // date the screen itself thinks it is.
+  // Admin overrides pin each column to a specific day independently (e.g. to test the layout
+  // before play starts, or to show yesterday's results alongside today's matches during the
+  // morning before play resumes) — otherwise both columns follow whatever date the screen
+  // itself thinks it is.
   let todayDay: Day | undefined;
   let tomorrowDay: Day | undefined;
-  if (tvOverrideDayId) {
+  const isManualDaySelection = !!tvOverrideDayId || !!tvOverrideDayId2;
+  if (isManualDaySelection) {
     const playableDaysSorted = [...days]
       .filter((d) => sessions.some((s) => s.day_id === d.id))
       .sort((a, b) => a.sort_order - b.sort_order);
-    const idx = playableDaysSorted.findIndex((d) => d.id === tvOverrideDayId);
-    todayDay = idx >= 0 ? playableDaysSorted[idx] : undefined;
-    tomorrowDay = idx >= 0 ? playableDaysSorted[idx + 1] : undefined;
+    todayDay = tvOverrideDayId ? playableDaysSorted.find((d) => d.id === tvOverrideDayId) : undefined;
+    if (tvOverrideDayId2) {
+      tomorrowDay = playableDaysSorted.find((d) => d.id === tvOverrideDayId2);
+    } else if (todayDay) {
+      // Right column left on "Automatisk" falls back to the day after the left column's
+      // pin, matching the old single-override behavior.
+      const idx = playableDaysSorted.findIndex((d) => d.id === todayDay!.id);
+      tomorrowDay = playableDaysSorted[idx + 1];
+    }
   } else {
     const now = new Date();
     const tomorrowDate = new Date(now);
@@ -217,33 +225,47 @@ export default function TvScoreboardPage() {
 
       <div className="flex min-h-0 flex-1">
         <div className="flex min-h-0 min-w-0 flex-1 gap-4 p-4">
-          <DayColumn title="I dag" day={todayDay} sessions={sessions} matches={matches} players={players} />
-          <DayColumn title="I morgen" day={tomorrowDay} sessions={sessions} matches={matches} players={players} />
+          <DayColumn
+            title={isManualDaySelection ? "Dag 1" : "I dag"}
+            day={todayDay}
+            sessions={sessions}
+            matches={matches}
+            players={players}
+          />
+          <DayColumn
+            title={isManualDaySelection ? "Dag 2" : "I morgen"}
+            day={tomorrowDay}
+            sessions={sessions}
+            matches={matches}
+            players={players}
+          />
         </div>
 
         <aside className="flex w-80 shrink-0 flex-col border-l border-card-border bg-card p-3">
           <h2 className="mb-2 shrink-0 text-center text-sm font-bold uppercase tracking-[0.3em] text-gold-deep">
             MVP
           </h2>
-          <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
+          <div className="flex min-h-0 flex-1 flex-col justify-between gap-1 overflow-y-auto">
             {rankedPlayers.map(({ player, stat }, i) => {
               const isGray = player.team_id === "gray";
               const borderClass = isGray ? "border-l-gray-team-deep" : "border-l-aqua-team";
-              const tintClass = isGray ? "bg-gray-team-bg/25" : "bg-aqua-team-bg/10";
+              const tintClass = isGray ? "bg-gray-team-bg/25" : "bg-aqua-team-bg/35";
               return (
                 <div
                   key={player.id}
-                  className={`flex items-center gap-2 rounded-lg border-l-4 px-2 py-0.5 ${borderClass} ${tintClass}`}
+                  className={`flex items-center gap-2.5 rounded-lg border-l-4 px-2.5 py-2 ${borderClass} ${tintClass}`}
                 >
-                  <span className="w-5 shrink-0 text-xs font-bold text-ink-light/50">{i + 1}</span>
-                  <PlayerAvatar playerId={player.id} fallbackTeamId={player.team_id} size={24} className="h-6 w-6" alwaysOn />
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
+                  <span className="w-6 shrink-0 text-sm font-bold text-ink-light/50">{i + 1}</span>
+                  <PlayerAvatar playerId={player.id} fallbackTeamId={player.team_id} size={32} className="h-8 w-8" alwaysOn />
+                  <span className="min-w-0 flex-1 truncate text-base font-semibold text-ink">
                     {player.name}
                     {player.is_captain && <span className="text-gold-deep"> (C)</span>}
                   </span>
+                  {/* A dark pill (same treatment as a match's points badge) keeps the number
+                      readable regardless of how saturated the row's own team tint is. */}
                   <span
-                    className={`w-12 shrink-0 text-right text-base font-bold tabular-nums ${
-                      stat.projectedExtra > 0 ? "italic text-ink-light" : "text-ink"
+                    className={`shrink-0 rounded-full bg-navy-deep px-2.5 py-1 text-sm font-extrabold tabular-nums ${
+                      stat.projectedExtra > 0 ? "italic text-gold/70" : "text-gold"
                     }`}
                   >
                     {stat.projectedExtra > 0 && "≈"}

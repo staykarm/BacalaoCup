@@ -15,7 +15,6 @@ import {
   startingUpFor,
 } from "@/lib/scoring";
 import { getHoleInfo } from "@/lib/courseHoles";
-import { computePlayerStats } from "@/lib/stats";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { PlayerDetailModal } from "./PlayerDetailModal";
 import { ModalShell } from "./ModalShell";
@@ -62,18 +61,10 @@ export function MatchRow({
   session: Session;
   hideNames?: boolean;
 }) {
-  const { matchHoles, sessions, days, matches, activeSessionIds, setMatchHole } = useTournament();
+  const { matchHoles, sessions, days, activeSessionIds, setMatchHole } = useTournament();
   const [scoring, setScoring] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const isActiveSession = activeSessionIds.includes(session.id);
-
-  // Each player's win-halved-loss record across the whole tournament so far, shown
-  // next to their name/photo — recomputed here from all matches, not just this one.
-  const playerStats = computePlayerStats(matches, players);
-  function recordFor(playerId: string) {
-    const s = playerStats.find((s) => s.player.id === playerId);
-    return s && s.played > 0 ? `${s.wins}-${s.halved}-${s.losses}` : null;
-  }
 
   // Genuinely blank (not just anonymized) so this falls back to the same generic
   // team-name display already used when a match has no named players at all.
@@ -173,7 +164,7 @@ export function MatchRow({
       </div>
 
       <div className="flex items-stretch overflow-hidden rounded-t-2xl">
-        <div className={`flex min-w-0 flex-1 items-center gap-2 px-3 py-3 sm:px-4 sm:py-4 ${sideBg("gray")}`}>
+        <div className={`flex min-w-0 flex-1 items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 ${sideBg("gray")}`}>
           <Image
             src="/logos/gray.png"
             alt=""
@@ -188,15 +179,10 @@ export function MatchRow({
                   <button
                     key={p.id}
                     onClick={() => setSelectedPlayerId(p.id)}
-                    className={`flex w-full items-center gap-1 text-left text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("gray")}`}
+                    className={`flex w-full items-center gap-1 text-left text-[10px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-xs sm:tracking-wide ${sideText("gray")}`}
                   >
                     <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />
                     <span className="min-w-0 truncate">{p.name}</span>
-                    {recordFor(p.id) && (
-                      <span className="shrink-0 text-[9px] font-semibold normal-case tracking-normal opacity-60">
-                        {recordFor(p.id)}
-                      </span>
-                    )}
                   </button>
                 ))}
                 {grayStrokesReceived !== null && (
@@ -211,44 +197,25 @@ export function MatchRow({
           </div>
         </div>
 
-        <button
-          onClick={() => setScoring(true)}
-          aria-label="Oppdater stilling"
-          className={`flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 px-1 py-3 text-center transition hover:bg-navy-lighter sm:w-24 sm:py-4 ${
-            match.result !== "not_played" || isLiveInProgress ? "bg-black" : "bg-navy-deep"
-          }`}
-        >
-          {match.result !== "not_played" || isLiveInProgress ? (
-            <>
-              <span className="text-sm font-extrabold text-white sm:text-base">{match.live_thru}</span>
-              {resultBadgeText && (
-                <span className="text-[10px] font-bold text-gold sm:text-xs">{resultBadgeText}</span>
-              )}
-            </>
-          ) : (
-            <span className="text-xs font-bold text-foreground sm:text-sm">{match.start_time ?? "--:--"}</span>
-          )}
-        </button>
-
-        <div
-          className={`flex min-w-0 flex-1 items-center justify-end gap-2 px-3 py-3 text-right sm:px-4 sm:py-4 ${sideBg("aqua")}`}
-        >
-          <div className="flex min-w-0 flex-col items-end gap-0.5">
+        <div className={`flex min-w-0 flex-1 items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 ${sideBg("aqua")}`}>
+          <Image
+            src="/logos/aquarellos.png"
+            alt=""
+            width={24}
+            height={24}
+            className="hidden h-5 w-5 shrink-0 rounded-full object-cover opacity-80 sm:block sm:h-6 sm:w-6"
+          />
+          <div className="flex min-w-0 flex-col gap-0.5">
             {aquaPlayers.length > 0 ? (
               <>
                 {aquaPlayers.map((p) => (
                   <button
                     key={p.id}
                     onClick={() => setSelectedPlayerId(p.id)}
-                    className={`flex w-full items-center justify-end gap-1 text-right text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("aqua")}`}
+                    className={`flex w-full items-center gap-1 text-left text-[10px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-xs sm:tracking-wide ${sideText("aqua")}`}
                   >
-                    {recordFor(p.id) && (
-                      <span className="shrink-0 text-[9px] font-semibold normal-case tracking-normal opacity-60">
-                        {recordFor(p.id)}
-                      </span>
-                    )}
-                    <span className="min-w-0 truncate">{p.name}</span>
                     <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />
+                    <span className="min-w-0 truncate">{p.name}</span>
                   </button>
                 ))}
                 {aquaStrokesReceived !== null && (
@@ -261,14 +228,26 @@ export function MatchRow({
               </span>
             )}
           </div>
-          <Image
-            src="/logos/aquarellos.png"
-            alt=""
-            width={24}
-            height={24}
-            className="hidden h-5 w-5 shrink-0 rounded-full object-cover opacity-80 sm:block sm:h-6 sm:w-6"
-          />
         </div>
+
+        <button
+          onClick={() => setScoring(true)}
+          aria-label="Oppdater stilling"
+          className={`flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 px-1 py-2.5 text-center transition hover:bg-navy-lighter sm:w-20 sm:py-3 ${
+            match.result !== "not_played" || isLiveInProgress ? "bg-black" : "bg-navy-deep"
+          }`}
+        >
+          {match.result !== "not_played" || isLiveInProgress ? (
+            <>
+              <span className="text-xs font-extrabold text-white sm:text-sm">{match.live_thru}</span>
+              {resultBadgeText && (
+                <span className="text-[9px] font-bold text-gold sm:text-[11px]">{resultBadgeText}</span>
+              )}
+            </>
+          ) : (
+            <span className="text-[11px] font-bold text-foreground sm:text-xs">{match.start_time ?? "--:--"}</span>
+          )}
+        </button>
       </div>
 
       {match.note && (

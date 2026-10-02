@@ -53,11 +53,11 @@ type ModalKey =
 const NAV_ITEMS: { key: Exclude<ModalKey, null | "admin">; label: string; icon: string }[] = [
   { key: "mvp", label: "MVP", icon: "🏆" },
   { key: "agenda", label: "Agenda", icon: "📅" },
-  { key: "baneinfo", label: "Baneinfo", icon: "⛳" },
-  { key: "kart", label: "Kart", icon: "🗺️" },
-  { key: "restaurant", label: "Restaur.", icon: "🍽️" },
   { key: "competitions", label: "Konk.", icon: "🎯" },
   { key: "strokes", label: "HCP", icon: "🔢" },
+  { key: "baneinfo", label: "Baneinfo", icon: "⛳" },
+  { key: "restaurant", label: "Restaur.", icon: "🍽️" },
+  { key: "kart", label: "Kart", icon: "🗺️" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

@@ -62,7 +62,7 @@ export function ScoreHeader({
         <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
           <button
             onClick={() => onOpenTeam("gray")}
-            className="flex min-w-0 items-center justify-end gap-2 rounded-2xl px-2 py-1 transition hover:bg-white/5 sm:gap-4"
+            className="flex min-w-0 items-center justify-end gap-2 rounded-2xl bg-gray-team-light px-3 py-1 transition hover:brightness-95 sm:gap-4 sm:px-4 sm:py-1.5"
           >
             <div className="flex min-w-0 items-center gap-1 sm:gap-2">
               <Image
@@ -72,20 +72,18 @@ export function ScoreHeader({
                 height={32}
                 className="h-5 w-5 shrink-0 rounded-full object-cover sm:h-8 sm:w-8"
               />
-              <span className="truncate text-[9px] font-semibold uppercase tracking-wider text-gray-team-light sm:text-sm">
+              <span className="truncate text-[9px] font-semibold uppercase tracking-wider text-ink sm:text-sm">
                 Gray (Joys)
               </span>
             </div>
-            <div className="text-right">
-              {/* Black-on-gray, matching the team's own flat color swatch used everywhere else.
-                  Projected total sits inline, right after the secure number, so the chip's
-                  own height never depends on whether there's a live match adding to it. */}
-              <div className="whitespace-nowrap rounded-2xl bg-gray-team-light px-4 py-0.5 font-display text-4xl font-bold text-ink sm:px-5 sm:py-1 sm:text-6xl">
-                {fmt(settled.gray)}
-                {grayLive > 0 && (
-                  <span className="ml-1 text-xl text-ink/60 sm:text-3xl">({fmt(gray)})</span>
-                )}
-              </div>
+            {/* Black-on-gray, matching the team's own flat color swatch used everywhere else.
+                Projected total sits inline, right after the secure number, so the row's own
+                height never depends on whether there's a live match adding to it. */}
+            <div className="whitespace-nowrap text-right font-display text-4xl font-bold text-ink sm:text-6xl">
+              {fmt(settled.gray)}
+              {grayLive > 0 && (
+                <span className="ml-1 text-xl text-ink/60 sm:text-3xl">({fmt(gray)})</span>
+              )}
             </div>
           </button>
 
@@ -93,19 +91,17 @@ export function ScoreHeader({
 
           <button
             onClick={() => onOpenTeam("aqua")}
-            className="flex min-w-0 items-center justify-start gap-2 rounded-2xl px-2 py-1 transition hover:bg-white/5 sm:gap-4"
+            className="flex min-w-0 items-center justify-start gap-2 rounded-2xl bg-aqua-team px-3 py-1 transition hover:brightness-110 sm:gap-4 sm:px-4 sm:py-1.5"
           >
-            <div className="text-left">
-              {/* White-on-blue, matching the team's own flat color swatch used everywhere else. */}
-              <div className="whitespace-nowrap rounded-2xl bg-aqua-team px-4 py-0.5 font-display text-4xl font-bold text-white sm:px-5 sm:py-1 sm:text-6xl">
-                {fmt(settled.aqua)}
-                {aquaLive > 0 && (
-                  <span className="ml-1 text-xl text-white/70 sm:text-3xl">({fmt(aqua)})</span>
-                )}
-              </div>
+            {/* White-on-blue, matching the team's own flat color swatch used everywhere else. */}
+            <div className="whitespace-nowrap text-left font-display text-4xl font-bold text-white sm:text-6xl">
+              {fmt(settled.aqua)}
+              {aquaLive > 0 && (
+                <span className="ml-1 text-xl text-white/70 sm:text-3xl">({fmt(aqua)})</span>
+              )}
             </div>
             <div className="flex min-w-0 items-center gap-1 sm:gap-2">
-              <span className="truncate text-[9px] font-semibold uppercase tracking-wider text-aqua-team-light sm:text-sm">
+              <span className="truncate text-[9px] font-semibold uppercase tracking-wider text-white sm:text-sm">
                 Aquarellos
               </span>
               <Image

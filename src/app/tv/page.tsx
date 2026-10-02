@@ -183,7 +183,7 @@ export default function TvScoreboardPage() {
         )}
 
         <div className="mt-2 grid grid-cols-3 items-center gap-4">
-          <div className="flex items-center justify-end gap-4">
+          <div className="flex items-center justify-end gap-4 rounded-2xl bg-gray-team-light px-5 py-1.5">
             <div className="flex items-center gap-2">
               <Image
                 src="/logos/gray.png"
@@ -192,29 +192,25 @@ export default function TvScoreboardPage() {
                 height={48}
                 className="h-9 w-9 shrink-0 rounded-full object-cover"
               />
-              <span className="text-sm font-semibold uppercase tracking-wider text-gray-team-light">
+              <span className="text-sm font-semibold uppercase tracking-wider text-ink">
                 Gray (Joys)
               </span>
             </div>
-            <div className="text-right">
-              {/* Projected total sits inline, right after the secure number, so the chip's
-                  own height never depends on whether there's a live match adding to it. */}
-              <div className="whitespace-nowrap rounded-2xl bg-gray-team-light px-5 py-1 font-display text-6xl font-bold text-ink">
-                {fmt(settled.gray)}
-                {grayLive > 0 && <span className="ml-1 text-3xl text-ink/60">({fmt(gray)})</span>}
-              </div>
+            {/* Projected total sits inline, right after the secure number, so the row's own
+                height never depends on whether there's a live match adding to it. */}
+            <div className="whitespace-nowrap text-right font-display text-6xl font-bold text-ink">
+              {fmt(settled.gray)}
+              {grayLive > 0 && <span className="ml-1 text-3xl text-ink/60">({fmt(gray)})</span>}
             </div>
           </div>
           <div className="text-center text-2xl font-bold text-foreground/30">–</div>
-          <div className="flex items-center gap-4">
-            <div className="text-left">
-              <div className="whitespace-nowrap rounded-2xl bg-aqua-team px-5 py-1 font-display text-6xl font-bold text-white">
-                {fmt(settled.aqua)}
-                {aquaLive > 0 && <span className="ml-1 text-3xl text-white/70">({fmt(aqua)})</span>}
-              </div>
+          <div className="flex items-center gap-4 rounded-2xl bg-aqua-team px-5 py-1.5">
+            <div className="whitespace-nowrap text-left font-display text-6xl font-bold text-white">
+              {fmt(settled.aqua)}
+              {aquaLive > 0 && <span className="ml-1 text-3xl text-white/70">({fmt(aqua)})</span>}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold uppercase tracking-wider text-aqua-team-light">
+              <span className="text-sm font-semibold uppercase tracking-wider text-white">
                 Aquarellos
               </span>
               <Image

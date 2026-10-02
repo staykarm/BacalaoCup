@@ -51,6 +51,18 @@ function pairHandicap(id1: string | null, id2: string | null, players: Player[])
   return greensomeTeamHandicap(hcp1, hcp2);
 }
 
+/**
+ * A side's playing handicap for the strokes-received comparison: a pair's combined
+ * Greensome-style handicap when both slots are filled (fourball/greensome), or the
+ * lone player's own handicap in a 1-vs-1 singles match. Null for an uneven side
+ * (2 vs 1) — that imbalance is already compensated by the head-start hole instead.
+ */
+function sideHandicap(id1: string | null, id2: string | null, players: Player[]): number | null {
+  if (id1 && id2) return pairHandicap(id1, id2, players);
+  if (id1 && !id2) return players.find((p) => p.id === id1)?.hcp ?? null;
+  return null;
+}
+
 export function MatchRow({
   match,
   players,
@@ -88,15 +100,16 @@ export function MatchRow({
   // An uneven side (2 players vs 1) gets a 1-hole head start — shown as a fixed "Hull 0".
   const headStart = startingUpFor(match);
 
-  // Greensome strokes received: only meaningful with a full pair on both sides, and only
-  // ever shown alongside real names (see grayPlayers/aquaPlayers above) — so this stays
-  // invisible on a hide_names day exactly like the pairings it would otherwise reveal.
-  const grayPairHcp = session.format === "greensome" ? pairHandicap(match.gray_player1, match.gray_player2, players) : null;
-  const aquaPairHcp = session.format === "greensome" ? pairHandicap(match.aqua_player1, match.aqua_player2, players) : null;
-  const pairStrokeDiff =
-    grayPairHcp !== null && aquaPairHcp !== null ? Math.round(grayPairHcp) - Math.round(aquaPairHcp) : null;
-  const grayStrokesReceived = pairStrokeDiff !== null && pairStrokeDiff > 0 ? pairStrokeDiff : null;
-  const aquaStrokesReceived = pairStrokeDiff !== null && pairStrokeDiff < 0 ? -pairStrokeDiff : null;
+  // Strokes received: shown for any side-vs-side match (greensome/fourball pairs or a
+  // singles 1v1), and only ever alongside real names (see grayPlayers/aquaPlayers above)
+  // — so this stays invisible on a hide_names day exactly like the pairings it would
+  // otherwise reveal.
+  const graySideHcp = sideHandicap(match.gray_player1, match.gray_player2, players);
+  const aquaSideHcp = sideHandicap(match.aqua_player1, match.aqua_player2, players);
+  const sideStrokeDiff =
+    graySideHcp !== null && aquaSideHcp !== null ? Math.round(graySideHcp) - Math.round(aquaSideHcp) : null;
+  const grayStrokesReceived = sideStrokeDiff !== null && sideStrokeDiff > 0 ? sideStrokeDiff : null;
+  const aquaStrokesReceived = sideStrokeDiff !== null && sideStrokeDiff < 0 ? -sideStrokeDiff : null;
 
   const liveLeaderTeam = liveLeader(match.live_up);
   // Same live-leader color, but for use on the near-white editing panel below the result box.

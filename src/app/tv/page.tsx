@@ -183,45 +183,49 @@ export default function TvScoreboardPage() {
         )}
 
         <div className="mt-2 grid grid-cols-3 items-center gap-4">
-          <div className="flex items-center justify-end gap-3">
-            <div className="text-right">
-              <div className="text-sm font-semibold uppercase tracking-wider text-gray-team-light">
+          <div className="flex items-center justify-end gap-4">
+            <div className="flex items-center gap-2">
+              <Image
+                src="/logos/gray.png"
+                alt=""
+                width={48}
+                height={48}
+                className="h-9 w-9 shrink-0 rounded-full object-cover"
+              />
+              <span className="text-sm font-semibold uppercase tracking-wider text-gray-team-light">
                 Gray (Joys)
-              </div>
-              <div className="font-display text-5xl font-bold text-gray-team-light drop-shadow">
+              </span>
+            </div>
+            <div className="text-right">
+              <div className="font-display text-6xl font-bold text-gray-team-light drop-shadow">
                 {fmt(settled.gray)}
               </div>
               {grayLive > 0 && (
                 <div className="text-xs font-semibold italic text-gray-team-light/60">≈{fmt(gray)} projisert</div>
               )}
             </div>
-            <Image
-              src="/logos/gray.png"
-              alt=""
-              width={64}
-              height={64}
-              className="h-12 w-12 shrink-0 rounded-full object-cover"
-            />
           </div>
           <div className="text-center text-2xl font-bold text-foreground/30">–</div>
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logos/aquarellos.png"
-              alt=""
-              width={64}
-              height={64}
-              className="h-12 w-12 shrink-0 rounded-full object-cover"
-            />
-            <div>
-              <div className="text-sm font-semibold uppercase tracking-wider text-aqua-team-light">
-                Aquarellos
-              </div>
-              <div className="font-display text-5xl font-bold text-aqua-team-light drop-shadow">
+          <div className="flex items-center gap-4">
+            <div className="text-left">
+              <div className="font-display text-6xl font-bold text-aqua-team-light drop-shadow">
                 {fmt(settled.aqua)}
               </div>
               {aquaLive > 0 && (
                 <div className="text-xs font-semibold italic text-aqua-team-light/60">≈{fmt(aqua)} projisert</div>
               )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold uppercase tracking-wider text-aqua-team-light">
+                Aquarellos
+              </span>
+              <Image
+                src="/logos/aquarellos.png"
+                alt=""
+                width={48}
+                height={48}
+                className="h-9 w-9 shrink-0 rounded-full object-cover"
+              />
             </div>
           </div>
         </div>

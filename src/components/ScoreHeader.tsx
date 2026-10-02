@@ -59,58 +59,62 @@ export function ScoreHeader({
           </p>
         )}
 
-        <div className="mt-2 grid grid-cols-3 items-center gap-2">
+        <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
           <button
             onClick={() => onOpenTeam("gray")}
-            className="flex items-center justify-end gap-2 rounded-2xl px-2 py-1 transition hover:bg-white/5 sm:gap-3"
+            className="flex min-w-0 items-center justify-end gap-2 rounded-2xl px-2 py-1 transition hover:bg-white/5 sm:gap-4"
           >
-            <div className="text-right">
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-team-light sm:text-sm">
+            <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+              <Image
+                src="/logos/gray.png"
+                alt="Gray (Joys)"
+                width={32}
+                height={32}
+                className="h-5 w-5 shrink-0 rounded-full object-cover sm:h-8 sm:w-8"
+              />
+              <span className="truncate text-[9px] font-semibold uppercase tracking-wider text-gray-team-light sm:text-sm">
                 Gray (Joys)
-              </div>
-              <div className="font-display text-3xl font-bold text-gray-team-light drop-shadow sm:text-5xl">
+              </span>
+            </div>
+            <div className="text-right">
+              <div className="font-display text-4xl font-bold text-gray-team-light drop-shadow sm:text-6xl">
                 {fmt(settled.gray)}
               </div>
               {grayLive > 0 && (
-                <div className="text-[10px] font-semibold italic text-gray-team-light/60 sm:text-xs">
+                <div className="whitespace-nowrap text-[10px] font-semibold italic text-gray-team-light/60 sm:text-xs">
                   ≈{fmt(gray)} projisert
                 </div>
               )}
             </div>
-            <Image
-              src="/logos/gray.png"
-              alt="Gray (Joys)"
-              width={40}
-              height={40}
-              className="h-8 w-8 shrink-0 rounded-full object-cover sm:h-11 sm:w-11"
-            />
           </button>
 
           <div className="text-center text-lg font-bold text-foreground/40 sm:text-2xl">–</div>
 
           <button
             onClick={() => onOpenTeam("aqua")}
-            className="flex items-center justify-start gap-2 rounded-2xl px-2 py-1 transition hover:bg-white/5 sm:gap-3"
+            className="flex min-w-0 items-center justify-start gap-2 rounded-2xl px-2 py-1 transition hover:bg-white/5 sm:gap-4"
           >
-            <Image
-              src="/logos/aquarellos.png"
-              alt="Aquarellos"
-              width={40}
-              height={40}
-              className="h-8 w-8 shrink-0 rounded-full object-cover sm:h-11 sm:w-11"
-            />
             <div className="text-left">
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-aqua-team-light sm:text-sm">
-                Aquarellos
-              </div>
-              <div className="font-display text-3xl font-bold text-aqua-team-light drop-shadow sm:text-5xl">
+              <div className="font-display text-4xl font-bold text-aqua-team-light drop-shadow sm:text-6xl">
                 {fmt(settled.aqua)}
               </div>
               {aquaLive > 0 && (
-                <div className="text-[10px] font-semibold italic text-aqua-team-light/60 sm:text-xs">
+                <div className="whitespace-nowrap text-[10px] font-semibold italic text-aqua-team-light/60 sm:text-xs">
                   ≈{fmt(aqua)} projisert
                 </div>
               )}
+            </div>
+            <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+              <span className="truncate text-[9px] font-semibold uppercase tracking-wider text-aqua-team-light sm:text-sm">
+                Aquarellos
+              </span>
+              <Image
+                src="/logos/aquarellos.png"
+                alt="Aquarellos"
+                width={32}
+                height={32}
+                className="h-5 w-5 shrink-0 rounded-full object-cover sm:h-8 sm:w-8"
+              />
             </div>
           </button>
         </div>

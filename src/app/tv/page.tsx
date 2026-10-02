@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -160,8 +161,25 @@ function DayColumn({
   );
 }
 
+// How often the unattended TV screen reloads itself, so a frozen tab or a dropped
+// connection doesn't sit stale for the rest of the day with nobody there to refresh it.
+const AUTO_RELOAD_MS = 2 * 60 * 60 * 1000;
+
 export default function TvScoreboardPage() {
   const { players, days, sessions, matches, loading, error, tvOverrideDayId } = useTournament();
+
+  // Ticks every second purely so a frozen screen is visible at a glance — if the clock
+  // stops moving, the page has stopped updating.
+  const [clock, setClock] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setClock(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const id = setTimeout(() => window.location.reload(), AUTO_RELOAD_MS);
+    return () => clearTimeout(id);
+  }, []);
 
   if (loading) {
     return (
@@ -307,13 +325,16 @@ export default function TvScoreboardPage() {
                 {player.name}
                 {player.is_captain && <span className="text-gold-deep"> (C)</span>}
               </span>
-              <span className="shrink-0 text-base font-bold text-gold">
+              <span className={`shrink-0 text-base font-bold ${stat.projectedExtra > 0 ? "italic text-red-400" : "text-gold"}`}>
                 {stat.projectedExtra > 0 && "≈"}
                 {fmt(stat.pointsContributed + stat.projectedExtra)}
               </span>
             </div>
           ))}
         </div>
+        <p className="mt-2 shrink-0 text-center text-[11px] text-foreground/30">
+          Oppdatert {clock.toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+        </p>
       </aside>
     </div>
   );

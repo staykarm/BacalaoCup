@@ -58,7 +58,12 @@ function PlayerRow({
       <span className="shrink-0 text-[11px] text-ink-light">
         {stat.wins}-{stat.halved}-{stat.losses}
       </span>
-      <span className="w-11 shrink-0 text-right text-sm font-bold text-ink">
+      <span
+        className={`w-11 shrink-0 text-right text-sm font-bold ${
+          stat.projectedExtra > 0 ? "italic text-red-500" : "text-ink"
+        }`}
+        title={stat.projectedExtra > 0 ? "Inkluderer anslått poeng fra kamp som pågår" : undefined}
+      >
         {stat.projectedExtra > 0 && "≈"}
         {fmt(stat.pointsContributed + stat.projectedExtra)}p
       </span>

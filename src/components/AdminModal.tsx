@@ -160,12 +160,34 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
     updateMatch(match.id, { flight_players: next });
   }
 
+  const jumpLinks = [
+    { id: "section-rounds", label: "Runder" },
+    { id: "section-tv", label: "TV" },
+    ...(scrambleSessions.length > 0 ? [{ id: "section-scramble-hcp", label: "Scramble-HCP" }] : []),
+    { id: "section-photos", label: "Bilder" },
+    { id: "section-hide-names", label: "Navn" },
+    ...(playableDays.some((d) => d.course && COMPETITIONS[d.course]) ? [{ id: "section-competitions", label: "Konkurranser" }] : []),
+    { id: "section-reset", label: "Nullstill" },
+  ];
+
   return (
     <ModalShell title="Admin" onClose={onClose}>
       <div className="space-y-4">
-        <p className="text-xs text-ink-light">
-          Midlertidig admin-panel, låst med PIN-kode mens vi tester appen.
-        </p>
+        <p className="text-xs text-ink-light">Adminpanel, låst med PIN-kode.</p>
+
+        <div className="sticky -top-5 z-10 -mx-5 bg-card px-5 pb-2 pt-5 sm:-mx-6 sm:px-6">
+          <div className="flex gap-1.5 overflow-x-auto text-xs">
+            {jumpLinks.map((l) => (
+              <a
+                key={l.id}
+                href={`#${l.id}`}
+                className="shrink-0 whitespace-nowrap rounded-full border border-card-border bg-card-deep px-2.5 py-1 font-semibold text-ink-light hover:border-gold-deep/40 hover:text-ink"
+              >
+                {l.label}
+              </a>
+            ))}
+          </div>
+        </div>
 
         <div className="rounded-2xl border border-card-border bg-white p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">PIN-kode</h3>
@@ -209,7 +231,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
           {exportError && <p className="mt-2 text-xs text-red-700">Klarte ikke å lage filen. Prøv igjen.</p>}
         </div>
 
-        <div className="rounded-2xl border border-card-border bg-white p-4">
+        <div id="section-rounds" className="rounded-2xl border border-card-border bg-white p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Aktive runder</h3>
           <p className="mb-3 text-xs text-ink-light">
             Valgte runder merkes med «- pågår» i oversikten. Flere runder kan være aktive samtidig — for eksempel
@@ -243,7 +265,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-card-border bg-white p-4">
+        <div id="section-tv" className="rounded-2xl border border-card-border bg-white p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">TV-visning</h3>
           <p className="mb-3 text-xs text-ink-light">
             Styrer hvilken dag <code>/tv</code>-skjermen viser som «I dag» (og dagen etter som «I morgen»).
@@ -265,7 +287,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
         </div>
 
         {scrambleSessions.length > 0 && (
-          <div className="rounded-2xl border border-card-border bg-white p-4">
+          <div id="section-scramble-hcp" className="rounded-2xl border border-card-border bg-white p-4">
             <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Scramble-handicap</h3>
             <p className="mb-3 text-xs text-ink-light">
               Trekkes fra lagets sammenlagte score-vs-par før poengene avgjøres.
@@ -338,7 +360,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        <div className="rounded-2xl border border-card-border bg-white p-4">
+        <div id="section-photos" className="rounded-2xl border border-card-border bg-white p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Spillerbilder</h3>
           <p className="mb-3 text-xs text-ink-light">
             Viser portrettbilde av hver spiller (i stedet for lag-logo) på forsiden, ved siden av navnet i
@@ -356,7 +378,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
           </label>
         </div>
 
-        <div className="rounded-2xl border border-card-border bg-white p-4">
+        <div id="section-hide-names" className="rounded-2xl border border-card-border bg-white p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Skjul spillernavn</h3>
           <p className="mb-3 text-xs text-ink-light">
             Skjuler navnene på kampene den dagen — alt annet (registrering, poeng) fungerer som normalt.
@@ -377,7 +399,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
         </div>
 
         {playableDays.some((d) => d.course && COMPETITIONS[d.course]) && (
-          <div className="rounded-2xl border border-card-border bg-white p-4">
+          <div id="section-competitions" className="rounded-2xl border border-card-border bg-white p-4">
             <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink">Konkurranse-vinnere</h3>
             <p className="mb-3 text-xs text-ink-light">
               Hvem vant Longest Drive og Closest to Pin hver dag. Vises i Konkurranser-oversikten.
@@ -408,7 +430,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        <div className="rounded-2xl border border-red-300 bg-red-50 p-4">
+        <div id="section-reset" className="rounded-2xl border border-red-300 bg-red-50 p-4">
           <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-red-700">Nullstill resultater</h3>
           <p className="mb-3 text-xs text-ink-light">
             Setter alle kamper tilbake til «Ikke spilt» og nullstiller live-stilling, hull og poeng. Kan ikke

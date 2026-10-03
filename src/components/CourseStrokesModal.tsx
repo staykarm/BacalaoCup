@@ -96,10 +96,6 @@ export function CourseStrokesModal({ onClose }: { onClose: () => void }) {
   return (
     <ModalShell title="HCP og mottatte slag" onClose={onClose}>
       <div className="space-y-4">
-        <p className="text-xs text-ink-light">
-          Mottatte slag per bane, basert på spillerens handicap. Los Lagos har CR-verdi 72,6 (over par), så
-          enkelte spillere får ett slag ekstra der.
-        </p>
         <TeamTable team="gray" players={players} courses={courses} onSelectPlayer={openPlayer} />
         <TeamTable team="aqua" players={players} courses={courses} onSelectPlayer={openPlayer} />
       </div>

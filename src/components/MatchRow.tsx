@@ -54,12 +54,17 @@ function pairHandicap(id1: string | null, id2: string | null, players: Player[])
 /**
  * A side's playing handicap for the strokes-received comparison: a pair's combined
  * Greensome-style handicap when both slots are filled (fourball/greensome), or the
- * lone player's own handicap in a 1-vs-1 singles match. Null for an uneven side
- * (2 vs 1) — that imbalance is already compensated by the head-start hole instead.
+ * lone player's own received strokes for this course in a 1-vs-1 singles match (not
+ * their raw hcp index — course_strokes is what's actually comparable hole-for-hole
+ * between the two opponents). Null for an uneven side (2 vs 1) — that imbalance is
+ * already compensated by the head-start hole instead.
  */
-function sideHandicap(id1: string | null, id2: string | null, players: Player[]): number | null {
+function sideHandicap(id1: string | null, id2: string | null, players: Player[], course: string | null): number | null {
   if (id1 && id2) return pairHandicap(id1, id2, players);
-  if (id1 && !id2) return players.find((p) => p.id === id1)?.hcp ?? null;
+  if (id1 && !id2) {
+    const player = players.find((p) => p.id === id1);
+    return course && player?.course_strokes[course] !== undefined ? player.course_strokes[course] : null;
+  }
   return null;
 }
 
@@ -107,8 +112,8 @@ export function MatchRow({
   // so it skips this pair figure entirely in favor of each player's own course handicap
   // (see playerCourseStrokes below).
   const isFourball = session.format === "fourball";
-  const graySideHcp = isFourball ? null : sideHandicap(match.gray_player1, match.gray_player2, players);
-  const aquaSideHcp = isFourball ? null : sideHandicap(match.aqua_player1, match.aqua_player2, players);
+  const graySideHcp = isFourball ? null : sideHandicap(match.gray_player1, match.gray_player2, players, course);
+  const aquaSideHcp = isFourball ? null : sideHandicap(match.aqua_player1, match.aqua_player2, players, course);
   const sideStrokeDiff =
     graySideHcp !== null && aquaSideHcp !== null ? Math.round(graySideHcp) - Math.round(aquaSideHcp) : null;
   const grayStrokesReceived = sideStrokeDiff !== null && sideStrokeDiff > 0 ? sideStrokeDiff : null;

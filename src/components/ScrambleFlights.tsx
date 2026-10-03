@@ -7,6 +7,7 @@ import { courseHoleNumber, HOLES_PER_MATCH, isFrontNine, scrambleProjectedResult
 import { getHoleInfo } from "@/lib/courseHoles";
 import { Match, Player, Session, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
+import { PlayerDetailModal } from "./PlayerDetailModal";
 
 function fmtVsPar(n: number | null) {
   if (n === null) return "–";
@@ -57,27 +58,26 @@ function FlightRow({
   players,
   hideNames,
   onClick,
+  onSelectPlayer,
 }: {
   flight: Match;
   players: Player[];
   hideNames: boolean;
   onClick: () => void;
+  onSelectPlayer: (playerId: string) => void;
 }) {
   const team = flight.flight_team as TeamId;
   // Same flat team fills MatchRow uses for its "not yet decided" state, so a scramble
   // flight reads as clearly gray/blue as any other day's match card.
   const bg = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-flat";
   const text = team === "gray" ? "text-ink" : "text-white";
-  const names = hideNames
+  const flightPlayers = hideNames
     ? []
-    : flight.flight_players.map((id) => players.find((p) => p.id === id)?.name ?? id);
+    : flight.flight_players.map((id) => ({ id, name: players.find((p) => p.id === id)?.name ?? id }));
   const started = flight.live_thru !== null;
 
   return (
-    <button
-      onClick={onClick}
-      className="flex w-full items-stretch overflow-hidden rounded-2xl border-2 border-card-border bg-card text-left shadow-sm transition hover:border-gold-deep/40"
-    >
+    <div className="flex w-full items-stretch overflow-hidden rounded-2xl border-2 border-card-border bg-card shadow-sm transition hover:border-gold-deep/40">
       <div className={`flex min-w-0 flex-1 items-center gap-2 px-3 py-3 sm:px-4 sm:py-4 ${bg}`}>
         <Image
           src={team === "gray" ? "/logos/gray.png" : "/logos/aquarellos.png"}
@@ -86,17 +86,28 @@ function FlightRow({
           height={24}
           className="h-5 w-5 shrink-0 rounded-full object-cover opacity-80 sm:h-6 sm:w-6"
         />
-        <div
-          className={`truncate text-[11px] font-bold uppercase leading-tight tracking-normal sm:text-sm sm:tracking-wide ${text}`}
-        >
-          {names.length > 0 ? names.join(" / ") : team === "gray" ? "Gray (Joys)" : "Aquarellos"}
+        <div className="min-w-0 flex-1 truncate text-[11px] font-bold uppercase leading-tight tracking-normal sm:text-sm sm:tracking-wide">
+          {flightPlayers.length > 0 ? (
+            flightPlayers.map((p, i) => (
+              <span key={p.id}>
+                {i > 0 && " / "}
+                <button onClick={() => onSelectPlayer(p.id)} className={`hover:underline ${text}`}>
+                  {p.name}
+                </button>
+              </span>
+            ))
+          ) : (
+            <span className={text}>{team === "gray" ? "Gray (Joys)" : "Aquarellos"}</span>
+          )}
         </div>
       </div>
 
       {/* Same dark time/hole box as a regular match-play card: tee time until the flight
           tees off, then the hole it's reached once a score starts coming in. */}
-      <div
-        className={`flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 px-1 py-3 text-center sm:w-24 sm:py-4 ${
+      <button
+        onClick={onClick}
+        aria-label="Oppdater scramble-score"
+        className={`flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 px-1 py-3 text-center transition hover:brightness-110 sm:w-24 sm:py-4 ${
           started ? "bg-black" : "bg-navy-deep"
         }`}
       >
@@ -105,7 +116,7 @@ function FlightRow({
         ) : (
           <span className="text-xs font-bold text-foreground sm:text-sm">{flight.start_time ?? "--:--"}</span>
         )}
-      </div>
+      </button>
 
       <div className="flex shrink-0 items-center justify-center bg-card px-2 sm:px-3">
         <span
@@ -116,7 +127,7 @@ function FlightRow({
           {fmtVsPar(flight.score_vs_par)}
         </span>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -133,6 +144,7 @@ export function ScrambleFlights({
 }) {
   const { matchHoles, sessions, days, activeSessionIds, setMatchHole } = useTournament();
   const [editingFlightId, setEditingFlightId] = useState<string | null>(null);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const isActiveSession = activeSessionIds.includes(session.id);
   // Re-derived from the live `matches` prop every render, not a captured snapshot, so the
   // modal's totals stay in sync as holes are entered instead of freezing at open-time.
@@ -190,6 +202,7 @@ export function ScrambleFlights({
             players={players}
             hideNames={hideNames}
             onClick={() => setEditingFlightId(f.id)}
+            onSelectPlayer={setSelectedPlayerId}
           />
         ))}
       </div>
@@ -199,13 +212,23 @@ export function ScrambleFlights({
           <div className="space-y-4">
             <div className="text-center">
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-light">
-                {!hideNames && editingFlight.flight_players.length > 0
-                  ? editingFlight.flight_players
-                      .map((id) => players.find((p) => p.id === id)?.name ?? id)
-                      .join(" / ")
-                  : editingFlight.flight_team === "gray"
-                    ? "Gray (Joys)"
-                    : "Aquarellos"}{" "}
+                {!hideNames && editingFlight.flight_players.length > 0 ? (
+                  editingFlight.flight_players.map((id, i) => {
+                    const p = players.find((pp) => pp.id === id);
+                    return (
+                      <span key={id}>
+                        {i > 0 && " / "}
+                        <button onClick={() => setSelectedPlayerId(id)} className="hover:underline">
+                          {p?.name ?? id}
+                        </button>
+                      </span>
+                    );
+                  })
+                ) : editingFlight.flight_team === "gray" ? (
+                  "Gray (Joys)"
+                ) : (
+                  "Aquarellos"
+                )}{" "}
                 &middot; {editingFlight.start_time ?? "--:--"}
               </p>
               <p className="font-display text-3xl font-bold text-ink">{fmtVsPar(editingFlight.score_vs_par)}</p>
@@ -267,6 +290,10 @@ export function ScrambleFlights({
             </p>
           </div>
         </ModalShell>
+      )}
+
+      {selectedPlayerId && (
+        <PlayerDetailModal playerId={selectedPlayerId} onClose={() => setSelectedPlayerId(null)} />
       )}
     </div>
   );

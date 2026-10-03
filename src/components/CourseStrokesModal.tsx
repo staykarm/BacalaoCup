@@ -1,17 +1,29 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
 import { shortCourseLabel } from "@/lib/courseHoles";
 import { Player, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
 import { PlayerAvatar } from "./PlayerAvatar";
+import { PlayerDetailModal } from "./PlayerDetailModal";
 
 function fmt(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
 
-function TeamTable({ team, players, courses }: { team: TeamId; players: Player[]; courses: string[] }) {
+function TeamTable({
+  team,
+  players,
+  courses,
+  onSelectPlayer,
+}: {
+  team: TeamId;
+  players: Player[];
+  courses: string[];
+  onSelectPlayer: (playerId: string) => void;
+}) {
   const teamName = team === "gray" ? "Gray (Joys)" : "Aquarellos";
   const sorted = players
     .filter((p) => p.team_id === team)
@@ -46,11 +58,14 @@ function TeamTable({ team, players, courses }: { team: TeamId; players: Player[]
             {sorted.map((p) => (
               <tr key={p.id} className="bg-card-deep">
                 <td className="whitespace-nowrap rounded-l-lg py-1.5 pl-2 font-semibold text-ink">
-                  <span className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => onSelectPlayer(p.id)}
+                    className="flex items-center gap-1.5 text-left hover:underline"
+                  >
                     <PlayerAvatar playerId={p.id} size={18} className="h-[18px] w-[18px]" alwaysOn />
                     {p.name}
                     {p.is_captain && <span className="text-gold-deep"> (C)</span>}
-                  </span>
+                  </button>
                 </td>
                 <td className="px-2 py-1.5 text-right text-ink-light">{p.hcp !== null ? fmt(p.hcp) : "–"}</td>
                 {courses.map((c, i) => (
@@ -72,6 +87,7 @@ function TeamTable({ team, players, courses }: { team: TeamId; players: Player[]
 
 export function CourseStrokesModal({ onClose }: { onClose: () => void }) {
   const { players, days } = useTournament();
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const courses = [...days]
     .filter((d) => d.course)
     .sort((a, b) => a.sort_order - b.sort_order)
@@ -85,9 +101,13 @@ export function CourseStrokesModal({ onClose }: { onClose: () => void }) {
           Mottatte slag per bane, basert på spillerens handicap. Los Lagos har CR-verdi 72,6 (over par), så
           enkelte spillere får ett slag ekstra der.
         </p>
-        <TeamTable team="gray" players={players} courses={courses} />
-        <TeamTable team="aqua" players={players} courses={courses} />
+        <TeamTable team="gray" players={players} courses={courses} onSelectPlayer={setSelectedPlayerId} />
+        <TeamTable team="aqua" players={players} courses={courses} onSelectPlayer={setSelectedPlayerId} />
       </div>
+
+      {selectedPlayerId && (
+        <PlayerDetailModal playerId={selectedPlayerId} onClose={() => setSelectedPlayerId(null)} />
+      )}
     </ModalShell>
   );
 }

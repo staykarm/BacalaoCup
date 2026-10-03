@@ -1,16 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTournament } from "@/context/TournamentContext";
+import { useWeather } from "@/hooks/useWeather";
 import { DailyForecast } from "@/lib/weather";
+import { Day } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
-
-interface WeatherApiResponse {
-  openMeteo: DailyForecast[] | null;
-  openMeteoError: string | null;
-  yr: DailyForecast[] | null;
-  yrError: string | null;
-}
+import { HourlyWeatherModal } from "./HourlyWeatherModal";
 
 function fmtTemp(n: number | null) {
   return n === null ? "–" : `${Math.round(n)}°`;
@@ -52,26 +48,8 @@ function SourceRow({
 
 export function WeatherModal({ onClose }: { onClose: () => void }) {
   const { days } = useTournament();
-  const [data, setData] = useState<WeatherApiResponse | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/weather")
-      .then((res) => {
-        if (!res.ok) throw new Error(`Status ${res.status}`);
-        return res.json() as Promise<WeatherApiResponse>;
-      })
-      .then((json) => {
-        if (!cancelled) setData(json);
-      })
-      .catch((err) => {
-        if (!cancelled) setLoadError(err instanceof Error ? err.message : "Klarte ikke å hente værmelding");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data, error: loadError } = useWeather();
+  const [selectedDay, setSelectedDay] = useState<Day | null>(null);
 
   const sortedDays = [...days].sort((a, b) => a.sort_order - b.sort_order);
 
@@ -87,20 +65,34 @@ export function WeatherModal({ onClose }: { onClose: () => void }) {
             const openMeteo = data.openMeteo?.find((f) => f.date === day.date);
             const yr = data.yr?.find((f) => f.date === day.date);
             return (
-              <div key={day.id} className="rounded-2xl border border-card-border bg-white p-3">
+              <button
+                key={day.id}
+                onClick={() => setSelectedDay(day)}
+                className="w-full rounded-2xl border border-card-border bg-white p-3 text-left transition hover:border-gold-deep/40"
+              >
                 <div className="mb-2 font-semibold text-ink">{day.label}</div>
                 <div className="space-y-1.5">
                   <SourceRow label="Open-Meteo" forecast={openMeteo} unavailable={!!data.openMeteoError} />
                   <SourceRow label="Yr" forecast={yr} unavailable={!!data.yrError} />
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
       )}
       <p className="mt-4 text-center text-[11px] text-ink-light/50">
-        Værdata fra Open-Meteo og Yr/MET Norway for Marbella-området — ikke banespesifikt.
+        Værdata fra Open-Meteo og Yr/MET Norway for Marbella-området — ikke banespesifikt. Trykk på en dag for
+        time-for-time-varsel.
       </p>
+
+      {selectedDay && data && (
+        <HourlyWeatherModal
+          dayLabel={selectedDay.label}
+          openMeteoHourly={(data.openMeteoHourly ?? []).filter((h) => h.date === selectedDay.date)}
+          yrHourly={(data.yrHourly ?? []).filter((h) => h.date === selectedDay.date)}
+          onClose={() => setSelectedDay(null)}
+        />
+      )}
     </ModalShell>
   );
 }

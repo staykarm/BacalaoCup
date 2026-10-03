@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useTournament } from "@/context/TournamentContext";
+import { useWeather } from "@/hooks/useWeather";
 import { SessionSection } from "@/components/SessionSection";
 
 export default function Home() {
   const { days, sessions, matches, players, loading, error, activeSessionIds } = useTournament();
+  const { data: weather } = useWeather();
   const [activeDay, setActiveDay] = useState<string | null>(null);
 
   // Only days with golf on them belong on the main page — a travel-only day (e.g. Sunday) has nothing to show here.
@@ -42,6 +44,7 @@ export default function Home() {
     .sort((a, b) => a.sort_order - b.sort_order);
 
   const currentDay = sortedDays.find((d) => d.id === currentDayId);
+  const dayYrForecast = weather?.yr?.find((f) => f.date === currentDay?.date) ?? null;
 
   return (
     <div>
@@ -80,6 +83,7 @@ export default function Home() {
             players={players}
             defaultOpen
             hideNames={currentDay?.hide_names ?? false}
+            yrForecast={dayYrForecast}
           />
         ))}
       </div>

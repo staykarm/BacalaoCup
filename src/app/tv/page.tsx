@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
 import { usePlayerModal } from "@/context/PlayerModalContext";
+import { useWeather } from "@/hooks/useWeather";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { PlayerDetailModal } from "@/components/PlayerDetailModal";
 import { ScoreBar } from "@/components/ScoreBar";
@@ -11,6 +12,7 @@ import { SessionSection } from "@/components/SessionSection";
 import { hasLiveMatches, pointsToClinch, projectedPoints, totalPoints } from "@/lib/scoring";
 import { computePlayerStats, rankByValue } from "@/lib/stats";
 import { Day, Match, Player, Session, TeamId } from "@/lib/types";
+import { DailyForecast } from "@/lib/weather";
 
 function fmt(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
@@ -33,12 +35,14 @@ function DayColumn({
   sessions,
   matches,
   players,
+  yrForecast,
 }: {
   title: string;
   day: Day | undefined;
   sessions: Session[];
   matches: Match[];
   players: Player[];
+  yrForecast: DailyForecast | null;
 }) {
   const daySessions = day
     ? sessions.filter((s) => s.day_id === day.id).sort((a, b) => a.sort_order - b.sort_order)
@@ -71,6 +75,7 @@ function DayColumn({
               players={players}
               defaultOpen
               hideNames={day.hide_names}
+              yrForecast={yrForecast}
             />
           ))
         )}
@@ -86,6 +91,7 @@ const AUTO_RELOAD_MS = 2 * 60 * 60 * 1000;
 export default function TvScoreboardPage() {
   const { players, days, sessions, matches, loading, error, tvOverrideDayId, tvOverrideDayId2 } = useTournament();
   const { playerId, closePlayerModal } = usePlayerModal();
+  const { data: weather } = useWeather();
 
   // Ticks every second purely so a frozen screen is visible at a glance — if the clock
   // stops moving, the page has stopped updating.
@@ -143,6 +149,9 @@ export default function TvScoreboardPage() {
     todayDay = days.find((d) => d.date === toDateKey(now));
     tomorrowDay = days.find((d) => d.date === toDateKey(tomorrowDate));
   }
+
+  const todayYrForecast = weather?.yr?.find((f) => f.date === todayDay?.date) ?? null;
+  const tomorrowYrForecast = weather?.yr?.find((f) => f.date === tomorrowDay?.date) ?? null;
 
   const { gray, aqua, possible } = projectedPoints(matches, sessions);
   const settled = totalPoints(matches, sessions);
@@ -250,6 +259,7 @@ export default function TvScoreboardPage() {
             sessions={sessions}
             matches={matches}
             players={players}
+            yrForecast={todayYrForecast}
           />
           <DayColumn
             title={isManualDaySelection ? "Dag 2" : "I morgen"}
@@ -257,6 +267,7 @@ export default function TvScoreboardPage() {
             sessions={sessions}
             matches={matches}
             players={players}
+            yrForecast={tomorrowYrForecast}
           />
         </div>
 

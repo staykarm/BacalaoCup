@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeOpenMeteo, normalizeYr } from "./weather";
+import { normalizeOpenMeteo, normalizeOpenMeteoHourly, normalizeYr, normalizeYrHourly } from "./weather";
 
 describe("normalizeOpenMeteo", () => {
   it("maps each day's fields through, including the weather code's label and emoji", () => {
@@ -135,5 +135,81 @@ describe("normalizeYr", () => {
 
   it("returns an empty array when there's no timeseries", () => {
     expect(normalizeYr({})).toEqual([]);
+  });
+});
+
+describe("normalizeOpenMeteoHourly", () => {
+  it("splits the local wall-clock time into date/hour and maps each field through", () => {
+    const result = normalizeOpenMeteoHourly({
+      hourly: {
+        time: ["2026-10-07T00:00", "2026-10-07T14:00"],
+        temperature_2m: [15, 23],
+        precipitation: [0, 1.2],
+        windspeed_10m: [5, 11],
+        weathercode: [0, 61],
+      },
+    });
+
+    expect(result).toEqual([
+      { date: "2026-10-07", hour: 0, temp: 15, precipitationMm: 0, windSpeed: 5, label: "Klarvær", emoji: "☀️" },
+      { date: "2026-10-07", hour: 14, temp: 23, precipitationMm: 1.2, windSpeed: 11, label: "Lett regn", emoji: "🌦️" },
+    ]);
+  });
+
+  it("returns an empty array when the hourly block is missing", () => {
+    expect(normalizeOpenMeteoHourly({})).toEqual([]);
+  });
+});
+
+describe("normalizeYrHourly", () => {
+  it("maps each entry to its local date/hour, preferring next_1_hours detail", () => {
+    const result = normalizeYrHourly({
+      properties: {
+        timeseries: [
+          {
+            time: "2026-10-07T10:00:00Z", // 12:00 local
+            data: {
+              instant: { details: { air_temperature: 22, wind_speed: 4 } },
+              next_1_hours: { summary: { symbol_code: "rain" }, details: { precipitation_amount: 0.3 } },
+              next_6_hours: { summary: { symbol_code: "cloudy" }, details: { precipitation_amount: 1.5 } },
+            },
+          },
+        ],
+      },
+    });
+
+    expect(result).toEqual([
+      {
+        date: "2026-10-07",
+        hour: 12,
+        temp: 22,
+        precipitationMm: 0.3,
+        windSpeed: 4,
+        label: "Regn",
+        emoji: "🌧️",
+      },
+    ]);
+  });
+
+  it("falls back to next_6_hours when next_1_hours is absent", () => {
+    const result = normalizeYrHourly({
+      properties: {
+        timeseries: [
+          {
+            time: "2026-10-07T16:00:00Z", // 18:00 local
+            data: {
+              instant: { details: { air_temperature: 19 } },
+              next_6_hours: { summary: { symbol_code: "cloudy" }, details: { precipitation_amount: 1.5 } },
+            },
+          },
+        ],
+      },
+    });
+    expect(result[0].label).toBe("Skyet");
+    expect(result[0].precipitationMm).toBe(1.5);
+  });
+
+  it("returns an empty array when there's no timeseries", () => {
+    expect(normalizeYrHourly({})).toEqual([]);
   });
 });

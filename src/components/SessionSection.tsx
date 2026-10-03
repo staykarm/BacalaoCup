@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Match, Player, Session, FORMAT_LABELS } from "@/lib/types";
 import { projectedPoints } from "@/lib/scoring";
 import { useTournament } from "@/context/TournamentContext";
+import { DailyForecast } from "@/lib/weather";
 import { MatchRow } from "./MatchRow";
 import { ScrambleFlights } from "./ScrambleFlights";
 import { FormatInfoModal } from "./FormatInfoModal";
@@ -18,12 +19,15 @@ export function SessionSection({
   players,
   defaultOpen = false,
   hideNames = false,
+  yrForecast = null,
 }: {
   session: Session;
   matches: Match[];
   players: Player[];
   defaultOpen?: boolean;
   hideNames?: boolean;
+  /** Yr's forecast for this session's day, shown as a discreet corner badge. Null/omitted = no badge. */
+  yrForecast?: DailyForecast | null;
 }) {
   const { activeSessionIds } = useTournament();
   const [open, setOpen] = useState(defaultOpen);
@@ -101,10 +105,18 @@ export function SessionSection({
             </div>
           </div>
         </div>
-        <div className="shrink-0 text-sm font-bold">
-          <span className={grayScoreText}>{fmt(gray)}</span>
-          <span className={dashText}> – </span>
-          <span className={aquaScoreText}>{fmt(aqua)}</span>
+        <div className="flex shrink-0 flex-col items-end gap-0.5">
+          {yrForecast && (
+            <span className="flex items-center gap-1 text-[10px] text-ink-light/50" title="Yr">
+              <span aria-hidden>{yrForecast.emoji}</span>
+              {Math.round(yrForecast.tempMax ?? 0)}°
+            </span>
+          )}
+          <div className="text-sm font-bold">
+            <span className={grayScoreText}>{fmt(gray)}</span>
+            <span className={dashText}> – </span>
+            <span className={aquaScoreText}>{fmt(aqua)}</span>
+          </div>
         </div>
       </div>
 

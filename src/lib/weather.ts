@@ -15,6 +15,28 @@ export interface DailyForecast {
   emoji: string;
 }
 
+/** One hour's forecast, in the forecast location's local time. */
+export interface HourlyForecast {
+  /** ISO date (YYYY-MM-DD), local time zone. */
+  date: string;
+  /** Local hour, 0-23. */
+  hour: number;
+  temp: number | null;
+  precipitationMm: number | null;
+  windSpeed: number | null;
+  label: string;
+  emoji: string;
+}
+
+export interface WeatherApiResponse {
+  openMeteo: DailyForecast[] | null;
+  openMeteoHourly: HourlyForecast[] | null;
+  openMeteoError: string | null;
+  yr: DailyForecast[] | null;
+  yrHourly: HourlyForecast[] | null;
+  yrError: string | null;
+}
+
 /** Marbella town centre — one shared forecast point for the whole tournament area, not per course. */
 export const WEATHER_LOCATION = { lat: 36.51, lon: -4.88 };
 
@@ -29,7 +51,7 @@ const UNKNOWN_CODE: WeatherCodeInfo = { label: "Ukjent", emoji: "❓" };
 
 // --- Open-Meteo -------------------------------------------------------------------
 
-interface OpenMeteoDailyResponse {
+interface OpenMeteoResponse {
   daily?: {
     time: string[];
     temperature_2m_max?: (number | null)[];
@@ -37,6 +59,14 @@ interface OpenMeteoDailyResponse {
     precipitation_sum?: (number | null)[];
     precipitation_probability_max?: (number | null)[];
     windspeed_10m_max?: (number | null)[];
+    weathercode?: (number | null)[];
+  };
+  hourly?: {
+    /** Local wall-clock datetime, e.g. "2026-10-07T14:00" — Open-Meteo formats it to match the requested `timezone` param directly, no conversion needed. */
+    time: string[];
+    temperature_2m?: (number | null)[];
+    precipitation?: (number | null)[];
+    windspeed_10m?: (number | null)[];
     weathercode?: (number | null)[];
   };
 }
@@ -78,7 +108,7 @@ function openMeteoCodeInfo(code: number | null | undefined): WeatherCodeInfo {
   return OPEN_METEO_CODES[code] ?? UNKNOWN_CODE;
 }
 
-export function normalizeOpenMeteo(raw: OpenMeteoDailyResponse): DailyForecast[] {
+export function normalizeOpenMeteo(raw: OpenMeteoResponse): DailyForecast[] {
   const daily = raw.daily;
   if (!daily?.time) return [];
   return daily.time.map((date, i) => {
@@ -90,6 +120,24 @@ export function normalizeOpenMeteo(raw: OpenMeteoDailyResponse): DailyForecast[]
       precipitationMm: daily.precipitation_sum?.[i] ?? null,
       precipitationProbability: daily.precipitation_probability_max?.[i] ?? null,
       windSpeedMax: daily.windspeed_10m_max?.[i] ?? null,
+      label: info.label,
+      emoji: info.emoji,
+    };
+  });
+}
+
+export function normalizeOpenMeteoHourly(raw: OpenMeteoResponse): HourlyForecast[] {
+  const hourly = raw.hourly;
+  if (!hourly?.time) return [];
+  return hourly.time.map((time, i) => {
+    const info = openMeteoCodeInfo(hourly.weathercode?.[i]);
+    const [date, hourPart] = time.split("T");
+    return {
+      date,
+      hour: Number(hourPart.slice(0, 2)),
+      temp: hourly.temperature_2m?.[i] ?? null,
+      precipitationMm: hourly.precipitation?.[i] ?? null,
+      windSpeed: hourly.windspeed_10m?.[i] ?? null,
       label: info.label,
       emoji: info.emoji,
     };
@@ -193,6 +241,33 @@ export function normalizeYr(raw: YrLocationforecastResponse): DailyForecast[] {
       precipitationMm: precipAmounts.length > 0 ? Math.round(precipAmounts.reduce((a, b) => a + b, 0) * 10) / 10 : null,
       precipitationProbability: null,
       windSpeedMax: windSpeeds.length > 0 ? Math.max(...windSpeeds) : null,
+      label: info.label,
+      emoji: info.emoji,
+    };
+  });
+}
+
+/**
+ * One row per timeseries entry, unaggregated — the near-term entries (first ~48h) carry
+ * next_1_hours precipitation/symbol detail; further out, only the coarser next_6_hours
+ * block is available and is shown as-is rather than split across its 6 hours.
+ */
+export function normalizeYrHourly(raw: YrLocationforecastResponse): HourlyForecast[] {
+  const entries = raw.properties?.timeseries ?? [];
+  return entries.map((entry) => {
+    const symbolCode =
+      entry.data.next_1_hours?.summary?.symbol_code ?? entry.data.next_6_hours?.summary?.symbol_code ?? null;
+    const info = yrSymbolInfo(symbolCode);
+    const precipitationMm =
+      entry.data.next_1_hours?.details?.precipitation_amount ??
+      entry.data.next_6_hours?.details?.precipitation_amount ??
+      null;
+    return {
+      date: localDateKey(entry.time),
+      hour: localHour(entry.time),
+      temp: entry.data.instant?.details?.air_temperature ?? null,
+      precipitationMm,
+      windSpeed: entry.data.instant?.details?.wind_speed ?? null,
       label: info.label,
       emoji: info.emoji,
     };

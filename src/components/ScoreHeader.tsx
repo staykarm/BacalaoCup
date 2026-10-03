@@ -62,8 +62,10 @@ export function ScoreHeader({
         <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
           <button
             onClick={() => onOpenTeam("gray")}
-            className="flex min-w-0 items-center justify-end gap-2 rounded-2xl bg-gray-team-light px-3 py-1 transition hover:brightness-95 sm:gap-4 sm:px-4 sm:py-1.5"
+            className="flex min-w-0 items-center justify-between gap-2 rounded-2xl bg-gray-team-light px-3 py-1 transition hover:brightness-95 sm:gap-4 sm:px-4 sm:py-1.5"
           >
+            {/* Pinned to the button's own left edge (justify-between), so it never shifts
+                as the score next to it grows or shrinks a digit. */}
             <div className="flex min-w-0 items-center gap-1 sm:gap-2">
               <Image
                 src="/logos/gray.png"
@@ -79,7 +81,7 @@ export function ScoreHeader({
             {/* Black-on-gray, matching the team's own flat color swatch used everywhere else.
                 Projected total sits inline, right after the secure number, so the row's own
                 height never depends on whether there's a live match adding to it. */}
-            <div className="whitespace-nowrap text-right font-display text-4xl font-bold text-ink sm:text-6xl">
+            <div className="shrink-0 whitespace-nowrap text-right font-display text-4xl font-bold text-ink sm:text-6xl">
               {fmt(settled.gray)}
               {grayLive > 0 && (
                 <span className="ml-1 text-xl text-ink/60 sm:text-3xl">({fmt(gray)})</span>
@@ -91,15 +93,17 @@ export function ScoreHeader({
 
           <button
             onClick={() => onOpenTeam("aqua")}
-            className="flex min-w-0 items-center justify-start gap-2 rounded-2xl bg-aqua-team px-3 py-1 transition hover:brightness-110 sm:gap-4 sm:px-4 sm:py-1.5"
+            className="flex min-w-0 items-center justify-between gap-2 rounded-2xl bg-aqua-team px-3 py-1 transition hover:brightness-110 sm:gap-4 sm:px-4 sm:py-1.5"
           >
             {/* White-on-blue, matching the team's own flat color swatch used everywhere else. */}
-            <div className="whitespace-nowrap text-left font-display text-4xl font-bold text-white sm:text-6xl">
+            <div className="shrink-0 whitespace-nowrap text-left font-display text-4xl font-bold text-white sm:text-6xl">
               {fmt(settled.aqua)}
               {aquaLive > 0 && (
                 <span className="ml-1 text-xl text-white/70 sm:text-3xl">({fmt(aqua)})</span>
               )}
             </div>
+            {/* Pinned to the button's own right edge (justify-between), so it never shifts
+                as the score next to it grows or shrinks a digit. */}
             <div className="flex min-w-0 items-center gap-1 sm:gap-2">
               <span className="truncate text-[9px] font-semibold uppercase tracking-wider text-white sm:text-sm">
                 Aquarellos

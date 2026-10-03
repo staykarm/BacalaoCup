@@ -14,14 +14,14 @@ function fmtVsPar(n: number | null) {
   return n > 0 ? `+${n}` : `${n}`;
 }
 
-/** Eagle-or-better: yellow/white. Birdie: red/white. Par: black on white. Bogey: white on blue. Double-or-worse: white on black. */
+/** Eagle-or-better: yellow/white. Birdie: red/white. Par: black on white. Bogey: white on black. Double-or-worse: white on purple. */
 function scoreCellClass(relative: number | null): string {
   if (relative === null) return "border-card-border bg-white text-ink-light/30";
   if (relative <= -2) return "border-transparent bg-yellow-500 text-white";
   if (relative === -1) return "border-transparent bg-red-600 text-white";
   if (relative === 0) return "border-card-border bg-white text-ink";
-  if (relative === 1) return "border-transparent bg-blue-700 text-white";
-  return "border-transparent bg-black text-white";
+  if (relative === 1) return "border-transparent bg-black text-white";
+  return "border-transparent bg-purple-700 text-white";
 }
 
 /** A running (or final) vs-par total: under par is white on red, par is black on white, over par is white on black. */

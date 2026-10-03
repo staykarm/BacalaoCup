@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTournament } from "@/context/TournamentContext";
 import { COMPETITIONS } from "@/lib/competitions";
 import { getHoleInfo } from "@/lib/courseHoles";
@@ -7,6 +8,7 @@ import { computeCompetitionWins } from "@/lib/stats";
 import { Player } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
 import { PlayerAvatar } from "./PlayerAvatar";
+import { PlayerDetailModal } from "./PlayerDetailModal";
 
 function fmt(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
@@ -17,11 +19,13 @@ function HoleBadges({
   course,
   winners,
   players,
+  onSelectPlayer,
 }: {
   holes: number[];
   course: string;
   winners: Record<string, string>;
   players: Player[];
+  onSelectPlayer: (playerId: string) => void;
 }) {
   return (
     <div className="mt-1.5 flex flex-wrap justify-center gap-1.5">
@@ -33,9 +37,10 @@ function HoleBadges({
         if (winner) {
           const onGray = winner.team_id === "gray";
           return (
-            <div
+            <button
               key={h}
-              className={`flex items-center gap-2 rounded-xl py-1.5 pl-1.5 pr-3 shadow-sm ${
+              onClick={() => onSelectPlayer(winner.id)}
+              className={`flex items-center gap-2 rounded-xl py-1.5 pl-1.5 pr-3 text-left shadow-sm hover:brightness-110 ${
                 onGray ? "bg-gray-team-deep" : "bg-aqua-team-deep"
               }`}
             >
@@ -53,7 +58,7 @@ function HoleBadges({
                 </div>
                 <div className={`text-xs font-bold ${onGray ? "text-ink" : "text-white"}`}>{winner.name}</div>
               </div>
-            </div>
+            </button>
           );
         }
 
@@ -70,6 +75,7 @@ function HoleBadges({
 
 export function CompetitionsModal({ onClose }: { onClose: () => void }) {
   const { days, players } = useTournament();
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   // A day with no course (e.g. a travel-only departure day) has no competitions to show.
   const sortedDays = [...days].filter((d) => d.course).sort((a, b) => a.sort_order - b.sort_order);
   const { perTeam, perPlayer } = computeCompetitionWins(days, players);
@@ -99,9 +105,10 @@ export function CompetitionsModal({ onClose }: { onClose: () => void }) {
               {playersWithWins.map(({ player, wins }) => {
                 const onGray = player.team_id === "gray";
                 return (
-                  <div
+                  <button
                     key={player.id}
-                    className={`flex items-center gap-2 rounded-lg px-2.5 py-1 text-xs ${
+                    onClick={() => setSelectedPlayerId(player.id)}
+                    className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1 text-left text-xs hover:brightness-110 ${
                       onGray ? "bg-gray-team-bg" : "bg-aqua-team-flat"
                     }`}
                   >
@@ -116,7 +123,7 @@ export function CompetitionsModal({ onClose }: { onClose: () => void }) {
                       {player.name}
                     </span>
                     <span className={onGray ? "text-ink/60" : "text-white/70"}>{wins}</span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -144,6 +151,7 @@ export function CompetitionsModal({ onClose }: { onClose: () => void }) {
                       course={day.course as string}
                       winners={day.competition_winners}
                       players={players}
+                      onSelectPlayer={setSelectedPlayerId}
                     />
                   </div>
                   <div className="rounded-xl bg-card-deep px-3 py-2.5 text-center">
@@ -155,6 +163,7 @@ export function CompetitionsModal({ onClose }: { onClose: () => void }) {
                       course={day.course as string}
                       winners={day.competition_winners}
                       players={players}
+                      onSelectPlayer={setSelectedPlayerId}
                     />
                   </div>
                 </div>
@@ -167,6 +176,10 @@ export function CompetitionsModal({ onClose }: { onClose: () => void }) {
           );
         })}
       </div>
+
+      {selectedPlayerId && (
+        <PlayerDetailModal playerId={selectedPlayerId} onClose={() => setSelectedPlayerId(null)} />
+      )}
     </ModalShell>
   );
 }

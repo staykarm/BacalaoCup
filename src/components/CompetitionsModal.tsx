@@ -96,15 +96,29 @@ export function CompetitionsModal({ onClose }: { onClose: () => void }) {
               </div>
             </div>
             <div className="space-y-1">
-              {playersWithWins.map(({ player, wins }) => (
-                <div
-                  key={player.id}
-                  className="flex items-center justify-between rounded-lg bg-card-deep px-2.5 py-1 text-xs"
-                >
-                  <span className="font-semibold text-ink">{player.name}</span>
-                  <span className="text-ink-light">{wins}</span>
-                </div>
-              ))}
+              {playersWithWins.map(({ player, wins }) => {
+                const onGray = player.team_id === "gray";
+                return (
+                  <div
+                    key={player.id}
+                    className={`flex items-center gap-2 rounded-lg px-2.5 py-1 text-xs ${
+                      onGray ? "bg-gray-team-bg" : "bg-aqua-team-flat"
+                    }`}
+                  >
+                    <PlayerAvatar
+                      playerId={player.id}
+                      fallbackTeamId={player.team_id}
+                      size={20}
+                      className="h-5 w-5"
+                      alwaysOn
+                    />
+                    <span className={`flex-1 font-semibold ${onGray ? "text-ink" : "text-white"}`}>
+                      {player.name}
+                    </span>
+                    <span className={onGray ? "text-ink/60" : "text-white/70"}>{wins}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

@@ -180,14 +180,13 @@ export function ScrambleFlights({
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
-        {/* Logo+name pinned to the outer edge (justify-between), so its position never
+        {/* Name pinned to the outer edge (justify-between), so its position never
             shifts with how wide the score chip ends up being. */}
         <div className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2 ${totalBg("gray", leadingSide, isNeutral)}`}>
           <span
-            className={`flex min-w-0 items-center gap-1 text-[11px] uppercase tracking-wide ${totalText("gray", leadingSide, isNeutral)}`}
+            className={`min-w-0 truncate text-[11px] uppercase tracking-wide ${totalText("gray", leadingSide, isNeutral)}`}
           >
-            <Image src="/logos/gray.png" alt="" width={16} height={16} className="h-4 w-4 shrink-0 rounded-full object-cover" />
-            <span className="truncate">Gray (Joys)</span>
+            Gray (Joys)
           </span>
           <span className={`inline-flex min-w-[3rem] shrink-0 items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.grayTotal : null)}`}>
             {fmtVsPar(live.started ? live.grayTotal : null)}
@@ -198,10 +197,9 @@ export function ScrambleFlights({
             {fmtVsPar(live.started ? live.aquaTotal : null)}
           </span>
           <span
-            className={`flex min-w-0 items-center gap-1 text-[11px] uppercase tracking-wide ${totalText("aqua", leadingSide, isNeutral)}`}
+            className={`min-w-0 truncate text-right text-[11px] uppercase tracking-wide ${totalText("aqua", leadingSide, isNeutral)}`}
           >
-            <span className="truncate">Aquarellos</span>
-            <Image src="/logos/aquarellos.png" alt="" width={16} height={16} className="h-4 w-4 shrink-0 rounded-full object-cover" />
+            Aquarellos
           </span>
         </div>
       </div>

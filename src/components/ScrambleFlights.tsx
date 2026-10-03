@@ -32,6 +32,26 @@ function vsParTotalClass(n: number | null): string {
   return "border-transparent bg-black text-white";
 }
 
+/**
+ * Same leading/trailing treatment as a regular match card: flat team colors before
+ * anyone's ahead, the leader gets its bold "won" fill, the trailing side goes plain
+ * white, and a genuine live tie goes neutral white on both sides.
+ */
+function totalBg(team: TeamId, leadingSide: TeamId | null, isNeutral: boolean): string {
+  if (isNeutral) return "bg-white";
+  const flat = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-flat";
+  const bold = team === "gray" ? "bg-gray-team-won" : "bg-aqua-team-won";
+  if (leadingSide === null) return flat;
+  return leadingSide === team ? bold : "bg-white";
+}
+
+function totalText(team: TeamId, leadingSide: TeamId | null, isNeutral: boolean): string {
+  if (isNeutral) return "text-ink";
+  if (leadingSide !== null && leadingSide !== team) return "text-ink-light/40";
+  if (team === "aqua") return "text-white";
+  return leadingSide === team ? "text-white" : "text-ink";
+}
+
 function FlightRow({
   flight,
   players,
@@ -123,6 +143,10 @@ export function ScrambleFlights({
   // Live combined score, usable as soon as any flight has teed off — once every flight
   // is finished this agrees exactly with scrambleResult's own totals.
   const live = scrambleProjectedResult(matches, session);
+  const leadingSide: TeamId | null = live.started ? live.winner : null;
+  // A genuine live tie goes neutral white on both sides, same as a tied match-play match —
+  // distinct from "not started yet", which keeps each side's own flat team color instead.
+  const isNeutral = live.started && live.winner === null;
 
   const frontNine = isFrontNine(session, sessions);
   const course = days.find((d) => d.id === session.day_id)?.course ?? null;
@@ -144,22 +168,14 @@ export function ScrambleFlights({
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
-        <div
-          className={`rounded-xl border-2 bg-gray-team-bg px-3 py-2 text-center ${
-            live.started && live.winner === "gray" ? "border-gold" : "border-transparent"
-          }`}
-        >
-          <p className="text-[11px] uppercase tracking-wide text-ink/70">Gray</p>
+        <div className={`rounded-xl px-3 py-2 text-center ${totalBg("gray", leadingSide, isNeutral)}`}>
+          <p className={`text-[11px] uppercase tracking-wide ${totalText("gray", leadingSide, isNeutral)}`}>Gray</p>
           <p className={`mt-1 inline-flex min-w-[3rem] items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.grayTotal : null)}`}>
             {fmtVsPar(live.started ? live.grayTotal : null)}
           </p>
         </div>
-        <div
-          className={`rounded-xl border-2 bg-aqua-team-flat px-3 py-2 text-center ${
-            live.started && live.winner === "aqua" ? "border-gold" : "border-transparent"
-          }`}
-        >
-          <p className="text-[11px] uppercase tracking-wide text-white/70">Aqua</p>
+        <div className={`rounded-xl px-3 py-2 text-center ${totalBg("aqua", leadingSide, isNeutral)}`}>
+          <p className={`text-[11px] uppercase tracking-wide ${totalText("aqua", leadingSide, isNeutral)}`}>Aqua</p>
           <p className={`mt-1 inline-flex min-w-[3rem] items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.aquaTotal : null)}`}>
             {fmtVsPar(live.started ? live.aquaTotal : null)}
           </p>

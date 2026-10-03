@@ -110,17 +110,28 @@ export function MatchRow({
   // grayPlayers/aquaPlayers above), so it stays invisible on a hide_names day exactly
   // like the pairings it would otherwise reveal. Fourball plays each ball individually,
   // so it skips this pair figure entirely in favor of each player's own course handicap
-  // (see playerCourseStrokes below).
+  // (see playerCourseStrokes below) — and so does an uneven (2-vs-1) side on any other
+  // format: each player still plays their own full handicap, and the 2-vs-1 imbalance
+  // itself is compensated by the head-start hole (headStart above), not by diffing a
+  // combined pair figure against the lone player's.
+  const grayCount = [match.gray_player1, match.gray_player2].filter(Boolean).length;
+  const aquaCount = [match.aqua_player1, match.aqua_player2].filter(Boolean).length;
+  const isUnevenSides = grayCount !== aquaCount;
   const isFourball = session.format === "fourball";
-  const graySideHcp = isFourball ? null : sideHandicap(match.gray_player1, match.gray_player2, players, course);
-  const aquaSideHcp = isFourball ? null : sideHandicap(match.aqua_player1, match.aqua_player2, players, course);
+  const showIndividualStrokes = isFourball || isUnevenSides;
+  const graySideHcp = showIndividualStrokes
+    ? null
+    : sideHandicap(match.gray_player1, match.gray_player2, players, course);
+  const aquaSideHcp = showIndividualStrokes
+    ? null
+    : sideHandicap(match.aqua_player1, match.aqua_player2, players, course);
   const sideStrokeDiff =
     graySideHcp !== null && aquaSideHcp !== null ? Math.round(graySideHcp) - Math.round(aquaSideHcp) : null;
   const grayStrokesReceived = sideStrokeDiff !== null && sideStrokeDiff > 0 ? sideStrokeDiff : null;
   const aquaStrokesReceived = sideStrokeDiff !== null && sideStrokeDiff < 0 ? -sideStrokeDiff : null;
 
-  // Fourball only: each player's own course handicap, shown next to their own name
-  // instead of a shared pair figure — nobody plays a combined ball here.
+  // Fourball, or an uneven (2-vs-1) side on any format: each player's own course handicap,
+  // shown next to their own name instead of a shared pair figure.
   function playerCourseStrokes(p: { course_strokes: Record<string, number> }): number | null {
     return course && p.course_strokes[course] !== undefined ? p.course_strokes[course] : null;
   }
@@ -222,7 +233,7 @@ export function MatchRow({
             {grayPlayers.length > 0 ? (
               <>
                 {grayPlayers.map((p) => {
-                  const strokeBadge = isFourball ? playerCourseStrokes(p) : grayStrokesReceived;
+                  const strokeBadge = showIndividualStrokes ? playerCourseStrokes(p) : grayStrokesReceived;
                   return (
                     <button
                       key={p.id}
@@ -277,7 +288,7 @@ export function MatchRow({
             {aquaPlayers.length > 0 ? (
               <>
                 {aquaPlayers.map((p) => {
-                  const strokeBadge = isFourball ? playerCourseStrokes(p) : aquaStrokesReceived;
+                  const strokeBadge = showIndividualStrokes ? playerCourseStrokes(p) : aquaStrokesReceived;
                   return (
                     <button
                       key={p.id}

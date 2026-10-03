@@ -41,13 +41,15 @@ function TeamTable({
         <span className="font-display text-base font-bold text-ink">{teamName}</span>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full border-separate border-spacing-y-1 text-left text-xs">
+        {/* table-fixed + a width only on the numeric columns, so the name column always
+            takes whatever space is left over instead of the other way around. */}
+        <table className="w-full table-fixed border-separate border-spacing-y-1 text-left text-xs">
           <thead>
             <tr className="text-[10px] uppercase tracking-wide text-ink-light/60">
-              <th className="pl-2 pr-2 font-semibold">Navn</th>
-              <th className="px-2 text-right font-semibold">HCP</th>
+              <th className="pl-2 pr-1 font-semibold">Navn</th>
+              <th className="w-10 px-1 text-right font-semibold">HCP</th>
               {courses.map((c) => (
-                <th key={c} className="px-2 text-right font-semibold">
+                <th key={c} className="w-10 px-1 text-right font-semibold">
                   {shortCourseLabel(c)}
                 </th>
               ))}
@@ -56,23 +58,23 @@ function TeamTable({
           <tbody>
             {sorted.map((p) => (
               <tr key={p.id} className="bg-card-deep">
-                <td className="max-w-[90px] rounded-l-lg py-1.5 pl-2 font-semibold text-ink sm:max-w-[160px]">
+                <td className="rounded-l-lg py-1.5 pl-2 pr-1 font-semibold text-ink">
                   <button
                     onClick={() => onSelectPlayer(p.id)}
-                    className="flex min-w-0 items-center gap-1.5 text-left hover:underline"
+                    className="flex items-center gap-1.5 text-left hover:underline"
                   >
                     <PlayerAvatar playerId={p.id} size={18} className="h-[18px] w-[18px] shrink-0" alwaysOn />
-                    <span className="truncate">
+                    <span>
                       {p.name}
                       {p.is_captain && <span className="text-gold-deep"> (C)</span>}
                     </span>
                   </button>
                 </td>
-                <td className="px-2 py-1.5 text-right text-ink-light">{p.hcp !== null ? fmt(p.hcp) : "–"}</td>
+                <td className="px-1 py-1.5 text-right text-ink-light">{p.hcp !== null ? fmt(p.hcp) : "–"}</td>
                 {courses.map((c, i) => (
                   <td
                     key={c}
-                    className={`px-2 py-1.5 text-right font-bold text-ink ${i === courses.length - 1 ? "rounded-r-lg pr-2" : ""}`}
+                    className={`px-1 py-1.5 text-right font-bold text-ink ${i === courses.length - 1 ? "rounded-r-lg pr-2" : ""}`}
                   >
                     {p.course_strokes[c] ?? "–"}
                   </td>

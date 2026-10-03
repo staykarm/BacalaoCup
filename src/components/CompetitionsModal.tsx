@@ -6,6 +6,7 @@ import { getHoleInfo } from "@/lib/courseHoles";
 import { computeCompetitionWins } from "@/lib/stats";
 import { Player } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
+import { PlayerAvatar } from "./PlayerAvatar";
 
 function fmt(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
@@ -27,12 +28,39 @@ function HoleBadges({
       {holes.map((h) => {
         const info = getHoleInfo(course, h);
         const winnerId = winners[h];
-        const winnerName = winnerId ? players.find((p) => p.id === winnerId)?.name : undefined;
+        const winner = winnerId ? players.find((p) => p.id === winnerId) : undefined;
+
+        if (winner) {
+          const onGray = winner.team_id === "gray";
+          return (
+            <div
+              key={h}
+              className={`flex items-center gap-2 rounded-xl py-1.5 pl-1.5 pr-3 shadow-sm ${
+                onGray ? "bg-gray-team-deep" : "bg-aqua-team-deep"
+              }`}
+            >
+              <PlayerAvatar
+                playerId={winner.id}
+                fallbackTeamId={winner.team_id}
+                size={36}
+                className="h-9 w-9"
+                alwaysOn
+              />
+              <div className="text-left">
+                <div className={`text-[9px] font-semibold uppercase tracking-wide ${onGray ? "text-ink/70" : "text-white/70"}`}>
+                  Hull {h}
+                  {info.par !== null && ` · par ${info.par}`}
+                </div>
+                <div className={`text-xs font-bold ${onGray ? "text-ink" : "text-white"}`}>{winner.name}</div>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <span key={h} className="rounded-lg bg-white px-2 py-1 text-xs font-semibold text-ink shadow-sm">
             Hull {h}
             {info.par !== null && <span className="ml-1 font-normal text-ink-light/60">par {info.par}</span>}
-            {winnerName && <span className="ml-1 font-normal text-gold-deep">&middot; {winnerName}</span>}
           </span>
         );
       })}

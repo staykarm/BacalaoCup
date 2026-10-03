@@ -56,14 +56,16 @@ function TeamTable({
           <tbody>
             {sorted.map((p) => (
               <tr key={p.id} className="bg-card-deep">
-                <td className="whitespace-nowrap rounded-l-lg py-1.5 pl-2 font-semibold text-ink">
+                <td className="max-w-[90px] rounded-l-lg py-1.5 pl-2 font-semibold text-ink sm:max-w-[160px]">
                   <button
                     onClick={() => onSelectPlayer(p.id)}
-                    className="flex items-center gap-1.5 text-left hover:underline"
+                    className="flex min-w-0 items-center gap-1.5 text-left hover:underline"
                   >
-                    <PlayerAvatar playerId={p.id} size={18} className="h-[18px] w-[18px]" alwaysOn />
-                    {p.name}
-                    {p.is_captain && <span className="text-gold-deep"> (C)</span>}
+                    <PlayerAvatar playerId={p.id} size={18} className="h-[18px] w-[18px] shrink-0" alwaysOn />
+                    <span className="truncate">
+                      {p.name}
+                      {p.is_captain && <span className="text-gold-deep"> (C)</span>}
+                    </span>
                   </button>
                 </td>
                 <td className="px-2 py-1.5 text-right text-ink-light">{p.hcp !== null ? fmt(p.hcp) : "–"}</td>

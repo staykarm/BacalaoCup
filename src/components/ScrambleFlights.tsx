@@ -3,13 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
-import {
-  courseHoleNumber,
-  HOLES_PER_MATCH,
-  isFrontNine,
-  scrambleProjectedResult,
-  scrambleResult,
-} from "@/lib/scoring";
+import { courseHoleNumber, HOLES_PER_MATCH, isFrontNine, scrambleProjectedResult } from "@/lib/scoring";
 import { getHoleInfo } from "@/lib/courseHoles";
 import { Match, Player, Session, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
@@ -126,9 +120,8 @@ export function ScrambleFlights({
   const editingFlight = matches.find((m) => m.id === editingFlightId) ?? null;
 
   const flights = [...matches].sort((a, b) => a.sort_order - b.sort_order);
-  const result = scrambleResult(matches, session);
   // Live combined score, usable as soon as any flight has teed off — once every flight
-  // is finished this agrees exactly with `result` above.
+  // is finished this agrees exactly with scrambleResult's own totals.
   const live = scrambleProjectedResult(matches, session);
 
   const frontNine = isFrontNine(session, sessions);
@@ -152,21 +145,21 @@ export function ScrambleFlights({
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div
-          className={`rounded-xl border px-3 py-2 text-center ${
-            live.started && live.winner === "gray" ? "border-gold bg-gold/10" : "border-card-border bg-card-deep"
+          className={`rounded-xl border-2 bg-gray-team-bg px-3 py-2 text-center ${
+            live.started && live.winner === "gray" ? "border-gold" : "border-transparent"
           }`}
         >
-          <p className="text-[11px] uppercase tracking-wide text-ink-light">Gray</p>
+          <p className="text-[11px] uppercase tracking-wide text-ink/70">Gray</p>
           <p className={`mt-1 inline-flex min-w-[3rem] items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.grayTotal : null)}`}>
             {fmtVsPar(live.started ? live.grayTotal : null)}
           </p>
         </div>
         <div
-          className={`rounded-xl border px-3 py-2 text-center ${
-            live.started && live.winner === "aqua" ? "border-gold bg-gold/10" : "border-card-border bg-card-deep"
+          className={`rounded-xl border-2 bg-aqua-team-flat px-3 py-2 text-center ${
+            live.started && live.winner === "aqua" ? "border-gold" : "border-transparent"
           }`}
         >
-          <p className="text-[11px] uppercase tracking-wide text-ink-light">Aqua</p>
+          <p className="text-[11px] uppercase tracking-wide text-white/70">Aqua</p>
           <p className={`mt-1 inline-flex min-w-[3rem] items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.aquaTotal : null)}`}>
             {fmtVsPar(live.started ? live.aquaTotal : null)}
           </p>
@@ -184,29 +177,6 @@ export function ScrambleFlights({
           />
         ))}
       </div>
-
-      {live.started && (
-        <div className="rounded-xl border border-card-border bg-card-deep px-3 py-2 text-center text-xs text-ink-light">
-          {result.decided ? (
-            result.winner ? (
-              <span className="font-semibold text-ink">
-                Sammenlagt {fmtVsPar(result.grayTotal)} – {fmtVsPar(result.aquaTotal)} &middot;{" "}
-                {result.winner === "gray" ? "Gray" : "Aqua"} tar {session.points_per_match}p
-              </span>
-            ) : (
-              <span className="font-semibold text-ink">
-                Sammenlagt {fmtVsPar(result.grayTotal)} – {fmtVsPar(result.aquaTotal)} &middot; Delt,{" "}
-                {session.points_per_match / 2}p hver
-              </span>
-            )
-          ) : (
-            <span className="font-semibold text-ink">
-              Sammenlagt {fmtVsPar(live.grayTotal)} – {fmtVsPar(live.aquaTotal)} &middot;{" "}
-              {live.winner ? `${live.winner === "gray" ? "Gray" : "Aqua"} leder` : "Likt"} &middot; pågår
-            </span>
-          )}
-        </div>
-      )}
 
       {editingFlight && (
         <ModalShell title="Scramble-score" onClose={() => setEditingFlightId(null)}>

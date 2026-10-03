@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { TournamentProvider, useTournament } from "@/context/TournamentContext";
+import { PlayerModalProvider, usePlayerModal } from "@/context/PlayerModalContext";
 import { TeamId } from "@/lib/types";
 import { ScoreHeader } from "./ScoreHeader";
 import { MvpModal } from "./MvpModal";
@@ -12,8 +13,17 @@ import { AdminModal } from "./AdminModal";
 import { AdminPinModal } from "./AdminPinModal";
 import { TeamPointsModal } from "./TeamPointsModal";
 import { FeedModal } from "./FeedModal";
+import { PlayerDetailModal } from "./PlayerDetailModal";
 
 const ADMIN_UNLOCKED_KEY = "bacalao-admin-unlocked";
+
+/** The single place a player's detail modal actually renders, so the × always
+ * collapses the whole player-to-player chain in one step (see PlayerModalContext). */
+function GlobalPlayerModal() {
+  const { playerId, closePlayerModal } = usePlayerModal();
+  if (!playerId) return null;
+  return <PlayerDetailModal playerId={playerId} onClose={closePlayerModal} />;
+}
 
 function SyncErrorToast() {
   const { syncError, clearSyncError } = useTournament();
@@ -83,39 +93,42 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <TournamentProvider>
-      <ScoreHeader onOpenAdmin={handleOpenAdmin} onOpenTeam={setOpenTeam} />
+      <PlayerModalProvider>
+        <ScoreHeader onOpenAdmin={handleOpenAdmin} onOpenTeam={setOpenTeam} />
 
-      <main className="mx-auto w-full max-w-5xl px-4 pb-28 pt-4 sm:px-6">{children}</main>
+        <main className="mx-auto w-full max-w-5xl px-4 pb-28 pt-4 sm:px-6">{children}</main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-navy-lighter/60 bg-navy-deep/95 backdrop-blur supports-[backdrop-filter]:bg-navy-deep/85">
-        <div className="mx-auto grid max-w-5xl grid-cols-5 px-1 py-1.5 sm:gap-2 sm:px-6 sm:py-2">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.key}
-              onClick={() => setOpenModal(item.key)}
-              className="flex min-w-0 flex-col items-center gap-0.5 rounded-2xl px-0.5 py-1.5 text-foreground/60 transition hover:bg-navy-lighter/40 hover:text-gold"
-            >
-              <span className="text-base leading-none sm:text-lg" aria-hidden>
-                {item.icon}
-              </span>
-              <span className="w-full truncate text-center text-[9px] font-semibold uppercase leading-none tracking-tight sm:text-[10px] sm:tracking-wide">
-                {item.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </nav>
+        <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-navy-lighter/60 bg-navy-deep/95 backdrop-blur supports-[backdrop-filter]:bg-navy-deep/85">
+          <div className="mx-auto grid max-w-5xl grid-cols-5 px-1 py-1.5 sm:gap-2 sm:px-6 sm:py-2">
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.key}
+                onClick={() => setOpenModal(item.key)}
+                className="flex min-w-0 flex-col items-center gap-0.5 rounded-2xl px-0.5 py-1.5 text-foreground/60 transition hover:bg-navy-lighter/40 hover:text-gold"
+              >
+                <span className="text-base leading-none sm:text-lg" aria-hidden>
+                  {item.icon}
+                </span>
+                <span className="w-full truncate text-center text-[9px] font-semibold uppercase leading-none tracking-tight sm:text-[10px] sm:tracking-wide">
+                  {item.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </nav>
 
-      {openModal === "mvp" && <MvpModal onClose={() => setOpenModal(null)} />}
-      {openModal === "agenda" && <AgendaModal onClose={() => setOpenModal(null)} />}
-      {openModal === "feed" && <FeedModal onClose={() => setOpenModal(null)} />}
-      {openModal === "competitions" && <CompetitionsModal onClose={() => setOpenModal(null)} />}
-      {openModal === "strokes" && <CourseStrokesModal onClose={() => setOpenModal(null)} />}
-      {openModal === "admin" && <AdminModal onClose={() => setOpenModal(null)} />}
-      {pinPromptOpen && <AdminPinModal onClose={() => setPinPromptOpen(false)} onUnlock={handleUnlock} />}
-      {openTeam && <TeamPointsModal team={openTeam} onClose={() => setOpenTeam(null)} />}
+        {openModal === "mvp" && <MvpModal onClose={() => setOpenModal(null)} />}
+        {openModal === "agenda" && <AgendaModal onClose={() => setOpenModal(null)} />}
+        {openModal === "feed" && <FeedModal onClose={() => setOpenModal(null)} />}
+        {openModal === "competitions" && <CompetitionsModal onClose={() => setOpenModal(null)} />}
+        {openModal === "strokes" && <CourseStrokesModal onClose={() => setOpenModal(null)} />}
+        {openModal === "admin" && <AdminModal onClose={() => setOpenModal(null)} />}
+        {pinPromptOpen && <AdminPinModal onClose={() => setPinPromptOpen(false)} onUnlock={handleUnlock} />}
+        {openTeam && <TeamPointsModal team={openTeam} onClose={() => setOpenTeam(null)} />}
+        <GlobalPlayerModal />
 
-      <SyncErrorToast />
+        <SyncErrorToast />
+      </PlayerModalProvider>
     </TournamentProvider>
   );
 }

@@ -1,10 +1,10 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
 import { useTournament } from "@/context/TournamentContext";
+import { usePlayerModal } from "@/context/PlayerModalContext";
 import { ActivityLogEntry, Match, Player, RESULT_LABELS, Session, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
-import { PlayerDetailModal } from "./PlayerDetailModal";
 
 function fmtVsPar(n: number | null) {
   if (n === null) return "–";
@@ -145,7 +145,7 @@ function FeedRow({
 
 export function FeedModal({ onClose }: { onClose: () => void }) {
   const { activityLog, matches, sessions, players, days } = useTournament();
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const { openPlayer } = usePlayerModal();
 
   const hideNamesBySession = new Map(
     sessions.map((s) => [s.id, days.find((d) => d.id === s.day_id)?.hide_names ?? false])
@@ -175,14 +175,10 @@ export function FeedModal({ onClose }: { onClose: () => void }) {
               session={session}
               players={players}
               hideNames={hideNamesBySession.get(session.id) ?? false}
-              onSelectPlayer={setSelectedPlayerId}
+              onSelectPlayer={openPlayer}
             />
           ))}
         </div>
-      )}
-
-      {selectedPlayerId && (
-        <PlayerDetailModal playerId={selectedPlayerId} onClose={() => setSelectedPlayerId(null)} />
       )}
     </ModalShell>
   );

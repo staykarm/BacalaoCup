@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
+import { usePlayerModal } from "@/context/PlayerModalContext";
 import { HoleResult, Match, Player, RESULT_LABELS, Session, TeamId } from "@/lib/types";
 import {
   courseHoleNumber,
@@ -17,7 +18,6 @@ import {
 import { getHoleInfo } from "@/lib/courseHoles";
 import { computePlayerStats } from "@/lib/stats";
 import { PlayerAvatar } from "./PlayerAvatar";
-import { PlayerDetailModal } from "./PlayerDetailModal";
 import { ModalShell } from "./ModalShell";
 
 const HOLE_OPTIONS: { key: HoleResult; label: string }[] = [
@@ -75,8 +75,8 @@ export function MatchRow({
   hideNames?: boolean;
 }) {
   const { matchHoles, sessions, days, matches, activeSessionIds, setMatchHole } = useTournament();
+  const { openPlayer } = usePlayerModal();
   const [scoring, setScoring] = useState(false);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const isActiveSession = activeSessionIds.includes(session.id);
 
   // Each player's win-halved-loss record across the whole tournament so far, shown
@@ -221,7 +221,7 @@ export function MatchRow({
                   return (
                     <button
                       key={p.id}
-                      onClick={() => setSelectedPlayerId(p.id)}
+                      onClick={() => openPlayer(p.id)}
                       className={`flex w-full items-center gap-1 text-left text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("gray")}`}
                     >
                       <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />
@@ -276,7 +276,7 @@ export function MatchRow({
                   return (
                     <button
                       key={p.id}
-                      onClick={() => setSelectedPlayerId(p.id)}
+                      onClick={() => openPlayer(p.id)}
                       className={`flex w-full items-center justify-end gap-1 text-right text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("aqua")}`}
                     >
                       {recordFor(p.id) && (
@@ -503,10 +503,6 @@ export function MatchRow({
             )}
           </div>
         </ModalShell>
-      )}
-
-      {selectedPlayerId && (
-        <PlayerDetailModal playerId={selectedPlayerId} onClose={() => setSelectedPlayerId(null)} />
       )}
     </div>
   );

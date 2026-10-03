@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
+import { usePlayerModal } from "@/context/PlayerModalContext";
 import { totalPoints } from "@/lib/scoring";
 import { computeCompetitionWins, computePlayerStats } from "@/lib/stats";
 import { TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
-import { PlayerDetailModal } from "./PlayerDetailModal";
 
 function fmt(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
@@ -33,7 +32,7 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
   const bannerText = team === "gray" ? "text-ink" : "text-white";
   const bannerSubtext = team === "gray" ? "text-ink/60" : "text-white/70";
   const listAccentText = team === "gray" ? "text-ink" : "text-aqua-team-deep";
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const { openPlayer } = usePlayerModal();
 
   return (
     <ModalShell title={teamName} onClose={onClose}>
@@ -63,7 +62,7 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
             {stats.map((s, i) => (
               <button
                 key={s.player.id}
-                onClick={() => setSelectedPlayerId(s.player.id)}
+                onClick={() => openPlayer(s.player.id)}
                 className="flex w-full items-center justify-between gap-3 rounded-2xl border border-card-border bg-white px-3 py-2.5 text-left text-sm hover:border-gold-deep/40"
               >
                 <div className="flex min-w-0 items-center gap-2">
@@ -87,10 +86,6 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
           </div>
         </section>
       </div>
-
-      {selectedPlayerId && (
-        <PlayerDetailModal playerId={selectedPlayerId} onClose={() => setSelectedPlayerId(null)} />
-      )}
     </ModalShell>
   );
 }

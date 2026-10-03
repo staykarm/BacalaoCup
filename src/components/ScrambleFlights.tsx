@@ -3,11 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
+import { usePlayerModal } from "@/context/PlayerModalContext";
 import { courseHoleNumber, HOLES_PER_MATCH, isFrontNine, scrambleProjectedResult } from "@/lib/scoring";
 import { getHoleInfo } from "@/lib/courseHoles";
 import { Match, Player, Session, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
-import { PlayerDetailModal } from "./PlayerDetailModal";
 
 function fmtVsPar(n: number | null) {
   if (n === null) return "–";
@@ -143,8 +143,8 @@ export function ScrambleFlights({
   hideNames?: boolean;
 }) {
   const { matchHoles, sessions, days, activeSessionIds, setMatchHole } = useTournament();
+  const { openPlayer } = usePlayerModal();
   const [editingFlightId, setEditingFlightId] = useState<string | null>(null);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const isActiveSession = activeSessionIds.includes(session.id);
   // Re-derived from the live `matches` prop every render, not a captured snapshot, so the
   // modal's totals stay in sync as holes are entered instead of freezing at open-time.
@@ -181,13 +181,23 @@ export function ScrambleFlights({
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div className={`rounded-xl px-3 py-2 text-center ${totalBg("gray", leadingSide, isNeutral)}`}>
-          <p className={`text-[11px] uppercase tracking-wide ${totalText("gray", leadingSide, isNeutral)}`}>Gray</p>
+          <p
+            className={`flex items-center justify-center gap-1 text-[11px] uppercase tracking-wide ${totalText("gray", leadingSide, isNeutral)}`}
+          >
+            <Image src="/logos/gray.png" alt="" width={16} height={16} className="h-4 w-4 shrink-0 rounded-full object-cover" />
+            Gray (Joys)
+          </p>
           <p className={`mt-1 inline-flex min-w-[3rem] items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.grayTotal : null)}`}>
             {fmtVsPar(live.started ? live.grayTotal : null)}
           </p>
         </div>
         <div className={`rounded-xl px-3 py-2 text-center ${totalBg("aqua", leadingSide, isNeutral)}`}>
-          <p className={`text-[11px] uppercase tracking-wide ${totalText("aqua", leadingSide, isNeutral)}`}>Aqua</p>
+          <p
+            className={`flex items-center justify-center gap-1 text-[11px] uppercase tracking-wide ${totalText("aqua", leadingSide, isNeutral)}`}
+          >
+            <Image src="/logos/aquarellos.png" alt="" width={16} height={16} className="h-4 w-4 shrink-0 rounded-full object-cover" />
+            Aquarellos
+          </p>
           <p className={`mt-1 inline-flex min-w-[3rem] items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.aquaTotal : null)}`}>
             {fmtVsPar(live.started ? live.aquaTotal : null)}
           </p>
@@ -202,7 +212,7 @@ export function ScrambleFlights({
             players={players}
             hideNames={hideNames}
             onClick={() => setEditingFlightId(f.id)}
-            onSelectPlayer={setSelectedPlayerId}
+            onSelectPlayer={openPlayer}
           />
         ))}
       </div>
@@ -218,7 +228,7 @@ export function ScrambleFlights({
                     return (
                       <span key={id}>
                         {i > 0 && " / "}
-                        <button onClick={() => setSelectedPlayerId(id)} className="hover:underline">
+                        <button onClick={() => openPlayer(id)} className="hover:underline">
                           {p?.name ?? id}
                         </button>
                       </span>
@@ -290,10 +300,6 @@ export function ScrambleFlights({
             </p>
           </div>
         </ModalShell>
-      )}
-
-      {selectedPlayerId && (
-        <PlayerDetailModal playerId={selectedPlayerId} onClose={() => setSelectedPlayerId(null)} />
       )}
     </div>
   );

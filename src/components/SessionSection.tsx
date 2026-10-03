@@ -46,7 +46,10 @@ export function SessionSection({
       ? `${fmt(session.points_per_match)}p/kamp`
       : `${fmt(Math.min(...matchPointValues))}–${fmt(Math.max(...matchPointValues))}p/kamp`;
 
-  const cardClass = isActive
+  // A scramble session's own card stays plain white — who's leading already shows on
+  // the Gray/Aqua total boxes inside it, so tinting the whole card too would just
+  // double up (and the strong team colors wash out badly at low opacity over a full card).
+  const cardClass = isActive && !isScramble
     ? leader === "gray"
       ? "border-gray-team bg-gray-team-bg/30 border-l-4"
       : leader === "aqua"

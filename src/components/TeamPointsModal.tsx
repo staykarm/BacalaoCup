@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
 import { totalPoints } from "@/lib/scoring";
 import { computeCompetitionWins, computePlayerStats } from "@/lib/stats";
 import { TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
+import { PlayerDetailModal } from "./PlayerDetailModal";
 
 function fmt(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
@@ -31,6 +33,7 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
   const bannerText = team === "gray" ? "text-ink" : "text-white";
   const bannerSubtext = team === "gray" ? "text-ink/60" : "text-white/70";
   const listAccentText = team === "gray" ? "text-ink" : "text-aqua-team-deep";
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   return (
     <ModalShell title={teamName} onClose={onClose}>
@@ -58,9 +61,10 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
           </h3>
           <div className="space-y-2">
             {stats.map((s, i) => (
-              <div
+              <button
                 key={s.player.id}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-card-border bg-white px-3 py-2.5 text-sm"
+                onClick={() => setSelectedPlayerId(s.player.id)}
+                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-card-border bg-white px-3 py-2.5 text-left text-sm hover:border-gold-deep/40"
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="w-5 shrink-0 text-xs font-bold text-ink-light/60">{i + 1}</span>
@@ -78,11 +82,15 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
                     {fmt(s.pointsContributed + s.projectedExtra)} p
                   </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </section>
       </div>
+
+      {selectedPlayerId && (
+        <PlayerDetailModal playerId={selectedPlayerId} onClose={() => setSelectedPlayerId(null)} />
+      )}
     </ModalShell>
   );
 }

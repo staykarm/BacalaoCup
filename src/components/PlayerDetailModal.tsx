@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTournament } from "@/context/TournamentContext";
 import { shortCourseLabel } from "@/lib/courseHoles";
 import { liveLeader } from "@/lib/scoring";
@@ -15,9 +16,24 @@ function fmt(n: number) {
 export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onClose: () => void }) {
   const { players, matches, sessions, days, playerYearStats } = useTournament();
   const player = players.find((p) => p.id === playerId);
+  const [linkedPlayerId, setLinkedPlayerId] = useState<string | null>(null);
   if (!player) return null;
 
   const nameOf = (id: string | null) => (id ? players.find((p) => p.id === id)?.name ?? id : null);
+  // Renders a list of player ids as names, each clickable to open that player's own
+  // modal on top of this one — joined the same way the plain-text version used to be.
+  function nameLinks(ids: (string | null)[]) {
+    const valid = ids.filter((id): id is string => !!id);
+    if (valid.length === 0) return null;
+    return valid.map((id, i) => (
+      <span key={id}>
+        {i > 0 && " / "}
+        <button onClick={() => setLinkedPlayerId(id)} className="hover:underline">
+          {nameOf(id)}
+        </button>
+      </span>
+    ));
+  }
   const sessionOf = (id: string) => sessions.find((s) => s.id === id);
   const dayOf = (sessionId: string) => {
     const session = sessionOf(sessionId);
@@ -167,10 +183,7 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
               {relevantMatches.map((m) => {
                 const session = sessionOf(m.session_id);
                 const day = dayOf(m.session_id);
-                const opponents = (side === "gray" ? [m.aqua_player1, m.aqua_player2] : [m.gray_player1, m.gray_player2])
-                  .map(nameOf)
-                  .filter((n): n is string => !!n)
-                  .join(" / ");
+                const opponentIds = side === "gray" ? [m.aqua_player1, m.aqua_player2] : [m.gray_player1, m.gray_player2];
                 const live = isLive(m);
                 const liveLeaderTeam = live ? liveLeader(m.live_up) : null;
                 const myPoints = side === "gray" ? m.points_gray : m.points_aqua;
@@ -192,7 +205,7 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
                       <div className="truncate font-semibold text-ink">
                         {day?.label} &middot; {session?.name}
                       </div>
-                      <div className="truncate text-ink-light/60">vs {opponents || "?"}</div>
+                      <div className="truncate text-ink-light/60">vs {nameLinks(opponentIds) ?? "?"}</div>
                     </div>
                     <div className="shrink-0 text-right">
                       <div className="font-semibold text-ink">{live ? "Pågår" : RESULT_LABELS[m.result]}</div>
@@ -217,17 +230,12 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
               {upcomingMatches.map((m) => {
                 const session = sessionOf(m.session_id);
                 const day = dayOf(m.session_id);
-                const opponents = (side === "gray" ? [m.aqua_player1, m.aqua_player2] : [m.gray_player1, m.gray_player2])
-                  .map(nameOf)
-                  .filter((n): n is string => !!n)
-                  .join(" / ");
+                const opponentIds = side === "gray" ? [m.aqua_player1, m.aqua_player2] : [m.gray_player1, m.gray_player2];
                 // The player's own partner on a 2-per-side format (fourball/greensome) — empty
                 // for singles, where there's no one else on the player's own side.
-                const partner = (side === "gray" ? [m.gray_player1, m.gray_player2] : [m.aqua_player1, m.aqua_player2])
-                  .filter((id) => id && id !== playerId)
-                  .map(nameOf)
-                  .filter((n): n is string => !!n)
-                  .join(" / ");
+                const partnerIds = (side === "gray" ? [m.gray_player1, m.gray_player2] : [m.aqua_player1, m.aqua_player2]).filter(
+                  (id) => id && id !== playerId
+                );
 
                 return (
                   <div
@@ -239,8 +247,8 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
                         {day?.label} &middot; {session?.name}
                       </div>
                       <div className="truncate text-ink-light/60">
-                        {partner && <>Med {partner} &middot; </>}
-                        vs {opponents || "?"}
+                        {partnerIds.length > 0 && <>Med {nameLinks(partnerIds)} &middot; </>}
+                        vs {nameLinks(opponentIds) ?? "?"}
                       </div>
                     </div>
                     <div className="shrink-0 text-right text-ink-light">{m.start_time ?? "--:--"}</div>
@@ -275,6 +283,10 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
           </section>
         )}
       </div>
+
+      {linkedPlayerId && (
+        <PlayerDetailModal playerId={linkedPlayerId} onClose={() => setLinkedPlayerId(null)} />
+      )}
     </ModalShell>
   );
 }

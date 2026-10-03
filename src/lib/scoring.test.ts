@@ -14,6 +14,7 @@ import {
   pointsForResult,
   pointsToClinch,
   projectedPoints,
+  scrambleProjectedResult,
   scrambleResult,
   startingUpFor,
   totalPoints,
@@ -251,6 +252,44 @@ describe("scrambleResult", () => {
   });
 });
 
+describe("scrambleProjectedResult", () => {
+  const session = makeSession({ format: "scramble", points_per_match: 8 });
+
+  it("is blank until any flight on either side has teed off", () => {
+    const flights = [
+      makeMatch({ id: "gf1", flight_team: "gray", live_thru: null, score_vs_par: null }),
+      makeMatch({ id: "af1", flight_team: "aqua", live_thru: null, score_vs_par: null }),
+    ];
+    expect(scrambleProjectedResult(flights, session)).toEqual({
+      started: false,
+      grayTotal: null,
+      aquaTotal: null,
+      winner: null,
+    });
+  });
+
+  it("leads on the current combined score as soon as one flight has started", () => {
+    const flights = [
+      makeMatch({ id: "gf1", flight_team: "gray", live_thru: 4, score_vs_par: -2 }),
+      makeMatch({ id: "gf2", flight_team: "gray", live_thru: null, score_vs_par: null }),
+      makeMatch({ id: "af1", flight_team: "aqua", live_thru: null, score_vs_par: null }),
+      makeMatch({ id: "af2", flight_team: "aqua", live_thru: null, score_vs_par: null }),
+    ];
+    // Gray's unstarted second flight counts as 0, same as both of aqua's — gray leads -2 to 0.
+    expect(scrambleProjectedResult(flights, session)).toEqual({ started: true, grayTotal: -2, aquaTotal: 0, winner: "gray" });
+  });
+
+  it("agrees with scrambleResult once every flight is finished", () => {
+    const flights = [
+      makeMatch({ id: "gf1", flight_team: "gray", live_thru: 9, score_vs_par: -2 }),
+      makeMatch({ id: "af1", flight_team: "aqua", live_thru: 9, score_vs_par: -3 }),
+    ];
+    const decided = scrambleResult(flights, session);
+    const projected = scrambleProjectedResult(flights, session);
+    expect(projected).toEqual({ started: true, grayTotal: decided.grayTotal, aquaTotal: decided.aquaTotal, winner: decided.winner });
+  });
+});
+
 describe("isFrontNine / courseHoleNumber", () => {
   const sessions = [
     makeSession({ id: "morning", day_id: "d1", sort_order: 1 }),
@@ -311,5 +350,17 @@ describe("totalPoints / projectedPoints", () => {
   it("splits a projected all-square live match evenly", () => {
     const matches = [makeMatch({ id: "m1", result: "not_played", live_up: 0, live_thru: 2 })];
     expect(projectedPoints(matches, [session])).toEqual({ gray: 1, aqua: 1, possible: 2 });
+  });
+
+  it("awards a scramble session's points to the live-leading team before every flight is finished", () => {
+    const scramble = makeSession({ id: "sc", format: "scramble", points_per_match: 8 });
+    const matches = [
+      makeMatch({ id: "gf1", session_id: "sc", flight_team: "gray", live_thru: 3, score_vs_par: -1 }),
+      makeMatch({ id: "gf2", session_id: "sc", flight_team: "gray", live_thru: null, score_vs_par: null }),
+      makeMatch({ id: "af1", session_id: "sc", flight_team: "aqua", live_thru: null, score_vs_par: null }),
+      makeMatch({ id: "af2", session_id: "sc", flight_team: "aqua", live_thru: null, score_vs_par: null }),
+    ];
+    expect(projectedPoints(matches, [scramble])).toEqual({ gray: 8, aqua: 0, possible: 8 });
+    expect(totalPoints(matches, [scramble])).toEqual({ gray: 0, aqua: 0, possible: 8 });
   });
 });

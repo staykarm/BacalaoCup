@@ -3,7 +3,13 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
-import { courseHoleNumber, HOLES_PER_MATCH, isFrontNine, scrambleResult } from "@/lib/scoring";
+import {
+  courseHoleNumber,
+  HOLES_PER_MATCH,
+  isFrontNine,
+  scrambleProjectedResult,
+  scrambleResult,
+} from "@/lib/scoring";
 import { getHoleInfo } from "@/lib/courseHoles";
 import { Match, Player, Session, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
@@ -24,6 +30,14 @@ function scoreCellClass(relative: number | null): string {
   return "border-transparent bg-black text-white";
 }
 
+/** A running (or final) vs-par total: under par is white on red, par is black on white, over par is white on black. */
+function vsParTotalClass(n: number | null): string {
+  if (n === null) return "border border-card-border bg-white text-ink-light/40";
+  if (n < 0) return "border-transparent bg-red-600 text-white";
+  if (n === 0) return "border border-card-border bg-white text-ink";
+  return "border-transparent bg-black text-white";
+}
+
 function FlightRow({
   flight,
   players,
@@ -40,30 +54,54 @@ function FlightRow({
   // flight reads as clearly gray/blue as any other day's match card.
   const bg = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-flat";
   const text = team === "gray" ? "text-ink" : "text-white";
-  const subtext = team === "gray" ? "text-ink-light/70" : "text-white/70";
   const names = hideNames
     ? []
     : flight.flight_players.map((id) => players.find((p) => p.id === id)?.name ?? id);
+  const started = flight.live_thru !== null;
 
   return (
-    <button onClick={onClick} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:brightness-105 ${bg}`}>
-      <Image
-        src={team === "gray" ? "/logos/gray.png" : "/logos/aquarellos.png"}
-        alt=""
-        width={22}
-        height={22}
-        className="h-[22px] w-[22px] shrink-0 rounded-full object-cover"
-      />
-      <div className="min-w-0 flex-1">
-        <div className={`truncate text-xs font-bold uppercase tracking-wide ${text}`}>
+    <button
+      onClick={onClick}
+      className="flex w-full items-stretch overflow-hidden rounded-2xl border-2 border-card-border bg-card text-left shadow-sm transition hover:border-gold-deep/40"
+    >
+      <div className={`flex min-w-0 flex-1 items-center gap-2 px-3 py-3 sm:px-4 sm:py-4 ${bg}`}>
+        <Image
+          src={team === "gray" ? "/logos/gray.png" : "/logos/aquarellos.png"}
+          alt=""
+          width={24}
+          height={24}
+          className="h-5 w-5 shrink-0 rounded-full object-cover opacity-80 sm:h-6 sm:w-6"
+        />
+        <div
+          className={`truncate text-[11px] font-bold uppercase leading-tight tracking-normal sm:text-sm sm:tracking-wide ${text}`}
+        >
           {names.length > 0 ? names.join(" / ") : team === "gray" ? "Gray (Joys)" : "Aquarellos"}
         </div>
-        <div className={`text-[11px] ${subtext}`}>{flight.start_time ?? "--:--"}</div>
       </div>
-      <span className={`font-display text-lg font-bold ${flight.score_vs_par === null ? `${text} opacity-40` : text}`}>
-        {fmtVsPar(flight.score_vs_par)}
-      </span>
-      <span className={`text-[11px] ${subtext}`}>{flight.live_thru !== null ? `Hull ${flight.live_thru}` : ""}</span>
+
+      {/* Same dark time/hole box as a regular match-play card: tee time until the flight
+          tees off, then the hole it's reached once a score starts coming in. */}
+      <div
+        className={`flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 px-1 py-3 text-center sm:w-24 sm:py-4 ${
+          started ? "bg-black" : "bg-navy-deep"
+        }`}
+      >
+        {started ? (
+          <span className="text-sm font-extrabold text-white sm:text-base">{flight.live_thru}</span>
+        ) : (
+          <span className="text-xs font-bold text-foreground sm:text-sm">{flight.start_time ?? "--:--"}</span>
+        )}
+      </div>
+
+      <div className="flex shrink-0 items-center justify-center bg-card px-2 sm:px-3">
+        <span
+          className={`inline-flex min-w-[2.75rem] items-center justify-center rounded-lg px-2 py-1 font-display text-sm font-bold sm:text-base ${vsParTotalClass(
+            flight.score_vs_par
+          )}`}
+        >
+          {fmtVsPar(flight.score_vs_par)}
+        </span>
+      </div>
     </button>
   );
 }
@@ -88,14 +126,10 @@ export function ScrambleFlights({
   const editingFlight = matches.find((m) => m.id === editingFlightId) ?? null;
 
   const flights = [...matches].sort((a, b) => a.sort_order - b.sort_order);
-  const grayFlights = matches.filter((m) => m.flight_team === "gray");
-  const aquaFlights = matches.filter((m) => m.flight_team === "aqua");
   const result = scrambleResult(matches, session);
-
-  const grayHasScore = grayFlights.some((f) => f.score_vs_par !== null);
-  const aquaHasScore = aquaFlights.some((f) => f.score_vs_par !== null);
-  const grayRunningTotal = grayFlights.reduce((a, f) => a + (f.score_vs_par ?? 0), 0);
-  const aquaRunningTotal = aquaFlights.reduce((a, f) => a + (f.score_vs_par ?? 0), 0);
+  // Live combined score, usable as soon as any flight has teed off — once every flight
+  // is finished this agrees exactly with `result` above.
+  const live = scrambleProjectedResult(matches, session);
 
   const frontNine = isFrontNine(session, sessions);
   const course = days.find((d) => d.id === session.day_id)?.course ?? null;
@@ -119,22 +153,22 @@ export function ScrambleFlights({
       <div className="grid grid-cols-2 gap-3">
         <div
           className={`rounded-xl border px-3 py-2 text-center ${
-            result.decided && result.winner === "gray" ? "border-gold bg-gold/10" : "border-card-border bg-card-deep"
+            live.started && live.winner === "gray" ? "border-gold bg-gold/10" : "border-card-border bg-card-deep"
           }`}
         >
           <p className="text-[11px] uppercase tracking-wide text-ink-light">Gray</p>
-          <p className={`font-display text-lg font-bold ${grayHasScore ? "text-ink" : "text-ink-light/40"}`}>
-            {fmtVsPar(grayHasScore ? grayRunningTotal : null)}
+          <p className={`mt-1 inline-flex min-w-[3rem] items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.grayTotal : null)}`}>
+            {fmtVsPar(live.started ? live.grayTotal : null)}
           </p>
         </div>
         <div
           className={`rounded-xl border px-3 py-2 text-center ${
-            result.decided && result.winner === "aqua" ? "border-gold bg-gold/10" : "border-card-border bg-card-deep"
+            live.started && live.winner === "aqua" ? "border-gold bg-gold/10" : "border-card-border bg-card-deep"
           }`}
         >
           <p className="text-[11px] uppercase tracking-wide text-ink-light">Aqua</p>
-          <p className={`font-display text-lg font-bold ${aquaHasScore ? "text-ink" : "text-ink-light/40"}`}>
-            {fmtVsPar(aquaHasScore ? aquaRunningTotal : null)}
+          <p className={`mt-1 inline-flex min-w-[3rem] items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.aquaTotal : null)}`}>
+            {fmtVsPar(live.started ? live.aquaTotal : null)}
           </p>
         </div>
       </div>
@@ -151,17 +185,24 @@ export function ScrambleFlights({
         ))}
       </div>
 
-      {result.decided && (
+      {live.started && (
         <div className="rounded-xl border border-card-border bg-card-deep px-3 py-2 text-center text-xs text-ink-light">
-          {result.winner ? (
-            <span className="font-semibold text-ink">
-              Sammenlagt {fmtVsPar(result.grayTotal)} – {fmtVsPar(result.aquaTotal)} &middot;{" "}
-              {result.winner === "gray" ? "Gray" : "Aqua"} tar {session.points_per_match}p
-            </span>
+          {result.decided ? (
+            result.winner ? (
+              <span className="font-semibold text-ink">
+                Sammenlagt {fmtVsPar(result.grayTotal)} – {fmtVsPar(result.aquaTotal)} &middot;{" "}
+                {result.winner === "gray" ? "Gray" : "Aqua"} tar {session.points_per_match}p
+              </span>
+            ) : (
+              <span className="font-semibold text-ink">
+                Sammenlagt {fmtVsPar(result.grayTotal)} – {fmtVsPar(result.aquaTotal)} &middot; Delt,{" "}
+                {session.points_per_match / 2}p hver
+              </span>
+            )
           ) : (
             <span className="font-semibold text-ink">
-              Sammenlagt {fmtVsPar(result.grayTotal)} – {fmtVsPar(result.aquaTotal)} &middot; Delt,{" "}
-              {session.points_per_match / 2}p hver
+              Sammenlagt {fmtVsPar(live.grayTotal)} – {fmtVsPar(live.aquaTotal)} &middot;{" "}
+              {live.winner ? `${live.winner === "gray" ? "Gray" : "Aqua"} leder` : "Likt"} &middot; pågår
             </span>
           )}
         </div>

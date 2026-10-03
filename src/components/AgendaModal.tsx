@@ -12,8 +12,9 @@ import { RestaurantModal } from "./RestaurantModal";
 import { KartModal } from "./KartModal";
 import { CourseInfoModal } from "./CourseInfoModal";
 import { RestaurantInfoModal } from "./RestaurantInfoModal";
+import { WeatherModal } from "./WeatherModal";
 
-type SubModal = "baneinfo" | "restaurant" | "kart" | null;
+type SubModal = "baneinfo" | "restaurant" | "kart" | "vaer" | null;
 
 export function AgendaModal({ onClose }: { onClose: () => void }) {
   const { days, sessions, matches } = useTournament();
@@ -24,7 +25,7 @@ export function AgendaModal({ onClose }: { onClose: () => void }) {
 
   return (
     <ModalShell title="Agenda" onClose={onClose}>
-      <div className="mb-4 grid grid-cols-3 gap-2">
+      <div className="mb-4 grid grid-cols-4 gap-2">
         <button
           onClick={() => setSubModal("baneinfo")}
           className="flex flex-col items-center gap-1 rounded-2xl border border-card-border bg-card-deep px-2 py-2.5 text-ink transition hover:bg-card-border/60"
@@ -51,6 +52,15 @@ export function AgendaModal({ onClose }: { onClose: () => void }) {
             🗺️
           </span>
           <span className="text-[11px] font-semibold uppercase tracking-wide">Kart</span>
+        </button>
+        <button
+          onClick={() => setSubModal("vaer")}
+          className="flex flex-col items-center gap-1 rounded-2xl border border-card-border bg-card-deep px-2 py-2.5 text-ink transition hover:bg-card-border/60"
+        >
+          <span className="text-lg leading-none" aria-hidden>
+            🌦️
+          </span>
+          <span className="text-[11px] font-semibold uppercase tracking-wide">Vær</span>
         </button>
       </div>
 
@@ -174,6 +184,7 @@ export function AgendaModal({ onClose }: { onClose: () => void }) {
       {subModal === "baneinfo" && <BaneinfoModal onClose={() => setSubModal(null)} />}
       {subModal === "restaurant" && <RestaurantModal onClose={() => setSubModal(null)} />}
       {subModal === "kart" && <KartModal onClose={() => setSubModal(null)} />}
+      {subModal === "vaer" && <WeatherModal onClose={() => setSubModal(null)} />}
       {courseModal && <CourseInfoModal courseName={courseModal} onClose={() => setCourseModal(null)} />}
       {restaurantModal && <RestaurantInfoModal restaurant={restaurantModal} onClose={() => setRestaurantModal(null)} />}
     </ModalShell>

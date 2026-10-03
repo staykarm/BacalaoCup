@@ -181,13 +181,23 @@ export function ScrambleFlights({
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div className={`rounded-xl px-3 py-2 text-center ${totalBg("gray", leadingSide, isNeutral)}`}>
-          <p className={`text-[11px] uppercase tracking-wide ${totalText("gray", leadingSide, isNeutral)}`}>Gray</p>
+          <p
+            className={`flex items-center justify-center gap-1 text-[11px] uppercase tracking-wide ${totalText("gray", leadingSide, isNeutral)}`}
+          >
+            <Image src="/logos/gray.png" alt="" width={16} height={16} className="h-4 w-4 shrink-0 rounded-full object-cover" />
+            Gray (Joys)
+          </p>
           <p className={`mt-1 inline-flex min-w-[3rem] items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.grayTotal : null)}`}>
             {fmtVsPar(live.started ? live.grayTotal : null)}
           </p>
         </div>
         <div className={`rounded-xl px-3 py-2 text-center ${totalBg("aqua", leadingSide, isNeutral)}`}>
-          <p className={`text-[11px] uppercase tracking-wide ${totalText("aqua", leadingSide, isNeutral)}`}>Aqua</p>
+          <p
+            className={`flex items-center justify-center gap-1 text-[11px] uppercase tracking-wide ${totalText("aqua", leadingSide, isNeutral)}`}
+          >
+            <Image src="/logos/aquarellos.png" alt="" width={16} height={16} className="h-4 w-4 shrink-0 rounded-full object-cover" />
+            Aquarellos
+          </p>
           <p className={`mt-1 inline-flex min-w-[3rem] items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.aquaTotal : null)}`}>
             {fmtVsPar(live.started ? live.aquaTotal : null)}
           </p>

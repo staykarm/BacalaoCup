@@ -17,15 +17,28 @@ export function pointsForResult(
   }
 }
 
+/** Shared by scrambleResult and scrambleProjectedResult: the combined score-vs-par and
+ * resulting winner from whatever's been entered so far — a flight with no score yet
+ * contributes 0. Net of an optional team handicap. */
+function scrambleTotals(flights: Match[], session: Session) {
+  const grayFlights = flights.filter((f) => f.flight_team === "gray");
+  const aquaFlights = flights.filter((f) => f.flight_team === "aqua");
+  const grayTotal = grayFlights.reduce((a, f) => a + (f.score_vs_par ?? 0), 0);
+  const aquaTotal = aquaFlights.reduce((a, f) => a + (f.score_vs_par ?? 0), 0);
+  const grayNet = grayTotal - (session.handicap_team === "gray" ? (session.handicap_strokes ?? 0) : 0);
+  const aquaNet = aquaTotal - (session.handicap_team === "aqua" ? (session.handicap_strokes ?? 0) : 0);
+  const winner: TeamId | null = grayNet === aquaNet ? null : grayNet < aquaNet ? "gray" : "aqua";
+  return { grayFlights, aquaFlights, grayTotal, aquaTotal, winner };
+}
+
 /**
  * A scramble session isn't match-play: each team fields two flights, and the whole
  * session's points go entirely to whichever team has the lower combined score-vs-par
  * across its two flights (net of an optional team handicap) — never split per row.
- * "Decided" only once every flight on both sides has a score entered.
+ * "Decided" only once every flight on both sides has played all 9 holes.
  */
 export function scrambleResult(flights: Match[], session: Session) {
-  const grayFlights = flights.filter((f) => f.flight_team === "gray");
-  const aquaFlights = flights.filter((f) => f.flight_team === "aqua");
+  const { grayFlights, aquaFlights, grayTotal, aquaTotal, winner } = scrambleTotals(flights, session);
   const allPlayedOut = (fs: Match[]) =>
     fs.length > 0 && fs.every((f) => f.live_thru !== null && f.live_thru >= HOLES_PER_MATCH);
   const decided = allPlayedOut(grayFlights) && allPlayedOut(aquaFlights);
@@ -33,14 +46,24 @@ export function scrambleResult(flights: Match[], session: Session) {
   if (!decided) {
     return { decided: false, grayTotal: null, aquaTotal: null, winner: null } as const;
   }
-
-  const grayTotal = grayFlights.reduce((a, f) => a + (f.score_vs_par ?? 0), 0);
-  const aquaTotal = aquaFlights.reduce((a, f) => a + (f.score_vs_par ?? 0), 0);
-  const grayNet = grayTotal - (session.handicap_team === "gray" ? (session.handicap_strokes ?? 0) : 0);
-  const aquaNet = aquaTotal - (session.handicap_team === "aqua" ? (session.handicap_strokes ?? 0) : 0);
-  const winner: TeamId | null = grayNet === aquaNet ? null : grayNet < aquaNet ? "gray" : "aqua";
-
   return { decided: true, grayTotal, aquaTotal, winner } as const;
+}
+
+/**
+ * A live read on a scramble session's combined score, usable as soon as any flight on
+ * either side has teed off — unlike scrambleResult, which only resolves once every
+ * flight has finished all 9 holes. A flight with no score yet still contributes 0, so
+ * the leader shown here can (and will) change as more flights report scores in. Once
+ * every flight is finished this agrees exactly with scrambleResult's own totals.
+ */
+export function scrambleProjectedResult(flights: Match[], session: Session) {
+  const { grayFlights, aquaFlights, grayTotal, aquaTotal, winner } = scrambleTotals(flights, session);
+  const started = grayFlights.some((f) => f.live_thru !== null) || aquaFlights.some((f) => f.live_thru !== null);
+
+  if (!started) {
+    return { started: false, grayTotal: null, aquaTotal: null, winner: null } as const;
+  }
+  return { started: true, grayTotal, aquaTotal, winner } as const;
 }
 
 function sessionPoints(sessionMatches: Match[], session: Session | undefined) {
@@ -100,8 +123,9 @@ export function totalPoints(matches: Match[], sessions: Session[]) {
  * hole by hole instead of waiting for the match to be locked in. Once at least one
  * hole has been played, a match that's all square splits its points evenly between
  * the teams, same as a halved final result. A match that hasn't started yet still
- * contributes nothing. A scramble session has no partial/live state — it only
- * contributes once every flight's score has been entered, same as totalPoints.
+ * contributes nothing. A scramble session works the same way: once any flight has
+ * teed off, the session's points go to whichever team currently leads the combined
+ * score (see scrambleProjectedResult), even before every flight has finished.
  */
 export function projectedPoints(matches: Match[], sessions: Session[]) {
   const sessionById = new Map(sessions.map((s) => [s.id, s]));
@@ -112,9 +136,15 @@ export function projectedPoints(matches: Match[], sessions: Session[]) {
   for (const [sessionId, sessionMatches] of bySession) {
     const session = sessionById.get(sessionId);
     if (session?.format === "scramble") {
-      const points = sessionPoints(sessionMatches, session);
-      gray += points.gray;
-      aqua += points.aqua;
+      const projected = scrambleProjectedResult(sessionMatches, session);
+      if (projected.started) {
+        if (projected.winner === "gray") gray += session.points_per_match;
+        else if (projected.winner === "aqua") aqua += session.points_per_match;
+        else {
+          gray += session.points_per_match / 2;
+          aqua += session.points_per_match / 2;
+        }
+      }
     } else {
       for (const m of sessionMatches) {
         if (m.result !== "not_played") {

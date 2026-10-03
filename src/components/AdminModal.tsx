@@ -100,6 +100,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
     activeSessionIds,
     toggleActiveSession,
     resetAllMatches,
+    clearActivityLog,
     updateSessionHandicap,
     updateDayHideNames,
     updateCompetitionWinner,
@@ -116,6 +117,9 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [done, setDone] = useState(false);
+  const [confirmingFeed, setConfirmingFeed] = useState(false);
+  const [clearingFeed, setClearingFeed] = useState(false);
+  const [feedCleared, setFeedCleared] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
   const [newPin, setNewPin] = useState("");
@@ -151,6 +155,14 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
     setDone(true);
   }
 
+  async function confirmClearFeed() {
+    setClearingFeed(true);
+    await clearActivityLog();
+    setClearingFeed(false);
+    setConfirmingFeed(false);
+    setFeedCleared(true);
+  }
+
   const sortedDays = [...days].sort((a, b) => a.sort_order - b.sort_order);
   const playableDays = sortedDays.filter((day) => sessions.some((s) => s.day_id === day.id));
 
@@ -170,6 +182,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
     { id: "section-hide-names", label: "Navn" },
     ...(playableDays.some((d) => d.course && COMPETITIONS[d.course]) ? [{ id: "section-competitions", label: "Konkurranser" }] : []),
     { id: "section-reset", label: "Nullstill" },
+    { id: "section-reset-feed", label: "Feed" },
   ];
 
   return (
@@ -485,6 +498,42 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
               className="rounded-xl border border-red-400 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-100"
             >
               Nullstill alle resultater
+            </button>
+          )}
+        </div>
+
+        <div id="section-reset-feed" className="rounded-2xl border border-red-300 bg-red-50 p-4">
+          <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-red-700">Nullstill feed</h3>
+          <p className="mb-3 text-xs text-ink-light">
+            Sletter alle innlegg i aktivitetsfeeden (start/hull/ferdig). Påvirker ikke selve kampene eller
+            resultatene. Kan ikke angres.
+          </p>
+
+          {feedCleared ? (
+            <p className="text-sm font-semibold text-ink-light">Feeden er nullstilt.</p>
+          ) : confirmingFeed ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold text-red-700">Er du sikker?</span>
+              <button
+                onClick={confirmClearFeed}
+                disabled={clearingFeed}
+                className="rounded-xl border border-red-400 bg-red-100 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-200 disabled:opacity-40"
+              >
+                {clearingFeed ? "Nullstiller..." : "Ja, nullstill feeden"}
+              </button>
+              <button
+                onClick={() => setConfirmingFeed(false)}
+                className="rounded-xl border border-card-border px-3 py-1.5 text-xs text-ink-light hover:bg-card-deep"
+              >
+                Avbryt
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmingFeed(true)}
+              className="rounded-xl border border-red-400 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-100"
+            >
+              Nullstill feeden
             </button>
           )}
         </div>

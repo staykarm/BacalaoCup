@@ -46,6 +46,8 @@ interface TournamentContextValue {
   updateLocationCoords: (id: string, lat: number, lng: number) => Promise<void>;
   /** Admin: resets every match back to not-played with no live score or result. */
   resetAllMatches: () => Promise<void>;
+  /** Admin: permanently deletes every activity feed entry. */
+  clearActivityLog: () => Promise<void>;
   /** Admin: which rounds are marked "- pågår" in the UI. Purely informational — doesn't restrict editing. */
   activeSessionIds: string[];
   toggleActiveSession: (sessionId: string) => Promise<void>;
@@ -535,6 +537,17 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const clearActivityLog = useCallback(async () => {
+    setActivityLog([]);
+
+    // activity_log.id is a uuid column, so a `!= ''` filter fails to cast and the delete
+    // never runs server-side — see the identical note on resetAllMatches above.
+    const { error: deleteError } = await supabase.from("activity_log").delete().not("id", "is", null);
+    if (deleteError) {
+      setSyncError(deleteError.message);
+    }
+  }, []);
+
   const updateSessionHandicap = useCallback(
     async (sessionId: string, team: TeamId | null, strokes: number | null) => {
       const patch = { handicap_team: team, handicap_strokes: team ? strokes : null };
@@ -598,6 +611,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       updateMatch,
       updateLocationCoords,
       resetAllMatches,
+      clearActivityLog,
       activeSessionIds,
       toggleActiveSession,
       updateSessionHandicap,
@@ -630,6 +644,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       updateMatch,
       updateLocationCoords,
       resetAllMatches,
+      clearActivityLog,
       activeSessionIds,
       toggleActiveSession,
       updateSessionHandicap,

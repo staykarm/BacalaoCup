@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useTournament } from "@/context/TournamentContext";
+import { usePlayerModal } from "@/context/PlayerModalContext";
 import { computeCompetitionWins, computePlayerStats, rankByValue } from "@/lib/stats";
 import { Player, PlayerYearStat, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
 import { PlayerAvatar } from "./PlayerAvatar";
-import { PlayerDetailModal } from "./PlayerDetailModal";
 
 function fmt(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
@@ -80,7 +79,7 @@ export function MvpModal({ onClose }: { onClose: () => void }) {
   const playerStats = computePlayerStats(matches, players);
   const competitionWins = computeCompetitionWins(days, players);
   const winsById = new Map(competitionWins.perPlayer.map((p) => [p.player.id, p.wins]));
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const { openPlayer } = usePlayerModal();
 
   const rows = players
     .map((p) => ({ player: p, stat: playerStats.find((s) => s.player.id === p.id)! }))
@@ -103,14 +102,10 @@ export function MvpModal({ onClose }: { onClose: () => void }) {
               .filter((h) => h.player_id === player.id)
               .sort((a, b) => b.year - a.year)}
             competitionWins={winsById.get(player.id) ?? 0}
-            onClick={() => setSelectedPlayerId(player.id)}
+            onClick={() => openPlayer(player.id)}
           />
         ))}
       </div>
-
-      {selectedPlayerId && (
-        <PlayerDetailModal playerId={selectedPlayerId} onClose={() => setSelectedPlayerId(null)} />
-      )}
     </ModalShell>
   );
 }

@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
+import { usePlayerModal } from "@/context/PlayerModalContext";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { PlayerDetailModal } from "@/components/PlayerDetailModal";
 import { ScoreBar } from "@/components/ScoreBar";
 import { SessionSection } from "@/components/SessionSection";
 import { hasLiveMatches, pointsToClinch, projectedPoints, totalPoints } from "@/lib/scoring";
@@ -83,6 +85,7 @@ const AUTO_RELOAD_MS = 2 * 60 * 60 * 1000;
 
 export default function TvScoreboardPage() {
   const { players, days, sessions, matches, loading, error, tvOverrideDayId, tvOverrideDayId2 } = useTournament();
+  const { playerId, closePlayerModal } = usePlayerModal();
 
   // Ticks every second purely so a frozen screen is visible at a glance — if the clock
   // stops moving, the page has stopped updating.
@@ -294,6 +297,8 @@ export default function TvScoreboardPage() {
           </p>
         </aside>
       </div>
+
+      {playerId && <PlayerDetailModal playerId={playerId} onClose={closePlayerModal} />}
     </div>
   );
 }

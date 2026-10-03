@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
+import { usePlayerModal } from "@/context/PlayerModalContext";
 import { shortCourseLabel } from "@/lib/courseHoles";
 import { Player, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
 import { PlayerAvatar } from "./PlayerAvatar";
-import { PlayerDetailModal } from "./PlayerDetailModal";
 
 function fmt(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
@@ -87,7 +86,7 @@ function TeamTable({
 
 export function CourseStrokesModal({ onClose }: { onClose: () => void }) {
   const { players, days } = useTournament();
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const { openPlayer } = usePlayerModal();
   const courses = [...days]
     .filter((d) => d.course)
     .sort((a, b) => a.sort_order - b.sort_order)
@@ -101,13 +100,9 @@ export function CourseStrokesModal({ onClose }: { onClose: () => void }) {
           Mottatte slag per bane, basert på spillerens handicap. Los Lagos har CR-verdi 72,6 (over par), så
           enkelte spillere får ett slag ekstra der.
         </p>
-        <TeamTable team="gray" players={players} courses={courses} onSelectPlayer={setSelectedPlayerId} />
-        <TeamTable team="aqua" players={players} courses={courses} onSelectPlayer={setSelectedPlayerId} />
+        <TeamTable team="gray" players={players} courses={courses} onSelectPlayer={openPlayer} />
+        <TeamTable team="aqua" players={players} courses={courses} onSelectPlayer={openPlayer} />
       </div>
-
-      {selectedPlayerId && (
-        <PlayerDetailModal playerId={selectedPlayerId} onClose={() => setSelectedPlayerId(null)} />
-      )}
     </ModalShell>
   );
 }

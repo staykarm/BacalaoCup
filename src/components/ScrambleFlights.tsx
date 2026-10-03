@@ -3,11 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useTournament } from "@/context/TournamentContext";
+import { usePlayerModal } from "@/context/PlayerModalContext";
 import { courseHoleNumber, HOLES_PER_MATCH, isFrontNine, scrambleProjectedResult } from "@/lib/scoring";
 import { getHoleInfo } from "@/lib/courseHoles";
 import { Match, Player, Session, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
-import { PlayerDetailModal } from "./PlayerDetailModal";
 
 function fmtVsPar(n: number | null) {
   if (n === null) return "–";
@@ -143,8 +143,8 @@ export function ScrambleFlights({
   hideNames?: boolean;
 }) {
   const { matchHoles, sessions, days, activeSessionIds, setMatchHole } = useTournament();
+  const { openPlayer } = usePlayerModal();
   const [editingFlightId, setEditingFlightId] = useState<string | null>(null);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const isActiveSession = activeSessionIds.includes(session.id);
   // Re-derived from the live `matches` prop every render, not a captured snapshot, so the
   // modal's totals stay in sync as holes are entered instead of freezing at open-time.
@@ -202,7 +202,7 @@ export function ScrambleFlights({
             players={players}
             hideNames={hideNames}
             onClick={() => setEditingFlightId(f.id)}
-            onSelectPlayer={setSelectedPlayerId}
+            onSelectPlayer={openPlayer}
           />
         ))}
       </div>
@@ -218,7 +218,7 @@ export function ScrambleFlights({
                     return (
                       <span key={id}>
                         {i > 0 && " / "}
-                        <button onClick={() => setSelectedPlayerId(id)} className="hover:underline">
+                        <button onClick={() => openPlayer(id)} className="hover:underline">
                           {p?.name ?? id}
                         </button>
                       </span>
@@ -290,10 +290,6 @@ export function ScrambleFlights({
             </p>
           </div>
         </ModalShell>
-      )}
-
-      {selectedPlayerId && (
-        <PlayerDetailModal playerId={selectedPlayerId} onClose={() => setSelectedPlayerId(null)} />
       )}
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useTournament } from "@/context/TournamentContext";
+import { usePlayerModal } from "@/context/PlayerModalContext";
 import { shortCourseLabel } from "@/lib/courseHoles";
 import { liveLeader } from "@/lib/scoring";
 import { computeCompetitionWins, computePlayerStats } from "@/lib/stats";
@@ -15,20 +15,21 @@ function fmt(n: number) {
 
 export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onClose: () => void }) {
   const { players, matches, sessions, days, playerYearStats } = useTournament();
+  const { openPlayer } = usePlayerModal();
   const player = players.find((p) => p.id === playerId);
-  const [linkedPlayerId, setLinkedPlayerId] = useState<string | null>(null);
   if (!player) return null;
 
   const nameOf = (id: string | null) => (id ? players.find((p) => p.id === id)?.name ?? id : null);
-  // Renders a list of player ids as names, each clickable to open that player's own
-  // modal on top of this one — joined the same way the plain-text version used to be.
+  // Renders a list of player ids as names, each clickable to switch this same modal to
+  // that player — swapping in place (via the shared PlayerModalContext) rather than
+  // nesting a new modal on top, so the × always closes the whole chain in one step.
   function nameLinks(ids: (string | null)[]) {
     const valid = ids.filter((id): id is string => !!id);
     if (valid.length === 0) return null;
     return valid.map((id, i) => (
       <span key={id}>
         {i > 0 && " / "}
-        <button onClick={() => setLinkedPlayerId(id)} className="hover:underline">
+        <button onClick={() => openPlayer(id)} className="hover:underline">
           {nameOf(id)}
         </button>
       </span>
@@ -283,10 +284,6 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
           </section>
         )}
       </div>
-
-      {linkedPlayerId && (
-        <PlayerDetailModal playerId={linkedPlayerId} onClose={() => setLinkedPlayerId(null)} />
-      )}
     </ModalShell>
   );
 }

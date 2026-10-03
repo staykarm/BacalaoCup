@@ -180,27 +180,29 @@ export function ScrambleFlights({
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
-        <div className={`rounded-xl px-3 py-2 text-center ${totalBg("gray", leadingSide, isNeutral)}`}>
-          <p
-            className={`flex items-center justify-center gap-1 text-[11px] uppercase tracking-wide ${totalText("gray", leadingSide, isNeutral)}`}
+        {/* Logo+name pinned to the outer edge (justify-between), so its position never
+            shifts with how wide the score chip ends up being. */}
+        <div className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2 ${totalBg("gray", leadingSide, isNeutral)}`}>
+          <span
+            className={`flex min-w-0 items-center gap-1 text-[11px] uppercase tracking-wide ${totalText("gray", leadingSide, isNeutral)}`}
           >
             <Image src="/logos/gray.png" alt="" width={16} height={16} className="h-4 w-4 shrink-0 rounded-full object-cover" />
-            Gray (Joys)
-          </p>
-          <p className={`mt-1 inline-flex min-w-[3rem] items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.grayTotal : null)}`}>
+            <span className="truncate">Gray (Joys)</span>
+          </span>
+          <span className={`inline-flex min-w-[3rem] shrink-0 items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.grayTotal : null)}`}>
             {fmtVsPar(live.started ? live.grayTotal : null)}
-          </p>
+          </span>
         </div>
-        <div className={`rounded-xl px-3 py-2 text-center ${totalBg("aqua", leadingSide, isNeutral)}`}>
-          <p
-            className={`flex items-center justify-center gap-1 text-[11px] uppercase tracking-wide ${totalText("aqua", leadingSide, isNeutral)}`}
-          >
-            <Image src="/logos/aquarellos.png" alt="" width={16} height={16} className="h-4 w-4 shrink-0 rounded-full object-cover" />
-            Aquarellos
-          </p>
-          <p className={`mt-1 inline-flex min-w-[3rem] items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.aquaTotal : null)}`}>
+        <div className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2 ${totalBg("aqua", leadingSide, isNeutral)}`}>
+          <span className={`inline-flex min-w-[3rem] shrink-0 items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.aquaTotal : null)}`}>
             {fmtVsPar(live.started ? live.aquaTotal : null)}
-          </p>
+          </span>
+          <span
+            className={`flex min-w-0 items-center gap-1 text-[11px] uppercase tracking-wide ${totalText("aqua", leadingSide, isNeutral)}`}
+          >
+            <span className="truncate">Aquarellos</span>
+            <Image src="/logos/aquarellos.png" alt="" width={16} height={16} className="h-4 w-4 shrink-0 rounded-full object-cover" />
+          </span>
         </div>
       </div>
 

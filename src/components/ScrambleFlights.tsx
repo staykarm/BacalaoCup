@@ -152,21 +152,21 @@ export function ScrambleFlights({
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div
-          className={`rounded-xl border px-3 py-2 text-center ${
-            live.started && live.winner === "gray" ? "border-gold bg-gold/10" : "border-card-border bg-card-deep"
+          className={`rounded-xl border-2 bg-gray-team-bg px-3 py-2 text-center ${
+            live.started && live.winner === "gray" ? "border-gold" : "border-transparent"
           }`}
         >
-          <p className="text-[11px] uppercase tracking-wide text-ink-light">Gray</p>
+          <p className="text-[11px] uppercase tracking-wide text-ink/70">Gray</p>
           <p className={`mt-1 inline-flex min-w-[3rem] items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.grayTotal : null)}`}>
             {fmtVsPar(live.started ? live.grayTotal : null)}
           </p>
         </div>
         <div
-          className={`rounded-xl border px-3 py-2 text-center ${
-            live.started && live.winner === "aqua" ? "border-gold bg-gold/10" : "border-card-border bg-card-deep"
+          className={`rounded-xl border-2 bg-aqua-team-flat px-3 py-2 text-center ${
+            live.started && live.winner === "aqua" ? "border-gold" : "border-transparent"
           }`}
         >
-          <p className="text-[11px] uppercase tracking-wide text-ink-light">Aqua</p>
+          <p className="text-[11px] uppercase tracking-wide text-white/70">Aqua</p>
           <p className={`mt-1 inline-flex min-w-[3rem] items-center justify-center rounded-lg px-2 py-1 font-display text-lg font-bold ${vsParTotalClass(live.started ? live.aquaTotal : null)}`}>
             {fmtVsPar(live.started ? live.aquaTotal : null)}
           </p>

@@ -146,6 +146,10 @@ export function MatchRow({
         : "text-gold-deep";
 
   const isLiveInProgress = match.result === "not_played" && (match.live_up !== 0 || match.live_thru !== null);
+  // Once a match has a final result, its hole-by-hole grid is locked read-only — correcting
+  // a mistake after the fact goes through the admin's "Nullstill resultater", not a stray tap here.
+  const isDecided = match.result !== "not_played";
+  const holesLocked = !isActiveSession || isDecided;
 
   // A not-yet-started match in a round that isn't active has no hole results to show and no
   // way to enter any — the hole-by-hole grid would just be a wall of dashes, so skip it.
@@ -211,10 +215,6 @@ export function MatchRow({
             : "border-card-border"
       }`}
     >
-      <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/50 bg-navy-deep px-2 py-0.5 text-[10px] font-bold text-gold shadow">
-        {fmtPts(match.points)}p
-      </div>
-
       <div className="flex items-stretch overflow-hidden rounded-t-2xl">
         <div className={`flex min-w-0 flex-1 items-center gap-2 px-3 py-3 sm:px-4 sm:py-4 ${sideBg("gray")}`}>
           {sideBadgeText("gray") && (
@@ -345,6 +345,11 @@ export function MatchRow({
         >
           <div className="space-y-5">
             <div className="text-center">
+              <div className="mb-3 flex justify-center">
+                <span className="rounded-full border border-gold/50 bg-navy-deep px-2 py-0.5 text-[10px] font-bold text-gold shadow">
+                  {fmtPts(match.points)}p
+                </span>
+              </div>
               {grayPlayers.length > 0 || aquaPlayers.length > 0 ? (
                 <div className="mb-3 flex items-start justify-center gap-3">
                   <div className="flex gap-2">
@@ -484,12 +489,12 @@ export function MatchRow({
                               return (
                                 <button
                                   key={opt.key}
-                                  disabled={!isActiveSession}
+                                  disabled={holesLocked}
                                   onClick={() => setMatchHole(match, relHole, { result: active ? null : opt.key })}
                                   aria-label={`Hull ${courseHoleNumber(relHole, frontNine)} ${opt.label}`}
                                   className={`h-5 w-8 rounded border text-[8px] font-bold uppercase leading-none transition ${
                                     active ? activeClass : inactiveClass
-                                  } ${isActiveSession ? "" : "cursor-default"}`}
+                                  } ${holesLocked ? "cursor-default" : ""}`}
                                 >
                                   {opt.label[0]}
                                 </button>
@@ -505,9 +510,11 @@ export function MatchRow({
                 </div>
 
                 <p className="text-center text-xs text-ink-light/60">
-                  {isActiveSession
-                    ? "Velg Grå, Delt eller Blå for hvert hull. Stillingen regnes ut automatisk."
-                    : "Kun visning – denne runden er ikke aktiv."}
+                  {isDecided
+                    ? "Kampen er avgjort – resultatet kan ikke endres her."
+                    : isActiveSession
+                      ? "Velg Grå, Delt eller Blå for hvert hull. Stillingen regnes ut automatisk."
+                      : "Kun visning – denne runden er ikke aktiv."}
                   {headStart !== 0 && (
                     <>
                       {" "}

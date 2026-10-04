@@ -146,10 +146,10 @@ export function MatchRow({
         : "text-gold-deep";
 
   const isLiveInProgress = match.result === "not_played" && (match.live_up !== 0 || match.live_thru !== null);
-  // Once a match has a final result, its hole-by-hole grid is locked read-only — correcting
-  // a mistake after the fact goes through the admin's "Nullstill resultater", not a stray tap here.
+  // Once a match has a final result, only the holes it was actually decided on stay editable
+  // (to fix a mis-registration) — any hole with no result yet is locked, so a decided match
+  // can't keep growing new holes after the fact.
   const isDecided = match.result !== "not_played";
-  const holesLocked = !isActiveSession || isDecided;
 
   // A not-yet-started match in a round that isn't active has no hole results to show and no
   // way to enter any — the hole-by-hole grid would just be a wall of dashes, so skip it.
@@ -467,6 +467,7 @@ export function MatchRow({
                     )}
                     {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => {
                       const result = holeByNumber.get(relHole) ?? null;
+                      const holeLocked = !isActiveSession || (isDecided && result === null);
                       return (
                         <td key={relHole}>
                           <div className="flex flex-col gap-0.5">
@@ -489,12 +490,12 @@ export function MatchRow({
                               return (
                                 <button
                                   key={opt.key}
-                                  disabled={holesLocked}
+                                  disabled={holeLocked}
                                   onClick={() => setMatchHole(match, relHole, { result: active ? null : opt.key })}
                                   aria-label={`Hull ${courseHoleNumber(relHole, frontNine)} ${opt.label}`}
                                   className={`h-5 w-8 rounded border text-[8px] font-bold uppercase leading-none transition ${
                                     active ? activeClass : inactiveClass
-                                  } ${holesLocked ? "cursor-default" : ""}`}
+                                  } ${holeLocked ? "cursor-default" : ""}`}
                                 >
                                   {opt.label[0]}
                                 </button>
@@ -511,7 +512,7 @@ export function MatchRow({
 
                 <p className="text-center text-xs text-ink-light/60">
                   {isDecided
-                    ? "Kampen er avgjort – resultatet kan ikke endres her."
+                    ? "Kampen er avgjort – du kan rette allerede spilte hull, men ikke legge inn flere."
                     : isActiveSession
                       ? "Velg Grå, Delt eller Blå for hvert hull. Stillingen regnes ut automatisk."
                       : "Kun visning – denne runden er ikke aktiv."}

@@ -16,7 +16,6 @@ import {
   startingUpFor,
 } from "@/lib/scoring";
 import { getHoleInfo } from "@/lib/courseHoles";
-import { computePlayerStats } from "@/lib/stats";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { ModalShell } from "./ModalShell";
 
@@ -40,6 +39,19 @@ function sidePlayers(match: Match, team: TeamId, players: Player[]) {
 
 function fmtPts(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
+/**
+ * A compound first name ("Glenn Stian", "Stein Erik") reliably overflows this row once
+ * a second player shares the same side (fourball/greensome) and the name column is halved —
+ * abbreviated to "Glenn S." there instead of truncating mid-word. Left full whenever the
+ * player has the whole side to themselves.
+ */
+function displayName(name: string, tight: boolean): string {
+  if (!tight) return name;
+  const parts = name.trim().split(/\s+/);
+  if (parts.length < 2) return name;
+  return [parts[0], `${parts[1][0]}.`, ...parts.slice(2)].join(" ");
 }
 
 /** A pair's combined Greensome playing handicap, or null if either slot is empty or missing an hcp. */
@@ -79,18 +91,10 @@ export function MatchRow({
   session: Session;
   hideNames?: boolean;
 }) {
-  const { matchHoles, sessions, days, matches, activeSessionIds, setMatchHole } = useTournament();
+  const { matchHoles, sessions, days, activeSessionIds, setMatchHole } = useTournament();
   const { openPlayer } = usePlayerModal();
   const [scoring, setScoring] = useState(false);
   const isActiveSession = activeSessionIds.includes(session.id);
-
-  // Each player's win-halved-loss record across the whole tournament so far, shown
-  // next to their name/photo — recomputed here from all matches, not just this one.
-  const playerStats = computePlayerStats(matches, players);
-  function recordFor(playerId: string) {
-    const s = playerStats.find((s) => s.player.id === playerId);
-    return s && s.played > 0 ? `${s.wins}-${s.halved}-${s.losses}` : null;
-  }
 
   // Genuinely blank (not just anonymized) so this falls back to the same generic
   // team-name display already used when a match has no named players at all.
@@ -242,7 +246,7 @@ export function MatchRow({
                     >
                       <PlayerAvatar playerId={p.id} size={16} className="h-4 w-4" />
                       <span className="min-w-0 truncate">
-                        {p.name}
+                        {displayName(p.name, grayPlayers.length > 1)}
                         {/* Shown until the match is settled — not started or live, same as the
                             scoring modal below. Once a result's in, the badge disappears. Same
                             color as the player's own name, inherited from the button above. */}
@@ -250,11 +254,6 @@ export function MatchRow({
                           <span className="normal-case"> ({strokeBadge})</span>
                         )}
                       </span>
-                      {recordFor(p.id) && (
-                        <span className="shrink-0 text-[9px] font-semibold normal-case tracking-normal opacity-60">
-                          {recordFor(p.id)}
-                        </span>
-                      )}
                     </button>
                   );
                 })}
@@ -295,13 +294,8 @@ export function MatchRow({
                       onClick={() => openPlayer(p.id)}
                       className={`flex w-full items-center justify-end gap-1 text-right text-[11px] font-bold uppercase leading-tight tracking-normal hover:underline sm:text-sm sm:tracking-wide ${sideText("aqua")}`}
                     >
-                      {recordFor(p.id) && (
-                        <span className="shrink-0 text-[9px] font-semibold normal-case tracking-normal opacity-60">
-                          {recordFor(p.id)}
-                        </span>
-                      )}
                       <span className="min-w-0 truncate">
-                        {p.name}
+                        {displayName(p.name, aquaPlayers.length > 1)}
                         {match.result === "not_played" && strokeBadge !== null && (
                           <span className="normal-case"> ({strokeBadge})</span>
                         )}

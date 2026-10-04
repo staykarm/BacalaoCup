@@ -60,7 +60,7 @@ export function ScoreBar({
         )}
 
         <div className="relative min-w-0 flex-1">
-          <div className="flex h-6 w-full overflow-hidden rounded-full border border-navy-lighter/60 bg-navy-deep shadow-inner sm:h-7">
+          <div className="flex h-9 w-full overflow-hidden rounded-full border border-navy-lighter/60 bg-navy-deep shadow-inner sm:h-10">
             <div
               className="h-full bg-gradient-to-r from-gray-team-deep to-gray-team transition-all duration-500"
               style={{ width: `${graySettledPct}%` }}
@@ -84,8 +84,8 @@ export function ScoreBar({
           {showLines && grayLinePct !== null && aquaLinePct !== null && (
             <>
               {/* Win-line ticks: the point each team must reach to clinch outright. */}
-              <div className="absolute top-0 h-6 w-px bg-white/70 sm:h-7" style={{ left: `${grayLinePct}%` }} />
-              <div className="absolute top-0 h-6 w-px bg-white/70 sm:h-7" style={{ left: `${aquaLinePct}%` }} />
+              <div className="absolute top-0 h-9 w-px bg-white/70 sm:h-10" style={{ left: `${grayLinePct}%` }} />
+              <div className="absolute top-0 h-9 w-px bg-white/70 sm:h-10" style={{ left: `${aquaLinePct}%` }} />
             </>
           )}
         </div>
@@ -100,18 +100,6 @@ export function ScoreBar({
             )}
           </span>
         )}
-      </div>
-
-      <div className="mt-1 flex justify-between text-[10px] uppercase tracking-wider text-foreground/50">
-        <span>
-          {fmt(graySettled)}p sikre
-          {grayLive > 0 && <span className="italic"> &middot; ≈{fmt(graySettled + grayLive)}p</span>}
-        </span>
-        <span>{fmt(possible)} p totalt</span>
-        <span>
-          {aquaLive > 0 && <span className="italic">≈{fmt(aquaSettled + aquaLive)}p &middot; </span>}
-          {fmt(aquaSettled)}p sikre
-        </span>
       </div>
     </div>
   );

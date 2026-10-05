@@ -168,13 +168,12 @@ export function MatchRow({
   function canStartHole(relHole: number): boolean {
     return relHole <= 1 || holeHasResult(relHole - 1);
   }
-  // The live match's current and upcoming hole get a bigger, spotlighted treatment in the
-  // grid below, so the next tap is obvious. Not relevant once the match is decided — nothing
-  // new can be entered there regardless of which holes are still empty.
+  // The live match's current hole gets a bigger, spotlighted treatment in the grid below, so
+  // the next tap is obvious. Not relevant once the match is decided — nothing new can be
+  // entered there regardless of which holes are still empty.
   const currentHole = isDecided
     ? null
     : Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).find((h) => !holeHasResult(h)) ?? null;
-  const nextHole = currentHole !== null && currentHole < HOLES_PER_MATCH ? currentHole + 1 : null;
 
   const leadingSide: TeamId | null =
     match.result === "gray_won"
@@ -429,26 +428,15 @@ export function MatchRow({
                     </td>
                     {headStart !== 0 && <td className="text-[11px] font-bold text-ink-light/70">0</td>}
                     {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => {
-                      const tier = relHole === currentHole ? "current" : relHole === nextHole ? "next" : "normal";
+                      const isCurrent = relHole === currentHole;
                       return (
                         <td
                           key={relHole}
-                          className={`font-bold text-ink ${
-                            tier === "current"
-                              ? "rounded-t-lg bg-gold/25 text-base"
-                              : tier === "next"
-                                ? "rounded-t-lg bg-gold/10 text-xs"
-                                : "text-[11px]"
-                          }`}
+                          className={`font-bold text-ink ${isCurrent ? "rounded-t-lg bg-gold/25 text-base" : "text-[11px]"}`}
                         >
-                          {tier === "current" && (
+                          {isCurrent && (
                             <span className="block text-[7px] font-bold uppercase tracking-wide text-gold-deep">
                               Nå
-                            </span>
-                          )}
-                          {tier === "next" && (
-                            <span className="block text-[7px] font-bold uppercase tracking-wide text-gold-deep/70">
-                              Neste
                             </span>
                           )}
                           {courseHoleNumber(relHole, frontNine)}
@@ -462,14 +450,9 @@ export function MatchRow({
                     </td>
                     {headStart !== 0 && <td className="text-[10px] text-ink-light/40">–</td>}
                     {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => {
-                      const tier = relHole === currentHole ? "current" : relHole === nextHole ? "next" : "normal";
+                      const isCurrent = relHole === currentHole;
                       return (
-                        <td
-                          key={relHole}
-                          className={`text-ink-light ${
-                            tier === "current" ? "bg-gold/25 text-sm" : tier === "next" ? "bg-gold/10 text-xs" : "text-[10px]"
-                          }`}
-                        >
+                        <td key={relHole} className={`text-ink-light ${isCurrent ? "bg-gold/25 text-sm" : "text-[10px]"}`}>
                           {getHoleInfo(course, courseHoleNumber(relHole, frontNine)).par ?? "–"}
                         </td>
                       );
@@ -481,14 +464,9 @@ export function MatchRow({
                     </td>
                     {headStart !== 0 && <td className="text-[10px] text-ink-light/40">–</td>}
                     {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => {
-                      const tier = relHole === currentHole ? "current" : relHole === nextHole ? "next" : "normal";
+                      const isCurrent = relHole === currentHole;
                       return (
-                        <td
-                          key={relHole}
-                          className={`text-ink-light/70 ${
-                            tier === "current" ? "bg-gold/25 text-xs" : tier === "next" ? "bg-gold/10 text-[11px]" : "text-[10px]"
-                          }`}
-                        >
+                        <td key={relHole} className={`text-ink-light/70 ${isCurrent ? "bg-gold/25 text-xs" : "text-[10px]"}`}>
                           {getHoleInfo(course, courseHoleNumber(relHole, frontNine)).index ?? "–"}
                         </td>
                       );
@@ -519,21 +497,11 @@ export function MatchRow({
                       const isEmpty = result === null;
                       const sequentialLocked = isEmpty && !canStartHole(relHole);
                       const holeLocked = !isActiveSession || (isDecided && isEmpty) || sequentialLocked;
-                      const tier = relHole === currentHole ? "current" : relHole === nextHole ? "next" : "normal";
-                      const sizeClass =
-                        tier === "current"
-                          ? "h-11 w-16 text-xs"
-                          : tier === "next"
-                            ? "h-7 w-11 text-[10px]"
-                            : "h-5 w-8 text-[8px]";
+                      const isCurrent = relHole === currentHole;
+                      const sizeClass = isCurrent ? "h-11 w-16 text-xs" : "h-5 w-8 text-[8px]";
                       return (
-                        <td
-                          key={relHole}
-                          className={
-                            tier === "current" ? "rounded-b-lg bg-gold/25" : tier === "next" ? "rounded-b-lg bg-gold/10" : undefined
-                          }
-                        >
-                          <div className={`flex flex-col ${tier === "current" ? "gap-1 py-1" : "gap-0.5"}`}>
+                        <td key={relHole} className={isCurrent ? "rounded-b-lg bg-gold/25" : undefined}>
+                          <div className={`flex flex-col ${isCurrent ? "gap-1 py-1" : "gap-0.5"}`}>
                             {HOLE_OPTIONS.map((opt) => {
                               const active = result === opt.key;
                               const activeClass =
@@ -560,7 +528,7 @@ export function MatchRow({
                                     active ? activeClass : inactiveClass
                                   } ${holeLocked ? "cursor-default" : ""}`}
                                 >
-                                  {tier === "current" ? opt.label : opt.label[0]}
+                                  {isCurrent ? opt.label : opt.label[0]}
                                 </button>
                               );
                             })}

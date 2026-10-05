@@ -510,14 +510,14 @@ export function MatchRow({
                                   : opt.key === "aqua"
                                     ? "border-aqua-team bg-aqua-team-deep text-white"
                                     : "border-gold-deep bg-gold/20 text-gold-deep";
-                              // Even unpressed, each button carries a faint tint of its own color
-                              // so the three options stay visually distinct before you pick one.
+                              // Even unpressed, each button carries a tint of its own color so the
+                              // three options stay clearly distinct before you pick a hole's winner.
                               const inactiveClass =
                                 opt.key === "gray"
-                                  ? "border-card-border bg-gray-team-bg/30 text-ink-light/50 hover:bg-gray-team-bg/50"
+                                  ? "border-gray-team/50 bg-gray-team-bg/70 text-ink-light/80 hover:bg-gray-team-bg"
                                   : opt.key === "aqua"
-                                    ? "border-card-border bg-aqua-team-light/25 text-ink-light/50 hover:bg-aqua-team-light/40"
-                                    : "border-card-border bg-gold/15 text-ink-light/50 hover:bg-gold/25";
+                                    ? "border-aqua-team/50 bg-aqua-team-light/60 text-ink-light/80 hover:bg-aqua-team-light"
+                                    : "border-gold-deep/50 bg-gold/30 text-ink-light/80 hover:bg-gold/45";
                               return (
                                 <button
                                   key={opt.key}

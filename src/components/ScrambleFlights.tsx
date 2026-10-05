@@ -166,6 +166,21 @@ export function ScrambleFlights({
     ? new Map(matchHoles.filter((h) => h.match_id === editingFlight.id).map((h) => [h.hole_number, h.score_vs_par]))
     : new Map<number, number | null>();
 
+  // Same order-of-entry rule as a match-play scoring modal: a hole only opens up once the
+  // one before it already has a score (hole 1 is always open), and an already-entered hole
+  // stays editable regardless, so a mis-registration can still be corrected out of order.
+  function holeHasResult(relHole: number): boolean {
+    return (holesForFlight.get(relHole) ?? null) !== null;
+  }
+  function canStartHole(relHole: number): boolean {
+    return relHole <= 1 || holeHasResult(relHole - 1);
+  }
+  // The flight's current hole gets the same bigger, spotlighted treatment a match-play
+  // scoring modal uses — null once every hole has a score, since there's nothing left to spotlight.
+  const currentHole = Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).find(
+    (h) => !holeHasResult(h)
+  ) ?? null;
+
   function onStrokesChange(relHole: number, raw: string) {
     if (!editingFlight) return;
     const info = getHoleInfo(course, courseHoleNumber(relHole, frontNine));
@@ -251,21 +266,35 @@ export function ScrambleFlights({
                     <td className="w-9 pr-1 text-left text-[9px] font-semibold uppercase tracking-wide text-ink-light/70">
                       Hull
                     </td>
-                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => (
-                      <td key={relHole} className="text-[11px] font-bold text-ink">
-                        {courseHoleNumber(relHole, frontNine)}
-                      </td>
-                    ))}
+                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => {
+                      const isCurrent = relHole === currentHole;
+                      return (
+                        <td
+                          key={relHole}
+                          className={`font-bold text-ink ${isCurrent ? "rounded-t-lg bg-gold/25 text-base" : "text-[11px]"}`}
+                        >
+                          {isCurrent && (
+                            <span className="block text-[7px] font-bold uppercase tracking-wide text-gold-deep">
+                              Nå
+                            </span>
+                          )}
+                          {courseHoleNumber(relHole, frontNine)}
+                        </td>
+                      );
+                    })}
                   </tr>
                   <tr>
                     <td className="pr-1 text-left text-[9px] font-semibold uppercase tracking-wide text-ink-light/70">
                       Par
                     </td>
-                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => (
-                      <td key={relHole} className="text-[10px] text-ink-light">
-                        {getHoleInfo(course, courseHoleNumber(relHole, frontNine)).par ?? "–"}
-                      </td>
-                    ))}
+                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => {
+                      const isCurrent = relHole === currentHole;
+                      return (
+                        <td key={relHole} className={`text-ink-light ${isCurrent ? "bg-gold/25 text-sm" : "text-[10px]"}`}>
+                          {getHoleInfo(course, courseHoleNumber(relHole, frontNine)).par ?? "–"}
+                        </td>
+                      );
+                    })}
                   </tr>
                   <tr>
                     <td />
@@ -273,17 +302,21 @@ export function ScrambleFlights({
                       const par = getHoleInfo(course, courseHoleNumber(relHole, frontNine)).par;
                       const relative = holesForFlight.get(relHole) ?? null;
                       const strokes = par !== null && relative !== null ? par + relative : null;
+                      const isEmpty = relative === null;
+                      const sequentialLocked = isEmpty && !canStartHole(relHole);
+                      const isCurrent = relHole === currentHole;
+                      const sizeClass = isCurrent ? "h-14 w-16 text-base" : "h-8 w-8 text-xs";
                       return (
-                        <td key={relHole}>
+                        <td key={relHole} className={isCurrent ? "rounded-b-lg bg-gold/25" : undefined}>
                           <input
                             type="text"
                             inputMode="numeric"
                             pattern="[0-9]*"
-                            disabled={par === null || !isActiveSession}
+                            disabled={par === null || !isActiveSession || sequentialLocked}
                             value={strokes ?? ""}
                             onChange={(e) => onStrokesChange(relHole, e.target.value.replace(/[^0-9]/g, ""))}
                             aria-label={`Hull ${courseHoleNumber(relHole, frontNine)} slag`}
-                            className={`h-8 w-8 rounded-lg border text-center text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-gold-deep/60 disabled:opacity-40 ${scoreCellClass(relative)}`}
+                            className={`${sizeClass} rounded-lg border text-center font-bold transition focus:outline-none focus:ring-2 focus:ring-gold-deep/60 disabled:opacity-40 ${scoreCellClass(relative)}`}
                           />
                         </td>
                       );
@@ -295,7 +328,7 @@ export function ScrambleFlights({
 
             <p className="text-center text-xs text-ink-light/60">
               {isActiveSession
-                ? "Skriv inn antall slag for hvert hull — over/under par regnes ut automatisk."
+                ? "Skriv inn antall slag for hvert hull, i rekkefølge — over/under par regnes ut automatisk."
                 : "Kun visning – denne runden er ikke aktiv."}
             </p>
           </div>

@@ -40,7 +40,7 @@ function vsParTotalClass(n: number | null): string {
  */
 function totalBg(team: TeamId, leadingSide: TeamId | null, isNeutral: boolean): string {
   if (isNeutral) return "bg-white";
-  const flat = team === "gray" ? "bg-gray-team-flat" : "bg-aqua-team-flat";
+  const flat = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-flat";
   const bold = team === "gray" ? "bg-gray-team-won" : "bg-aqua-team-won";
   if (leadingSide === null) return flat;
   return leadingSide === team ? bold : "bg-white";
@@ -69,7 +69,7 @@ function FlightRow({
   const team = flight.flight_team as TeamId;
   // Same flat team fills MatchRow uses for its "not yet decided" state, so a scramble
   // flight reads as clearly gray/blue as any other day's match card.
-  const bg = team === "gray" ? "bg-gray-team-flat" : "bg-aqua-team-flat";
+  const bg = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-flat";
   const text = team === "gray" ? "text-ink" : "text-white";
   const flightPlayers = hideNames
     ? []

@@ -208,7 +208,7 @@ export function MatchRow({
     // Deliberately far apart from the "won" fill below, so a decided/leading match reads
     // clearly different at a glance from one that's still all square. Only reached outside
     // the active session now (see isNeutral above), for a day's other, non-active rounds.
-    const flat = team === "gray" ? "bg-gray-team-flat" : "bg-aqua-team-flat";
+    const flat = team === "gray" ? "bg-gray-team-bg" : "bg-aqua-team-flat";
     const bold = team === "gray" ? "bg-gray-team-won" : "bg-aqua-team-won";
     if (leadingSide === null) return flat;
     // The trailing/losing side goes plain white — only the leading/winning team should show

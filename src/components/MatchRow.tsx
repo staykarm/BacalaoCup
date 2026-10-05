@@ -159,6 +159,23 @@ export function MatchRow({
   // way to enter any — the hole-by-hole grid would just be a wall of dashes, so skip it.
   const showHoleGrid = isActiveSession || match.result !== "not_played" || isLiveInProgress;
 
+  // Results must be entered in hole order: an empty hole only accepts a result once the one
+  // before it already has one (hole 1 is always open). An already-filled hole stays editable
+  // regardless, so a mis-registration can still be corrected out of order.
+  function holeHasResult(relHole: number): boolean {
+    return (holeByNumber.get(relHole) ?? null) !== null;
+  }
+  function canStartHole(relHole: number): boolean {
+    return relHole <= 1 || holeHasResult(relHole - 1);
+  }
+  // The live match's current and upcoming hole get a bigger, spotlighted treatment in the
+  // grid below, so the next tap is obvious. Not relevant once the match is decided — nothing
+  // new can be entered there regardless of which holes are still empty.
+  const currentHole = isDecided
+    ? null
+    : Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).find((h) => !holeHasResult(h)) ?? null;
+  const nextHole = currentHole !== null && currentHole < HOLES_PER_MATCH ? currentHole + 1 : null;
+
   const leadingSide: TeamId | null =
     match.result === "gray_won"
       ? "gray"
@@ -411,33 +428,71 @@ export function MatchRow({
                       Hull
                     </td>
                     {headStart !== 0 && <td className="text-[11px] font-bold text-ink-light/70">0</td>}
-                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => (
-                      <td key={relHole} className="text-[11px] font-bold text-ink">
-                        {courseHoleNumber(relHole, frontNine)}
-                      </td>
-                    ))}
+                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => {
+                      const tier = relHole === currentHole ? "current" : relHole === nextHole ? "next" : "normal";
+                      return (
+                        <td
+                          key={relHole}
+                          className={`font-bold text-ink ${
+                            tier === "current"
+                              ? "rounded-t-lg bg-gold/25 text-base"
+                              : tier === "next"
+                                ? "rounded-t-lg bg-gold/10 text-xs"
+                                : "text-[11px]"
+                          }`}
+                        >
+                          {tier === "current" && (
+                            <span className="block text-[7px] font-bold uppercase tracking-wide text-gold-deep">
+                              Nå
+                            </span>
+                          )}
+                          {tier === "next" && (
+                            <span className="block text-[7px] font-bold uppercase tracking-wide text-gold-deep/70">
+                              Neste
+                            </span>
+                          )}
+                          {courseHoleNumber(relHole, frontNine)}
+                        </td>
+                      );
+                    })}
                   </tr>
                   <tr>
                     <td className="pr-1 text-left text-[9px] font-semibold uppercase tracking-wide text-ink-light/70">
                       Par
                     </td>
                     {headStart !== 0 && <td className="text-[10px] text-ink-light/40">–</td>}
-                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => (
-                      <td key={relHole} className="text-[10px] text-ink-light">
-                        {getHoleInfo(course, courseHoleNumber(relHole, frontNine)).par ?? "–"}
-                      </td>
-                    ))}
+                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => {
+                      const tier = relHole === currentHole ? "current" : relHole === nextHole ? "next" : "normal";
+                      return (
+                        <td
+                          key={relHole}
+                          className={`text-ink-light ${
+                            tier === "current" ? "bg-gold/25 text-sm" : tier === "next" ? "bg-gold/10 text-xs" : "text-[10px]"
+                          }`}
+                        >
+                          {getHoleInfo(course, courseHoleNumber(relHole, frontNine)).par ?? "–"}
+                        </td>
+                      );
+                    })}
                   </tr>
                   <tr>
                     <td className="pr-1 text-left text-[9px] font-semibold uppercase tracking-wide text-ink-light/70">
                       Idx
                     </td>
                     {headStart !== 0 && <td className="text-[10px] text-ink-light/40">–</td>}
-                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => (
-                      <td key={relHole} className="text-[10px] text-ink-light/70">
-                        {getHoleInfo(course, courseHoleNumber(relHole, frontNine)).index ?? "–"}
-                      </td>
-                    ))}
+                    {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => {
+                      const tier = relHole === currentHole ? "current" : relHole === nextHole ? "next" : "normal";
+                      return (
+                        <td
+                          key={relHole}
+                          className={`text-ink-light/70 ${
+                            tier === "current" ? "bg-gold/25 text-xs" : tier === "next" ? "bg-gold/10 text-[11px]" : "text-[10px]"
+                          }`}
+                        >
+                          {getHoleInfo(course, courseHoleNumber(relHole, frontNine)).index ?? "–"}
+                        </td>
+                      );
+                    })}
                   </tr>
                   <tr>
                     <td />
@@ -461,10 +516,24 @@ export function MatchRow({
                     )}
                     {Array.from({ length: HOLES_PER_MATCH }, (_, i) => i + 1).map((relHole) => {
                       const result = holeByNumber.get(relHole) ?? null;
-                      const holeLocked = !isActiveSession || (isDecided && result === null);
+                      const isEmpty = result === null;
+                      const sequentialLocked = isEmpty && !canStartHole(relHole);
+                      const holeLocked = !isActiveSession || (isDecided && isEmpty) || sequentialLocked;
+                      const tier = relHole === currentHole ? "current" : relHole === nextHole ? "next" : "normal";
+                      const sizeClass =
+                        tier === "current"
+                          ? "h-11 w-16 text-xs"
+                          : tier === "next"
+                            ? "h-7 w-11 text-[10px]"
+                            : "h-5 w-8 text-[8px]";
                       return (
-                        <td key={relHole}>
-                          <div className="flex flex-col gap-0.5">
+                        <td
+                          key={relHole}
+                          className={
+                            tier === "current" ? "rounded-b-lg bg-gold/25" : tier === "next" ? "rounded-b-lg bg-gold/10" : undefined
+                          }
+                        >
+                          <div className={`flex flex-col ${tier === "current" ? "gap-1 py-1" : "gap-0.5"}`}>
                             {HOLE_OPTIONS.map((opt) => {
                               const active = result === opt.key;
                               const activeClass =
@@ -487,11 +556,11 @@ export function MatchRow({
                                   disabled={holeLocked}
                                   onClick={() => setMatchHole(match, relHole, { result: active ? null : opt.key })}
                                   aria-label={`Hull ${courseHoleNumber(relHole, frontNine)} ${opt.label}`}
-                                  className={`h-5 w-8 rounded border text-[8px] font-bold uppercase leading-none transition ${
+                                  className={`${sizeClass} rounded border font-bold uppercase leading-none transition ${
                                     active ? activeClass : inactiveClass
                                   } ${holeLocked ? "cursor-default" : ""}`}
                                 >
-                                  {opt.label[0]}
+                                  {tier === "current" ? opt.label : opt.label[0]}
                                 </button>
                               );
                             })}
@@ -508,7 +577,7 @@ export function MatchRow({
                   {isDecided
                     ? "Kampen er avgjort – du kan rette allerede spilte hull, men ikke legge inn flere."
                     : isActiveSession
-                      ? "Velg Grå, Delt eller Blå for hvert hull. Stillingen regnes ut automatisk."
+                      ? "Velg Grå, Delt eller Blå for hvert hull, i rekkefølge. Stillingen regnes ut automatisk."
                       : "Kun visning – denne runden er ikke aktiv."}
                   {headStart !== 0 && (
                     <>

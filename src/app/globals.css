@@ -23,6 +23,11 @@
   --color-gray-team-light: #d3d7de;
   --color-gray-team-deep: #a4abb8;
   --color-gray-team-bg: #c8cdd7;
+  /** Match-card "not yet decided" fill for Gray — deliberately darker/bolder than gray-team-bg
+   *  above (parallel to how aqua-team-flat sits darker than aqua-team below), so an undecided
+   *  gray side reads as clearly as an undecided aqua side instead of nearly disappearing
+   *  against the white card background. */
+  --color-gray-team-flat: #969dae;
   /** Match-card "leading/won" fill for Gray — deliberately much darker than gray-team-deep
    *  above, so a decided/leading match reads clearly different from an all-square one. */
   --color-gray-team-won: #4d5361;
@@ -62,6 +67,7 @@
   --color-gray-team-light: var(--color-gray-team-light);
   --color-gray-team-deep: var(--color-gray-team-deep);
   --color-gray-team-bg: var(--color-gray-team-bg);
+  --color-gray-team-flat: var(--color-gray-team-flat);
   --color-gray-team-won: var(--color-gray-team-won);
 
   --color-aqua-team: var(--color-aqua-team);

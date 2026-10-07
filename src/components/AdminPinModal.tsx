@@ -19,7 +19,7 @@ export function AdminPinModal({ onClose, onUnlock }: { onClose: () => void; onUn
   }
 
   return (
-    <ModalShell title="Admin" onClose={onClose}>
+    <ModalShell title="Admin" onClose={onClose} anchorTop>
       <div className="space-y-4 text-center">
         <p className="text-sm text-ink-light">Skriv inn PIN-koden for å åpne admin-panelet.</p>
         <input

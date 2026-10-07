@@ -7,6 +7,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { supabase } from "@/lib/supabase";
@@ -118,94 +119,144 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const [syncError, setSyncError] = useState<string | null>(null);
   const clearSyncError = useCallback(() => setSyncError(null), []);
 
+  // Kept alive for the component's whole lifetime (the provider sits at the app root and
+  // never really unmounts mid-session) — guards a response landing after the one genuine
+  // teardown, e.g. a fast-refresh in dev.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Fetches fresh data and applies it to state, returning an error message instead of
+  // setting it directly — shared by the initial mount and by every later re-sync (tab
+  // becoming visible again, window regaining focus), which disagree on how a failure
+  // should surface (a blocking full-page error vs. the same dismissible toast a failed
+  // save already uses), so that choice is left to each caller. Never touches `loading`
+  // either, for the same reason: a background re-sync shouldn't flash the whole app back
+  // to its loading screen just because a stale socket is quietly correcting itself.
+  const syncData = useCallback(async (): Promise<string | null> => {
+    const [
+      teamsRes,
+      playersRes,
+      daysRes,
+      sessionsRes,
+      matchesRes,
+      matchHolesRes,
+      locationsRes,
+      playerYearStatsRes,
+      appSettingsRes,
+    ] = await Promise.all([
+      supabase.from("teams").select("*"),
+      supabase.from("players").select("*"),
+      supabase.from("days").select("*").order("sort_order"),
+      supabase.from("sessions").select("*").order("sort_order"),
+      supabase.from("matches").select("*").order("sort_order"),
+      supabase.from("match_holes").select("*"),
+      supabase.from("locations").select("*").order("sort_order"),
+      supabase.from("player_year_stats").select("*").order("year", { ascending: false }),
+      supabase.from("app_settings").select("*").eq("id", "singleton").maybeSingle(),
+    ]);
+
+    if (!mountedRef.current) return null;
+
+    const firstError =
+      teamsRes.error ||
+      playersRes.error ||
+      daysRes.error ||
+      sessionsRes.error ||
+      matchesRes.error ||
+      matchHolesRes.error ||
+      locationsRes.error ||
+      playerYearStatsRes.error ||
+      appSettingsRes.error;
+
+    if (firstError) return firstError.message;
+
+    setTeams(teamsRes.data ?? []);
+    setPlayers(playersRes.data ?? []);
+    setDays(daysRes.data ?? []);
+    setSessions(sessionsRes.data ?? []);
+    setMatches(matchesRes.data ?? []);
+    setMatchHoles(matchHolesRes.data ?? []);
+    setLocations(locationsRes.data ?? []);
+    setPlayerYearStats(playerYearStatsRes.data ?? []);
+    setActiveSessionIds(appSettingsRes.data?.active_session_ids ?? []);
+    setAdminPin(appSettingsRes.data?.admin_pin ?? "2026");
+    setShowPlayerPhotosState(appSettingsRes.data?.show_player_photos ?? false);
+    setTvOverrideDayIdState(appSettingsRes.data?.tv_override_day_id ?? null);
+    setTvOverrideDayId2State(appSettingsRes.data?.tv_override_day_id_2 ?? null);
+    setTvSingleDayState(appSettingsRes.data?.tv_single_day ?? false);
+    return null;
+  }, []);
+
+  // Loaded separately from the critical data above: activity_log is a newer table that may
+  // not exist yet on a database that hasn't run the latest migration, and the feed is a
+  // nice-to-have — it shouldn't block the whole app behind a missing-table error.
+  const syncActivityLog = useCallback(async () => {
+    const { data, error: activityError } = await supabase
+      .from("activity_log")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(300);
+    if (!mountedRef.current || activityError) return;
+    setActivityLog(data ?? []);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
+    async function initialLoad() {
       setLoading(true);
       try {
-        const [
-          teamsRes,
-          playersRes,
-          daysRes,
-          sessionsRes,
-          matchesRes,
-          matchHolesRes,
-          locationsRes,
-          playerYearStatsRes,
-          appSettingsRes,
-        ] = await Promise.all([
-          supabase.from("teams").select("*"),
-          supabase.from("players").select("*"),
-          supabase.from("days").select("*").order("sort_order"),
-          supabase.from("sessions").select("*").order("sort_order"),
-          supabase.from("matches").select("*").order("sort_order"),
-          supabase.from("match_holes").select("*"),
-          supabase.from("locations").select("*").order("sort_order"),
-          supabase.from("player_year_stats").select("*").order("year", { ascending: false }),
-          supabase.from("app_settings").select("*").eq("id", "singleton").maybeSingle(),
-        ]);
-
+        const errMsg = await syncData();
         if (cancelled) return;
-
-        const firstError =
-          teamsRes.error ||
-          playersRes.error ||
-          daysRes.error ||
-          sessionsRes.error ||
-          matchesRes.error ||
-          matchHolesRes.error ||
-          locationsRes.error ||
-          playerYearStatsRes.error ||
-          appSettingsRes.error;
-
-        if (firstError) {
-          setError(firstError.message);
-          setLoading(false);
-          return;
-        }
-
-        setTeams(teamsRes.data ?? []);
-        setPlayers(playersRes.data ?? []);
-        setDays(daysRes.data ?? []);
-        setSessions(sessionsRes.data ?? []);
-        setMatches(matchesRes.data ?? []);
-        setMatchHoles(matchHolesRes.data ?? []);
-        setLocations(locationsRes.data ?? []);
-        setPlayerYearStats(playerYearStatsRes.data ?? []);
-        setActiveSessionIds(appSettingsRes.data?.active_session_ids ?? []);
-        setAdminPin(appSettingsRes.data?.admin_pin ?? "2026");
-        setShowPlayerPhotosState(appSettingsRes.data?.show_player_photos ?? false);
-        setTvOverrideDayIdState(appSettingsRes.data?.tv_override_day_id ?? null);
-        setTvOverrideDayId2State(appSettingsRes.data?.tv_override_day_id_2 ?? null);
-        setTvSingleDayState(appSettingsRes.data?.tv_single_day ?? false);
-        setLoading(false);
+        if (errMsg) setError(errMsg);
       } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : "Klarte ikke å koble til Supabase");
-        setLoading(false);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
 
-    // Loaded separately from the critical data above: activity_log is a newer table that may
-    // not exist yet on a database that hasn't run the latest migration, and the feed is a
-    // nice-to-have — it shouldn't block the whole app behind a missing-table error.
-    async function loadActivityLog() {
-      const { data, error: activityError } = await supabase
-        .from("activity_log")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(300);
-      if (cancelled || activityError) return;
-      setActivityLog(data ?? []);
-    }
-
-    load();
-    loadActivityLog();
+    initialLoad();
+    syncActivityLog();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [syncData, syncActivityLog]);
+
+  // Realtime alone isn't enough: a backgrounded tab or a locked phone screen can silently
+  // drop the websocket (iOS Safari in particular suspends it), so without this a viewer
+  // used to have to actually leave and reopen the app to see anything had moved on.
+  // Re-syncing everything as soon as the tab is visible/focused again catches that case
+  // without needing to diagnose whether the socket itself is still alive.
+  useEffect(() => {
+    let lastSync = Date.now();
+
+    function resync() {
+      if (Date.now() - lastSync < 2000) return;
+      lastSync = Date.now();
+      syncData()
+        .then((errMsg) => errMsg && setSyncError(errMsg))
+        .catch((err) => setSyncError(err instanceof Error ? err.message : "Klarte ikke å koble til Supabase"));
+      syncActivityLog();
+    }
+
+    function handleVisibility() {
+      if (document.visibilityState === "visible") resync();
+    }
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", resync);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", resync);
+    };
+  }, [syncData, syncActivityLog]);
 
   useEffect(() => {
     const channel = supabase

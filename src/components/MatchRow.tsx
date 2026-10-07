@@ -484,7 +484,7 @@ export function MatchRow({
                           }
                           className={`flex h-16 w-8 items-center justify-center rounded border text-[8px] font-bold uppercase leading-none ${
                             headStart > 0
-                              ? "border-gray-team bg-gray-team-bg text-ink"
+                              ? "border-gray-team-won bg-gray-team-won text-white"
                               : "border-aqua-team bg-aqua-team-deep text-white"
                           }`}
                         >
@@ -506,7 +506,7 @@ export function MatchRow({
                               const active = result === opt.key;
                               const activeClass =
                                 opt.key === "gray"
-                                  ? "border-gray-team bg-gray-team-bg text-ink"
+                                  ? "border-gray-team-won bg-gray-team-won text-white"
                                   : opt.key === "aqua"
                                     ? "border-aqua-team bg-aqua-team-deep text-white"
                                     : "border-gold-deep bg-gold/20 text-gold-deep";

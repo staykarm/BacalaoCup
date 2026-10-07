@@ -89,7 +89,8 @@ function DayColumn({
 const AUTO_RELOAD_MS = 2 * 60 * 60 * 1000;
 
 export default function TvScoreboardPage() {
-  const { players, days, sessions, matches, loading, error, tvOverrideDayId, tvOverrideDayId2 } = useTournament();
+  const { players, days, sessions, matches, matchHoles, loading, error, tvOverrideDayId, tvOverrideDayId2 } =
+    useTournament();
   const { playerId, openPlayer, closePlayerModal } = usePlayerModal();
   const { data: weather } = useWeather();
 
@@ -168,7 +169,7 @@ export default function TvScoreboardPage() {
   // secure figure above, never in place of it (a live lead can still flip).
   const clinchProjected = pointsToClinch(gray, aqua, possible);
 
-  const playerStats = computePlayerStats(matches, players);
+  const playerStats = computePlayerStats(matches, matchHoles, players);
   const rankedPlayers = players
     .map((p) => ({ player: p, stat: playerStats.find((s) => s.player.id === p.id)! }))
     .sort(

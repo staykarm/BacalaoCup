@@ -3,7 +3,7 @@
 import { useTournament } from "@/context/TournamentContext";
 import { usePlayerModal } from "@/context/PlayerModalContext";
 import { computeCompetitionWins, computePlayerStats, rankByValue } from "@/lib/stats";
-import { Player, PlayerYearStat, TeamId } from "@/lib/types";
+import { Player, TeamId } from "@/lib/types";
 import { ModalShell } from "./ModalShell";
 import { PlayerAvatar } from "./PlayerAvatar";
 
@@ -15,14 +15,12 @@ function PlayerRow({
   rank,
   player,
   stat,
-  history,
   competitionWins,
   onClick,
 }: {
   rank: number;
   player: Player;
   stat: ReturnType<typeof computePlayerStats>[number];
-  history: PlayerYearStat[];
   competitionWins: number;
   onClick: () => void;
 }) {
@@ -32,13 +30,6 @@ function PlayerRow({
   // team unmistakable either way.
   const borderClass = team === "gray" ? "border-l-gray-team-deep" : "border-l-aqua-team";
   const tintClass = team === "gray" ? "bg-gray-team-bg/25" : "bg-aqua-team-bg/35";
-
-  const historyText = history
-    .map((h) => {
-      const bits = [h.record, h.total_points !== null ? `${fmt(h.total_points)}p` : null].filter(Boolean);
-      return `${h.year}${bits.length > 0 ? ` (${bits.join(" · ")})` : ""}`;
-    })
-    .join("  ·  ");
 
   return (
     <button
@@ -54,9 +45,6 @@ function PlayerRow({
         </span>
         {competitionWins > 0 && <span className="ml-1.5 text-[10px] text-gold-deep">🏆 {competitionWins}</span>}
         {player.hcp !== null && <span className="ml-1.5 text-[10px] text-ink-light/40">hcp {fmt(player.hcp)}</span>}
-        {historyText && (
-          <span className="ml-1.5 truncate text-[10px] text-ink-light/40">&middot; {historyText}</span>
-        )}
       </span>
       <span className="shrink-0 text-[11px] text-ink-light">
         {stat.wins}-{stat.halved}-{stat.losses}
@@ -78,7 +66,7 @@ function PlayerRow({
 }
 
 export function MvpModal({ onClose }: { onClose: () => void }) {
-  const { players, matches, matchHoles, playerYearStats, days } = useTournament();
+  const { players, matches, matchHoles, days } = useTournament();
   const playerStats = computePlayerStats(matches, matchHoles, players);
   const competitionWins = computeCompetitionWins(days, players);
   const winsById = new Map(competitionWins.perPlayer.map((p) => [p.player.id, p.wins]));
@@ -101,9 +89,6 @@ export function MvpModal({ onClose }: { onClose: () => void }) {
             rank={ranks[i]}
             player={player}
             stat={stat}
-            history={playerYearStats
-              .filter((h) => h.player_id === player.id)
-              .sort((a, b) => b.year - a.year)}
             competitionWins={winsById.get(player.id) ?? 0}
             onClick={() => openPlayer(player.id)}
           />

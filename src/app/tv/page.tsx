@@ -90,7 +90,7 @@ const AUTO_RELOAD_MS = 2 * 60 * 60 * 1000;
 
 export default function TvScoreboardPage() {
   const { players, days, sessions, matches, loading, error, tvOverrideDayId, tvOverrideDayId2 } = useTournament();
-  const { playerId, closePlayerModal } = usePlayerModal();
+  const { playerId, openPlayer, closePlayerModal } = usePlayerModal();
   const { data: weather } = useWeather();
 
   // Ticks every second purely so a frozen screen is visible at a glance — if the clock
@@ -300,10 +300,13 @@ export default function TvScoreboardPage() {
                 >
                   <span className="w-6 shrink-0 text-sm font-bold text-ink-light/50">{mvpRanks[i]}</span>
                   <PlayerAvatar playerId={player.id} fallbackTeamId={player.team_id} size={32} className="h-8 w-8" alwaysOn />
-                  <span className="min-w-0 flex-1 truncate text-base font-semibold text-ink">
+                  <button
+                    onClick={() => openPlayer(player.id)}
+                    className="min-w-0 flex-1 truncate text-left text-base font-semibold text-ink hover:underline"
+                  >
                     {player.name}
                     {player.is_captain && <span className="text-gold-deep"> (C)</span>}
-                  </span>
+                  </button>
                   {/* A dark pill (same treatment as a match's points badge) keeps the number
                       readable regardless of how saturated the row's own team tint is. */}
                   <span

@@ -14,7 +14,7 @@ function fmt(n: number) {
 }
 
 export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onClose: () => void }) {
-  const { players, matches, sessions, days, playerYearStats } = useTournament();
+  const { players, matches, matchHoles, sessions, days, playerYearStats } = useTournament();
   const { openPlayer } = usePlayerModal();
   const player = players.find((p) => p.id === playerId);
   if (!player) return null;
@@ -100,9 +100,10 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
   const projectedExtra = liveMatches.reduce((sum, m) => sum + liveProjectedPoints(m), 0);
   const projectedTotal = pointsContributed + projectedExtra;
 
-  const rankedPlayers = computePlayerStats(matches, players);
+  const rankedPlayers = computePlayerStats(matches, matchHoles, players);
   const overallRank = rankedPlayers.findIndex((s) => s.player.id === playerId) + 1;
   const teamRank = rankedPlayers.filter((s) => s.player.team_id === side).findIndex((s) => s.player.id === playerId) + 1;
+  const myHoleStat = rankedPlayers.find((s) => s.player.id === playerId);
 
   const competitionWins = computeCompetitionWins(days, players).perPlayer.find(
     (p) => p.player.id === playerId
@@ -138,6 +139,12 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
             </div>
             <div className={`mt-1 text-lg font-bold ${side === "gray" ? "text-ink" : "text-white"}`}>
               {wins}-{halved}-{losses}
+              {myHoleStat && (
+                <span className={`text-sm font-semibold ${side === "gray" ? "text-ink/50" : "text-white/60"}`}>
+                  {" "}
+                  ({myHoleStat.holesWon}-{myHoleStat.holesHalved}-{myHoleStat.holesLost})
+                </span>
+              )}
             </div>
             <div className={`mt-0.5 text-[11px] font-semibold ${side === "gray" ? "text-ink/60" : "text-white/60"}`}>
               #{overallRank} på MVP totalt &middot; #{teamRank} i laget

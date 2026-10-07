@@ -60,6 +60,10 @@ function PlayerRow({
       </span>
       <span className="shrink-0 text-[11px] text-ink-light">
         {stat.wins}-{stat.halved}-{stat.losses}
+        <span className="text-ink-light/50">
+          {" "}
+          ({stat.holesWon}-{stat.holesHalved}-{stat.holesLost})
+        </span>
       </span>
       <span
         className={`w-12 shrink-0 text-right text-sm font-bold tabular-nums ${
@@ -75,8 +79,8 @@ function PlayerRow({
 }
 
 export function MvpModal({ onClose }: { onClose: () => void }) {
-  const { players, matches, playerYearStats, days } = useTournament();
-  const playerStats = computePlayerStats(matches, players);
+  const { players, matches, matchHoles, playerYearStats, days } = useTournament();
+  const playerStats = computePlayerStats(matches, matchHoles, players);
   const competitionWins = computeCompetitionWins(days, players);
   const winsById = new Map(competitionWins.perPlayer.map((p) => [p.player.id, p.wins]));
   const { openPlayer } = usePlayerModal();

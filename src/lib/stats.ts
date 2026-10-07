@@ -1,5 +1,5 @@
 import { liveLeader } from "./scoring";
-import { Day, Match, Player, Session, TeamId } from "./types";
+import { Day, Match, MatchHole, Player, Session, TeamId } from "./types";
 
 export interface PlayerStat {
   player: Player;
@@ -7,6 +7,13 @@ export interface PlayerStat {
   wins: number;
   losses: number;
   halved: number;
+  /** Individual hole results across every match-play match (singles/fourball/greensome/
+   *  mixed) the player's side is in — scramble flights have no per-hole winner, so they
+   *  never contribute here. Counted as soon as a hole is entered, even mid-match, unlike
+   *  wins/losses/halved above which only settle once the whole match is decided. */
+  holesWon: number;
+  holesLost: number;
+  holesHalved: number;
   /** Points from finalized matches only. */
   pointsContributed: number;
   /** Extra points projected from a live in-progress match, if its current lead holds. */
@@ -46,17 +53,55 @@ function sideWon(match: Match, side: TeamId): boolean {
   return match.result === "aqua_won";
 }
 
-export function computePlayerStats(matches: Match[], players: Player[]): PlayerStat[] {
+export function computePlayerStats(matches: Match[], matchHoles: MatchHole[], players: Player[]): PlayerStat[] {
   const byId = new Map(players.map((p) => [p.id, p]));
   const stats = new Map<string, PlayerStat>();
 
   for (const p of players) {
-    stats.set(p.id, { player: p, played: 0, wins: 0, losses: 0, halved: 0, pointsContributed: 0, projectedExtra: 0 });
+    stats.set(p.id, {
+      player: p,
+      played: 0,
+      wins: 0,
+      losses: 0,
+      halved: 0,
+      holesWon: 0,
+      holesLost: 0,
+      holesHalved: 0,
+      pointsContributed: 0,
+      projectedExtra: 0,
+    });
+  }
+
+  // Scramble holes carry a score_vs_par but no result (no per-hole winner), so they're
+  // already excluded here without checking the match's own format.
+  const holesByMatch = new Map<string, MatchHole[]>();
+  for (const h of matchHoles) {
+    if (h.result === null) continue;
+    const list = holesByMatch.get(h.match_id);
+    if (list) list.push(h);
+    else holesByMatch.set(h.match_id, [h]);
   }
 
   for (const match of matches) {
     const grayIds = [match.gray_player1, match.gray_player2].filter((id): id is string => !!id);
     const aquaIds = [match.aqua_player1, match.aqua_player2].filter((id): id is string => !!id);
+
+    for (const hole of holesByMatch.get(match.id) ?? []) {
+      for (const id of grayIds) {
+        const s = stats.get(id);
+        if (!s || !byId.has(id)) continue;
+        if (hole.result === "gray") s.holesWon += 1;
+        else if (hole.result === "aqua") s.holesLost += 1;
+        else s.holesHalved += 1;
+      }
+      for (const id of aquaIds) {
+        const s = stats.get(id);
+        if (!s || !byId.has(id)) continue;
+        if (hole.result === "aqua") s.holesWon += 1;
+        else if (hole.result === "gray") s.holesLost += 1;
+        else s.holesHalved += 1;
+      }
+    }
 
     if (match.result === "not_played") {
       // Not finalized — only worth anything once it's actually under way, and then only

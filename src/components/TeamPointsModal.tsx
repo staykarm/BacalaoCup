@@ -13,12 +13,12 @@ function fmt(n: number) {
 }
 
 export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () => void }) {
-  const { matches, players, sessions, days } = useTournament();
+  const { matches, players, matchHoles, sessions, days } = useTournament();
   const { gray, aqua } = totalPoints(matches, sessions);
   const teamTotal = team === "gray" ? gray : aqua;
   const teamName = team === "gray" ? "Gray (Joys)" : "Aquarellos";
 
-  const stats = computePlayerStats(matches, players)
+  const stats = computePlayerStats(matches, matchHoles, players)
     .filter((s) => s.player.team_id === team)
     .sort((a, b) => b.pointsContributed + b.projectedExtra - (a.pointsContributed + a.projectedExtra));
 

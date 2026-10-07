@@ -8,10 +8,17 @@ export function ModalShell({
   title,
   onClose,
   children,
+  anchorTop = false,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  /**
+   * Anchors the sheet near the top of the screen on mobile instead of the usual bottom
+   * sheet — for a modal whose content opens the on-screen keyboard (e.g. the admin PIN
+   * prompt), where a bottom-anchored sheet would otherwise sit right behind the keyboard.
+   */
+  anchorTop?: boolean;
 }) {
   const [dragY, setDragY] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -47,13 +54,17 @@ export function ModalShell({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center sm:p-4"
+      className={`fixed inset-0 z-50 flex justify-center bg-black/70 backdrop-blur-sm sm:items-center sm:p-4 ${
+        anchorTop ? "items-start pt-10" : "items-end"
+      }`}
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
         style={dragY ? { transform: `translateY(${dragY}px)`, transition: dragging ? "none" : "transform 0.2s ease-out" } : undefined}
-        className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[2rem] border border-card-border bg-card shadow-2xl sm:rounded-[2rem]"
+        className={`flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden border border-card-border bg-card shadow-2xl sm:rounded-[2rem] ${
+          anchorTop ? "rounded-[2rem]" : "rounded-t-[2rem]"
+        }`}
       >
         <div
           onTouchStart={handleTouchStart}

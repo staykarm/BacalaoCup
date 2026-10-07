@@ -89,8 +89,9 @@ function DayColumn({
 const AUTO_RELOAD_MS = 2 * 60 * 60 * 1000;
 
 export default function TvScoreboardPage() {
-  const { players, days, sessions, matches, loading, error, tvOverrideDayId, tvOverrideDayId2 } = useTournament();
-  const { playerId, closePlayerModal } = usePlayerModal();
+  const { players, days, sessions, matches, matchHoles, loading, error, tvOverrideDayId, tvOverrideDayId2 } =
+    useTournament();
+  const { playerId, openPlayer, closePlayerModal } = usePlayerModal();
   const { data: weather } = useWeather();
 
   // Ticks every second purely so a frozen screen is visible at a glance — if the clock
@@ -129,6 +130,10 @@ export default function TvScoreboardPage() {
   let todayDay: Day | undefined;
   let tomorrowDay: Day | undefined;
   const isManualDaySelection = !!tvOverrideDayId || !!tvOverrideDayId2;
+  // "none" isn't a real day id, so the lookups below already leave tomorrowDay undefined —
+  // this just also drops the right column from the layout so the left one takes the full
+  // screen, instead of rendering a second, empty "Ingen runde." panel next to it.
+  const isSingleDayMode = tvOverrideDayId2 === "none";
   if (isManualDaySelection) {
     const playableDaysSorted = [...days]
       .filter((d) => sessions.some((s) => s.day_id === d.id))
@@ -164,7 +169,7 @@ export default function TvScoreboardPage() {
   // secure figure above, never in place of it (a live lead can still flip).
   const clinchProjected = pointsToClinch(gray, aqua, possible);
 
-  const playerStats = computePlayerStats(matches, players);
+  const playerStats = computePlayerStats(matches, matchHoles, players);
   const rankedPlayers = players
     .map((p) => ({ player: p, stat: playerStats.find((s) => s.player.id === p.id)! }))
     .sort(
@@ -194,7 +199,10 @@ export default function TvScoreboardPage() {
           </p>
         )}
 
-        <div className="mt-2 grid grid-cols-3 items-center gap-4">
+        {/* Same 1fr/auto/1fr split as the main app's ScoreHeader: the two team boxes fill
+            the whole row (not just a third each), so their scores land near the page's
+            actual center instead of near the center of their own narrower column. */}
+        <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
           {/* Logo+name pinned to each box's own outer edge (justify-between), so they never
               shift as the score next to them grows or shrinks a digit. */}
           <div className="flex items-center justify-between gap-4 rounded-2xl bg-gray-team-light px-5 py-1.5">
@@ -252,6 +260,10 @@ export default function TvScoreboardPage() {
       </header>
 
       <div className="flex min-h-0 flex-1">
+        {/* Single-day mode drops the right DayColumn instead of leaving an empty "Ingen
+            runde." panel next to it, so the remaining column's flex-1 takes the whole
+            width here — same full-width room SessionSection/MatchRow get on the main
+            page, instead of being squeezed into half the screen. */}
         <div className="flex min-h-0 min-w-0 flex-1 gap-4 p-4">
           <DayColumn
             title={isManualDaySelection ? "Dag 1" : "I dag"}
@@ -261,14 +273,16 @@ export default function TvScoreboardPage() {
             players={players}
             yrForecast={todayYrForecast}
           />
-          <DayColumn
-            title={isManualDaySelection ? "Dag 2" : "I morgen"}
-            day={tomorrowDay}
-            sessions={sessions}
-            matches={matches}
-            players={players}
-            yrForecast={tomorrowYrForecast}
-          />
+          {!isSingleDayMode && (
+            <DayColumn
+              title={isManualDaySelection ? "Dag 2" : "I morgen"}
+              day={tomorrowDay}
+              sessions={sessions}
+              matches={matches}
+              players={players}
+              yrForecast={tomorrowYrForecast}
+            />
+          )}
         </div>
 
         <aside className="flex w-80 shrink-0 flex-col border-l border-card-border bg-card p-3">
@@ -287,10 +301,13 @@ export default function TvScoreboardPage() {
                 >
                   <span className="w-6 shrink-0 text-sm font-bold text-ink-light/50">{mvpRanks[i]}</span>
                   <PlayerAvatar playerId={player.id} fallbackTeamId={player.team_id} size={32} className="h-8 w-8" alwaysOn />
-                  <span className="min-w-0 flex-1 truncate text-base font-semibold text-ink">
+                  <button
+                    onClick={() => openPlayer(player.id)}
+                    className="min-w-0 flex-1 truncate text-left text-base font-semibold text-ink hover:underline"
+                  >
                     {player.name}
                     {player.is_captain && <span className="text-gold-deep"> (C)</span>}
-                  </span>
+                  </button>
                   {/* A dark pill (same treatment as a match's points badge) keeps the number
                       readable regardless of how saturated the row's own team tint is. */}
                   <span

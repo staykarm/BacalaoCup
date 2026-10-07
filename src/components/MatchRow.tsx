@@ -290,7 +290,9 @@ export function MatchRow({
           }`}
         >
           {match.result !== "not_played" || isLiveInProgress ? (
-            <span className="text-sm font-extrabold text-white sm:text-base">{match.live_thru}</span>
+            <span className="text-sm font-extrabold text-white sm:text-base">
+              {match.result !== "not_played" ? "F" : match.live_thru}
+            </span>
           ) : (
             <span className="text-xs font-bold text-foreground sm:text-sm">{match.start_time ?? "--:--"}</span>
           )}

@@ -153,7 +153,6 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
           </div>
           <div className="shrink-0 text-right">
             <div className={`font-display text-4xl font-bold ${side === "gray" ? "text-ink" : "text-white"}`}>
-              {projectedExtra > 0 && "≈"}
               {fmt(projectedTotal)}
             </div>
             <div className={`text-[11px] font-semibold uppercase tracking-wide ${side === "gray" ? "text-ink/60" : "text-white/60"}`}>
@@ -218,7 +217,6 @@ export function PlayerDetailModal({ playerId, onClose }: { playerId: string; onC
                     <div className="shrink-0 text-right">
                       <div className="font-semibold text-ink">{live ? "Pågår" : RESULT_LABELS[m.result]}</div>
                       <div className="text-gold-deep">
-                        {live && "≈"}
                         {fmt(live ? liveProjectedPoints(m) : myPoints)} p
                       </div>
                     </div>

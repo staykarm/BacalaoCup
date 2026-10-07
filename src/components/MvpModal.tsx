@@ -71,7 +71,6 @@ function PlayerRow({
         }`}
         title={stat.projectedExtra > 0 ? "Inkluderer anslått poeng fra kamp som pågår" : undefined}
       >
-        {stat.projectedExtra > 0 && "≈"}
         {(stat.pointsContributed + stat.projectedExtra).toFixed(1)}p
       </span>
     </button>

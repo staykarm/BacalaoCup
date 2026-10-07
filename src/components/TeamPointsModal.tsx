@@ -77,7 +77,6 @@ export function TeamPointsModal({ team, onClose }: { team: TeamId; onClose: () =
                     {s.wins}-{s.halved}-{s.losses}
                   </span>
                   <span className={`font-bold ${listAccentText}`}>
-                    {s.projectedExtra > 0 && "≈"}
                     {fmt(s.pointsContributed + s.projectedExtra)} p
                   </span>
                 </div>

@@ -72,12 +72,17 @@ interface TournamentContextValue {
   setTvOverrideDayId: (dayId: string | null) => Promise<void>;
   /**
    * Admin: pin the /tv scoreboard's right ("I morgen") column. Null = the day after
-   * tvOverrideDayId (or automatic, if that's also null). The sentinel value "none" (not a
-   * real day id) instead drops the right column entirely, so the left column's day takes
-   * the whole screen.
+   * tvOverrideDayId (or automatic, if that's also null). Ignored while tvSingleDay is true.
    */
   tvOverrideDayId2: string | null;
   setTvOverrideDayId2: (dayId: string | null) => Promise<void>;
+  /**
+   * Admin: drop the /tv scoreboard's right column entirely so the left day's column takes
+   * the whole screen. A separate flag rather than a sentinel value on tvOverrideDayId2,
+   * since that column is a foreign key into days(id) and can't hold a non-day value.
+   */
+  tvSingleDay: boolean;
+  setTvSingleDay: (value: boolean) => Promise<void>;
   /**
    * Registers (or clears, when both are null) one hole's result for a match-play
    * match or score for a scramble flight, then derives and writes back that
@@ -107,6 +112,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const [showPlayerPhotos, setShowPlayerPhotosState] = useState(false);
   const [tvOverrideDayId, setTvOverrideDayIdState] = useState<string | null>(null);
   const [tvOverrideDayId2, setTvOverrideDayId2State] = useState<string | null>(null);
+  const [tvSingleDay, setTvSingleDayState] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -172,6 +178,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         setShowPlayerPhotosState(appSettingsRes.data?.show_player_photos ?? false);
         setTvOverrideDayIdState(appSettingsRes.data?.tv_override_day_id ?? null);
         setTvOverrideDayId2State(appSettingsRes.data?.tv_override_day_id_2 ?? null);
+        setTvSingleDayState(appSettingsRes.data?.tv_single_day ?? false);
         setLoading(false);
       } catch (err) {
         if (cancelled) return;
@@ -316,12 +323,14 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
             show_player_photos: boolean;
             tv_override_day_id: string | null;
             tv_override_day_id_2: string | null;
+            tv_single_day: boolean;
           };
           setActiveSessionIds(next.active_session_ids ?? []);
           setAdminPin(next.admin_pin);
           setShowPlayerPhotosState(next.show_player_photos ?? false);
           setTvOverrideDayIdState(next.tv_override_day_id ?? null);
           setTvOverrideDayId2State(next.tv_override_day_id_2 ?? null);
+          setTvSingleDayState(next.tv_single_day ?? false);
         }
       )
       .on(
@@ -517,6 +526,17 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const setTvSingleDay = useCallback(async (value: boolean) => {
+    setTvSingleDayState(value);
+    const { error: updateError } = await supabase
+      .from("app_settings")
+      .update({ tv_single_day: value })
+      .eq("id", "singleton");
+    if (updateError) {
+      setSyncError(updateError.message);
+    }
+  }, []);
+
   const resetAllMatches = useCallback(async () => {
     const reset = {
       result: "not_played" as MatchResult,
@@ -630,6 +650,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       setTvOverrideDayId,
       tvOverrideDayId2,
       setTvOverrideDayId2,
+      tvSingleDay,
+      setTvSingleDay,
       setMatchHole,
     }),
     [
@@ -663,6 +685,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       setTvOverrideDayId,
       tvOverrideDayId2,
       setTvOverrideDayId2,
+      tvSingleDay,
+      setTvSingleDay,
       setMatchHole,
     ]
   );

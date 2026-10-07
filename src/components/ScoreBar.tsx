@@ -53,7 +53,7 @@ export function ScoreBar({
             Trenger {fmt(clinchGray as number)}p
             {clinchGrayProjected !== null && clinchGrayProjected !== clinchGray && (
               <span className="block text-[9px] font-semibold italic tracking-wide text-gray-team-light/60 sm:text-[11px]">
-                ≈{fmt(clinchGrayProjected)}p hvis ledelsen holder
+                {fmt(clinchGrayProjected)}p hvis ledelsen holder
               </span>
             )}
           </span>
@@ -95,7 +95,7 @@ export function ScoreBar({
             Trenger {fmt(clinchAqua as number)}p
             {clinchAquaProjected !== null && clinchAquaProjected !== clinchAqua && (
               <span className="block text-[9px] font-semibold italic tracking-wide text-aqua-team-light/60 sm:text-[11px]">
-                ≈{fmt(clinchAquaProjected)}p hvis ledelsen holder
+                {fmt(clinchAquaProjected)}p hvis ledelsen holder
               </span>
             )}
           </span>

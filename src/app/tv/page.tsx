@@ -315,7 +315,6 @@ export default function TvScoreboardPage() {
                       stat.projectedExtra > 0 ? "italic text-gold/70" : "text-gold"
                     }`}
                   >
-                    {stat.projectedExtra > 0 && "≈"}
                     {(stat.pointsContributed + stat.projectedExtra).toFixed(1)}
                   </span>
                 </div>

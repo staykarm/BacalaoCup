@@ -286,7 +286,8 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
             Styrer hvilke to dager <code>/tv</code>-skjermen viser, venstre og høyre kolonne uavhengig av
             hverandre — f.eks. gårsdagens resultater til venstre og dagens kamper til høyre om morgenen.
             Automatisk følger datoen på enheten som viser skjermen. Står kun venstre på en valgt dag,
-            følger høyre automatisk dagen etter den.
+            følger høyre automatisk dagen etter den. Velg &quot;Ingen&quot; på høyre for å vise kun venstre
+            kolonne i full bredde.
           </p>
           <div className="space-y-2">
             <label className="block text-xs text-ink-light">
@@ -312,6 +313,7 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
                 className="mt-1 w-full rounded-xl border border-card-border bg-card-deep px-3 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
               >
                 <option value="">Automatisk (dagen etter venstre kolonne)</option>
+                <option value="none">Ingen (vis kun venstre kolonne i full bredde)</option>
                 {playableDays.map((day) => (
                   <option key={day.id} value={day.id}>
                     {day.label}

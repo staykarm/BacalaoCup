@@ -70,7 +70,12 @@ interface TournamentContextValue {
    */
   tvOverrideDayId: string | null;
   setTvOverrideDayId: (dayId: string | null) => Promise<void>;
-  /** Admin: pin the /tv scoreboard's right ("I morgen") column. Null = the day after tvOverrideDayId (or automatic, if that's also null). */
+  /**
+   * Admin: pin the /tv scoreboard's right ("I morgen") column. Null = the day after
+   * tvOverrideDayId (or automatic, if that's also null). The sentinel value "none" (not a
+   * real day id) instead drops the right column entirely, so the left column's day takes
+   * the whole screen.
+   */
   tvOverrideDayId2: string | null;
   setTvOverrideDayId2: (dayId: string | null) => Promise<void>;
   /**

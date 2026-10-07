@@ -113,6 +113,8 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
     setTvOverrideDayId,
     tvOverrideDayId2,
     setTvOverrideDayId2,
+    tvSingleDay,
+    setTvSingleDay,
   } = useTournament();
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -308,8 +310,17 @@ export function AdminModal({ onClose }: { onClose: () => void }) {
             <label className="block text-xs text-ink-light">
               Høyre kolonne
               <select
-                value={tvOverrideDayId2 ?? ""}
-                onChange={(e) => setTvOverrideDayId2(e.target.value || null)}
+                value={tvSingleDay ? "none" : tvOverrideDayId2 ?? ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "none") {
+                    setTvSingleDay(true);
+                    setTvOverrideDayId2(null);
+                  } else {
+                    setTvSingleDay(false);
+                    setTvOverrideDayId2(value || null);
+                  }
+                }}
                 className="mt-1 w-full rounded-xl border border-card-border bg-card-deep px-3 py-1.5 text-sm text-ink focus:border-gold-deep/60 focus:outline-none"
               >
                 <option value="">Automatisk (dagen etter venstre kolonne)</option>

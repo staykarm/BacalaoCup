@@ -89,8 +89,18 @@ function DayColumn({
 const AUTO_RELOAD_MS = 2 * 60 * 60 * 1000;
 
 export default function TvScoreboardPage() {
-  const { players, days, sessions, matches, matchHoles, loading, error, tvOverrideDayId, tvOverrideDayId2 } =
-    useTournament();
+  const {
+    players,
+    days,
+    sessions,
+    matches,
+    matchHoles,
+    loading,
+    error,
+    tvOverrideDayId,
+    tvOverrideDayId2,
+    tvSingleDay,
+  } = useTournament();
   const { playerId, openPlayer, closePlayerModal } = usePlayerModal();
   const { data: weather } = useWeather();
 
@@ -129,17 +139,17 @@ export default function TvScoreboardPage() {
   // itself thinks it is.
   let todayDay: Day | undefined;
   let tomorrowDay: Day | undefined;
-  const isManualDaySelection = !!tvOverrideDayId || !!tvOverrideDayId2;
-  // "none" isn't a real day id, so the lookups below already leave tomorrowDay undefined —
-  // this just also drops the right column from the layout so the left one takes the full
-  // screen, instead of rendering a second, empty "Ingen runde." panel next to it.
-  const isSingleDayMode = tvOverrideDayId2 === "none";
+  const isManualDaySelection = !!tvOverrideDayId || !!tvOverrideDayId2 || tvSingleDay;
+  // tvSingleDay drops the right column from the layout entirely, so the left one takes the
+  // full screen, instead of rendering a second, empty "Ingen runde." panel next to it.
   if (isManualDaySelection) {
     const playableDaysSorted = [...days]
       .filter((d) => sessions.some((s) => s.day_id === d.id))
       .sort((a, b) => a.sort_order - b.sort_order);
     todayDay = tvOverrideDayId ? playableDaysSorted.find((d) => d.id === tvOverrideDayId) : undefined;
-    if (tvOverrideDayId2) {
+    if (tvSingleDay) {
+      tomorrowDay = undefined;
+    } else if (tvOverrideDayId2) {
       tomorrowDay = playableDaysSorted.find((d) => d.id === tvOverrideDayId2);
     } else if (todayDay) {
       // Right column left on "Automatisk" falls back to the day after the left column's
@@ -273,7 +283,7 @@ export default function TvScoreboardPage() {
             players={players}
             yrForecast={todayYrForecast}
           />
-          {!isSingleDayMode && (
+          {!tvSingleDay && (
             <DayColumn
               title={isManualDaySelection ? "Dag 2" : "I morgen"}
               day={tomorrowDay}

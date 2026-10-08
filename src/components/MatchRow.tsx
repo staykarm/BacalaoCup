@@ -145,13 +145,18 @@ export function MatchRow({
     return course && p.course_strokes[course] !== undefined ? p.course_strokes[course] : null;
   }
 
-  // Hardcoded override: Terje and Jokke's stored course_strokes for this matchup don't
-  // reflect reality (should be dead even) and there's no live-DB access from here to
-  // correct the source data — so the badge is suppressed directly for this one pairing,
-  // regardless of format or which side either of them is on.
+  // Hardcoded override: Terje and Jokke's stored course_strokes for their 1v1 singles
+  // matchup don't reflect reality (should be dead even) and there's no live-DB access
+  // from here to correct the source data — so the badge is suppressed directly for that
+  // one singles match. Scoped to an actual 1-vs-1 between just the two of them: in the
+  // Chris+Jokke (greensome) vs. Terje match they also both appear in, Jokke isn't playing
+  // Terje solo — Terje's own figure there (computed as a lone player via sideHandicap's
+  // fallback) is correct and must stay visible, not be swallowed by this override.
   const isTerjeVsJokke =
-    [match.gray_player1, match.gray_player2, match.aqua_player1, match.aqua_player2].includes("terje") &&
-    [match.gray_player1, match.gray_player2, match.aqua_player1, match.aqua_player2].includes("jokke");
+    grayCount === 1 &&
+    aquaCount === 1 &&
+    [match.gray_player1, match.aqua_player1].includes("terje") &&
+    [match.gray_player1, match.aqua_player1].includes("jokke");
 
   const liveLeaderTeam = liveLeader(match.live_up);
   // Same live-leader color, but for use on the near-white editing panel below the result box.

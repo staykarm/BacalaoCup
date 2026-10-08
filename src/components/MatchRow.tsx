@@ -115,14 +115,19 @@ export function MatchRow({
   // like the pairings it would otherwise reveal. Fourball plays each ball individually,
   // so it skips this pair figure entirely in favor of each player's own course handicap
   // (see playerCourseStrokes below) — and so does an uneven (2-vs-1) side on any other
-  // format: each player still plays their own full handicap, and the 2-vs-1 imbalance
-  // itself is compensated by the head-start hole (headStart above), not by diffing a
-  // combined pair figure against the lone player's.
+  // non-greensome format (i.e. "mixed", which also plays as fourball): each player still
+  // plays their own full handicap, and the 2-vs-1 imbalance itself is compensated by the
+  // head-start hole (headStart above), not by diffing a combined pair figure against the
+  // lone player's. Greensome is the one exception: its pair always uses the blended
+  // two-man handicap, even when the other side happens to be a player short — sideHandicap
+  // below already falls back to that lone player's own course handicap on its own, so there's
+  // nothing else to special-case for that side.
   const grayCount = [match.gray_player1, match.gray_player2].filter(Boolean).length;
   const aquaCount = [match.aqua_player1, match.aqua_player2].filter(Boolean).length;
   const isUnevenSides = grayCount !== aquaCount;
   const isFourball = session.format === "fourball";
-  const showIndividualStrokes = isFourball || isUnevenSides;
+  const isGreensome = session.format === "greensome";
+  const showIndividualStrokes = isFourball || (isUnevenSides && !isGreensome);
   const graySideHcp = showIndividualStrokes
     ? null
     : sideHandicap(match.gray_player1, match.gray_player2, players, course);

@@ -115,14 +115,19 @@ export function MatchRow({
   // like the pairings it would otherwise reveal. Fourball plays each ball individually,
   // so it skips this pair figure entirely in favor of each player's own course handicap
   // (see playerCourseStrokes below) — and so does an uneven (2-vs-1) side on any other
-  // format: each player still plays their own full handicap, and the 2-vs-1 imbalance
-  // itself is compensated by the head-start hole (headStart above), not by diffing a
-  // combined pair figure against the lone player's.
+  // non-greensome format (i.e. "mixed", which also plays as fourball): each player still
+  // plays their own full handicap, and the 2-vs-1 imbalance itself is compensated by the
+  // head-start hole (headStart above), not by diffing a combined pair figure against the
+  // lone player's. Greensome is the one exception: its pair always uses the blended
+  // two-man handicap, even when the other side happens to be a player short — sideHandicap
+  // below already falls back to that lone player's own course handicap on its own, so there's
+  // nothing else to special-case for that side.
   const grayCount = [match.gray_player1, match.gray_player2].filter(Boolean).length;
   const aquaCount = [match.aqua_player1, match.aqua_player2].filter(Boolean).length;
   const isUnevenSides = grayCount !== aquaCount;
   const isFourball = session.format === "fourball";
-  const showIndividualStrokes = isFourball || isUnevenSides;
+  const isGreensome = session.format === "greensome";
+  const showIndividualStrokes = isFourball || (isUnevenSides && !isGreensome);
   const graySideHcp = showIndividualStrokes
     ? null
     : sideHandicap(match.gray_player1, match.gray_player2, players, course);
@@ -139,6 +144,14 @@ export function MatchRow({
   function playerCourseStrokes(p: { course_strokes: Record<string, number> }): number | null {
     return course && p.course_strokes[course] !== undefined ? p.course_strokes[course] : null;
   }
+
+  // Hardcoded override: Terje and Jokke's stored course_strokes for this matchup don't
+  // reflect reality (should be dead even) and there's no live-DB access from here to
+  // correct the source data — so the badge is suppressed directly for this one pairing,
+  // regardless of format or which side either of them is on.
+  const isTerjeVsJokke =
+    [match.gray_player1, match.gray_player2, match.aqua_player1, match.aqua_player2].includes("terje") &&
+    [match.gray_player1, match.gray_player2, match.aqua_player1, match.aqua_player2].includes("jokke");
 
   const liveLeaderTeam = liveLeader(match.live_up);
   // Same live-leader color, but for use on the near-white editing panel below the result box.
@@ -253,7 +266,12 @@ export function MatchRow({
             {grayPlayers.length > 0 ? (
               <>
                 {grayPlayers.map((p) => {
-                  const strokeBadge = showIndividualStrokes ? playerCourseStrokes(p) : grayStrokesReceived;
+                  const strokeBadge =
+                    p.id === "terje" && isTerjeVsJokke
+                      ? null
+                      : showIndividualStrokes
+                        ? playerCourseStrokes(p)
+                        : grayStrokesReceived;
                   return (
                     <button
                       key={p.id}
@@ -305,7 +323,12 @@ export function MatchRow({
             {aquaPlayers.length > 0 ? (
               <>
                 {aquaPlayers.map((p) => {
-                  const strokeBadge = showIndividualStrokes ? playerCourseStrokes(p) : aquaStrokesReceived;
+                  const strokeBadge =
+                    p.id === "terje" && isTerjeVsJokke
+                      ? null
+                      : showIndividualStrokes
+                        ? playerCourseStrokes(p)
+                        : aquaStrokesReceived;
                   return (
                     <button
                       key={p.id}
@@ -511,7 +534,7 @@ export function MatchRow({
                                   ? "border-gray-team-won bg-gray-team-won text-white"
                                   : opt.key === "aqua"
                                     ? "border-aqua-team bg-aqua-team-deep text-white"
-                                    : "border-gold-deep bg-gold/20 text-gold-deep";
+                                    : "border-ink-light/40 bg-white text-ink";
                               // Even unpressed, each button carries a tint of its own color so the
                               // three options stay clearly distinct before you pick a hole's winner.
                               const inactiveClass =
@@ -519,7 +542,7 @@ export function MatchRow({
                                   ? "border-gray-team/50 bg-gray-team-bg/70 text-ink-light/80 hover:bg-gray-team-bg"
                                   : opt.key === "aqua"
                                     ? "border-aqua-team/50 bg-aqua-team-light/60 text-ink-light/80 hover:bg-aqua-team-light"
-                                    : "border-gold-deep/50 bg-gold/30 text-ink-light/80 hover:bg-gold/45";
+                                    : "border-card-border bg-card-deep/70 text-ink-light/80 hover:bg-card-deep";
                               return (
                                 <button
                                   key={opt.key}

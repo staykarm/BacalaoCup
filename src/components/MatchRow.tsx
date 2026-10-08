@@ -140,6 +140,14 @@ export function MatchRow({
     return course && p.course_strokes[course] !== undefined ? p.course_strokes[course] : null;
   }
 
+  // Hardcoded override: Terje and Jokke's stored course_strokes for this matchup don't
+  // reflect reality (should be dead even) and there's no live-DB access from here to
+  // correct the source data — so the badge is suppressed directly for this one pairing,
+  // regardless of format or which side either of them is on.
+  const isTerjeVsJokke =
+    [match.gray_player1, match.gray_player2, match.aqua_player1, match.aqua_player2].includes("terje") &&
+    [match.gray_player1, match.gray_player2, match.aqua_player1, match.aqua_player2].includes("jokke");
+
   const liveLeaderTeam = liveLeader(match.live_up);
   // Same live-leader color, but for use on the near-white editing panel below the result box.
   const liveColorOnLight =
@@ -253,7 +261,12 @@ export function MatchRow({
             {grayPlayers.length > 0 ? (
               <>
                 {grayPlayers.map((p) => {
-                  const strokeBadge = showIndividualStrokes ? playerCourseStrokes(p) : grayStrokesReceived;
+                  const strokeBadge =
+                    p.id === "terje" && isTerjeVsJokke
+                      ? null
+                      : showIndividualStrokes
+                        ? playerCourseStrokes(p)
+                        : grayStrokesReceived;
                   return (
                     <button
                       key={p.id}
@@ -305,7 +318,12 @@ export function MatchRow({
             {aquaPlayers.length > 0 ? (
               <>
                 {aquaPlayers.map((p) => {
-                  const strokeBadge = showIndividualStrokes ? playerCourseStrokes(p) : aquaStrokesReceived;
+                  const strokeBadge =
+                    p.id === "terje" && isTerjeVsJokke
+                      ? null
+                      : showIndividualStrokes
+                        ? playerCourseStrokes(p)
+                        : aquaStrokesReceived;
                   return (
                     <button
                       key={p.id}
